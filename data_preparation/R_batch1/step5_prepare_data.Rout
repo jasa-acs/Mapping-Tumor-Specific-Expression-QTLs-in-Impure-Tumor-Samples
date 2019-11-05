@@ -1,0 +1,726 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/genotype_normal/")
+> 
+> # ------------------------------------------------------------
+> # read data
+> # ------------------------------------------------------------
+> 
+> date()
+[1] "Tue Oct 23 12:42:09 2012"
+> dat = read.table("birdseed-v2.calls.txt", header=TRUE, na.strings="-1")
+> date()
+[1] "Tue Oct 23 12:48:10 2012"
+> 
+> dim(dat)
+[1] 909622    686
+> dat[1:2,1:5]
+    probeset_id BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+1 SNP_A-2131660                                                    2
+2 SNP_A-1967418                                                    2
+  CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL
+1                                                     2
+2                                                     2
+  RANDS_p_TCGA_b109_SNP_1N_GenomeWideSNP_6_A11_771896.CEL
+1                                                       2
+2                                                       2
+  JOUAL_p_TCGA_b96_SNP_N_GenomeWideSNP_6_A12_747988.CEL
+1                                                     2
+2                                                     2
+> 
+> table(dat[,2])
+
+     0      1      2 
+333099 243076 326357 
+> table(is.na(dat[,2]))
+
+ FALSE   TRUE 
+902532   7090 
+> 
+> # ------------------------------------------------------------
+> # read in the samples to be used
+> # ------------------------------------------------------------
+> 
+> sam = read.table("../info/brca_samples2use_after_qc_female.txt", 
++   header=TRUE, sep="\t", as.is=TRUE)
+> dim(sam)
+[1] 663  23
+> sam[1,]
+  DNAtumor_institution DNAtumor_patientID DNAtumor_type DNAtumor_portion
+1                   A7               A0D9           01A              31D
+  DNAtumor_plate                                   DNAtumor_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_H07_697072.CEL
+  DNAnorml_institution DNAnorml_patientID DNAnorml_type DNAnorml_portion
+1                   A7               A0D9           10A              01D
+  DNAnorml_plate                                   DNAnorml_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+                     RNA_Exome             RNA_RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+             RNA_RNAseq.Normal              RNA_rnaseqID.Tumor
+1 TCGA-A7-A0D9-11A-53R-A089-07 110318_SN749_0046_AB039FABXX_4_
+                   RNA_rnaseqID.Normal RNA_institution RNA_patientID RNA_type
+1 110909_UNC9-SN296_0240_BD0DDBABXX_1_              A7          A0D9      01A
+  RNA_portion RNA_plate gender
+1         31R      A056 female
+> 
+> mat1 = match(sam$DNAnorml_arrayFile, names(dat))
+> 
+> if(any(is.na(mat1))){
++   stop("some sampls in the sample file are not in the data\n")
++ }
+> 
+> dat = dat[,c(1,mat1)]
+> dim(dat)
+[1] 909622    664
+> dat[1:2,1:5]
+    probeset_id BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+1 SNP_A-2131660                                                    2
+2 SNP_A-1967418                                                    2
+  CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL
+1                                                     2
+2                                                     2
+  RANDS_p_TCGA_b109_SNP_1N_GenomeWideSNP_6_A11_771896.CEL
+1                                                       2
+2                                                       2
+  JOUAL_p_TCGA_b96_SNP_N_GenomeWideSNP_6_A12_747988.CEL
+1                                                     2
+2                                                     2
+> 
+> if(any(sam$DNAnorml_arrayFile != names(dat)[-1])){
++   stop("sample name mismatch\n")
++ }
+> 
+> # ------------------------------------------------------------
+> # read in SNP annotation 
+> # ------------------------------------------------------------
+> 
+> path = "/Users/suninsky/research/data/Affy/Affy6/anno/"
+> info = read.csv(sprintf("%s/GenomeWideSNP_6.na32.annot.csv", path), 
++                 as.is=TRUE, comment.char="#")
+> 
+> dim(info)
+[1] 934968     27
+> names(info)
+ [1] "Probe.Set.ID"                               
+ [2] "dbSNP.RS.ID"                                
+ [3] "Chromosome"                                 
+ [4] "Physical.Position"                          
+ [5] "Strand"                                     
+ [6] "ChrX.pseudo.autosomal.region.1"             
+ [7] "Cytoband"                                   
+ [8] "Flank"                                      
+ [9] "Allele.A"                                   
+[10] "Allele.B"                                   
+[11] "Associated.Gene"                            
+[12] "Genetic.Map"                                
+[13] "Microsatellite"                             
+[14] "Fragment.Enzyme.Type.Length.Start.Stop"     
+[15] "Allele.Frequencies"                         
+[16] "Heterozygous.Allele.Frequencies"            
+[17] "Number.of.individuals.Number.of.chromosomes"
+[18] "In.Hapmap"                                  
+[19] "Strand.Versus.dbSNP"                        
+[20] "Copy.Number.Variation"                      
+[21] "Probe.Count"                                
+[22] "ChrX.pseudo.autosomal.region.2"             
+[23] "In.Final.List"                              
+[24] "Minor.Allele"                               
+[25] "Minor.Allele.Frequency"                     
+[26] "X..GC"                                      
+[27] "OMIM"                                       
+> info[1:5,1:4]
+   Probe.Set.ID dbSNP.RS.ID Chromosome Physical.Position
+1 SNP_A-1780419   rs6576700          1          84875173
+2 SNP_A-1780418  rs17054099          5         156390980
+3 SNP_A-1780415   rs7730126          5         158729947
+4 SNP_A-1780414   rs2061700          9          22976592
+5 SNP_A-1780413  rs10834942         11          26300969
+> table(info$Chromosome)
+
+  ---     1    10    11    12    13    14    15    16    17    18    19     2 
+ 1846 73403 49592 45933 43797 35143 28939 26865 28622 21300 27213 12419 75842 
+   20    21    22     3     4     5     6     7     8     9    MT     X     Y 
+23486 12910 11951 62277 57556 57945 57818 48283 49992 42663   411 37902   860 
+> 
+> # ------------------------------------------------------------
+> # extract data 
+> # ------------------------------------------------------------
+> 
+> if(! all(dat$probeset_id %in% info$Probe.Set.ID)){
++   stop("some probeset_id in data file are not recognized\n")
++ }
+> 
+> info = info[match(dat$probeset_id, info$Probe.Set.ID),]
+> dim(info)
+[1] 909622     27
+> all(dat$probeset_id == info$Probe.Set.ID)
+[1] TRUE
+> table(info$Chromosome)
+
+  ---     1    10    11    12    13    14    15    16    17    18    19     2 
+ 1182 71480 48314 44671 42672 34382 28169 26126 27768 20687 26623 11955 74078 
+   20    21    22     3     4     5     6     7     8     9    MT     X     Y 
+22906 12584 11471 60838 56174 56592 56420 47091 48749 41528   107 36767   288 
+> 
+> w2rm = which(info$Chromosome == "---")
+> length(w2rm)
+[1] 1182
+> 
+> if(length(w2rm) > 0){
++   info = info[-w2rm,]
++   dat  = dat[-w2rm,]
++ }
+> 
+> dim(info)
+[1] 908440     27
+> dim(dat)
+[1] 908440    664
+> table(info$Chromosome)
+
+    1    10    11    12    13    14    15    16    17    18    19     2    20 
+71480 48314 44671 42672 34382 28169 26126 27768 20687 26623 11955 74078 22906 
+   21    22     3     4     5     6     7     8     9    MT     X     Y 
+12584 11471 60838 56174 56592 56420 47091 48749 41528   107 36767   288 
+> 
+> # ------------------------------------------------------------
+> # sort by SNP location 
+> # ------------------------------------------------------------
+> 
+> chrs = info$Chromosome
+> chrs[which(chrs=="X")]   = "23"
+> chrs[which(chrs=="Y")]   = "24"
+> chrs[which(chrs=="MT")]  = "25"
+> 
+> table(chrs)
+chrs
+    1    10    11    12    13    14    15    16    17    18    19     2    20 
+71480 48314 44671 42672 34382 28169 26126 27768 20687 26623 11955 74078 22906 
+   21    22    23    24    25     3     4     5     6     7     8     9 
+12584 11471 36767   288   107 60838 56174 56592 56420 47091 48749 41528 
+> chrs = as.numeric(chrs)
+> table(chrs)
+chrs
+    1     2     3     4     5     6     7     8     9    10    11    12    13 
+71480 74078 60838 56174 56592 56420 47091 48749 41528 48314 44671 42672 34382 
+   14    15    16    17    18    19    20    21    22    23    24    25 
+28169 26126 27768 20687 26623 11955 22906 12584 11471 36767   288   107 
+> 
+> pos  = as.numeric(info$Physical.Position)
+> summary(pos)
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+      408  31730000  69900000  78720000 115600000 249200000 
+> 
+> od   = order(chrs, pos)
+> 
+> info = info[od,]
+> dat  = dat[od,]
+> 
+> dim(info)
+[1] 908440     27
+> info[1:5,1:4]
+        Probe.Set.ID dbSNP.RS.ID Chromosome Physical.Position
+788828 SNP_A-8575125  rs10458597          1            564621
+923156 SNP_A-8709646  rs12565286          1            721290
+711629 SNP_A-8497791  rs12082473          1            740857
+93734  SNP_A-1909444   rs3094315          1            752566
+572021 SNP_A-8358063   rs2286139          1            761732
+> 
+> dim(dat)
+[1] 908440    664
+> dat[1:2,1:2]
+         probeset_id BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+906474 SNP_A-8575125                                                    0
+745070 SNP_A-8709646                                                    0
+> 
+> if(! all(dat$probeset_id == info$Probe.Set.ID)){
++   stop("probeset_id mismatch\n")
++ }
+> 
+> # ------------------------------------------------------------
+> # remove the SNPs that have more than 5% missing values 
+> # ------------------------------------------------------------
+> 
+> pdata = data.matrix(dat[,-1])
+> dim(pdata)
+[1] 908440    663
+> 
+> nNA = rowSums(is.na(pdata))
+> summary(nNA)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00    0.00    2.00   11.37    9.00  663.00 
+> 
+> w2rm = which(nNA > 0.05*ncol(pdata))
+> length(w2rm)
+[1] 75094
+> 
+> if(length(w2rm) > 0){
++   dat   = dat[-w2rm,]
++   info  = info[-w2rm,]
++   pdata = pdata[-w2rm,]
++ }
+> 
+> dim(dat)
+[1] 833346    664
+> dim(info)
+[1] 833346     27
+> dim(pdata)
+[1] 833346    663
+> 
+> # ------------------------------------------------------------
+> # switch to forward strand
+> # ------------------------------------------------------------
+> 
+> table(info$Strand)
+
+     +      -    --- 
+415891 416558    897 
+> table(info$Strand.Versus.dbSNP)
+
+    --- reverse    same 
+    897  412531  419918 
+> table(info$Strand, info$Strand.Versus.dbSNP)
+     
+         --- reverse   same
+  +        0   64399 351492
+  -        0  348132  68426
+  ---    897       0      0
+> 
+> table(info$Allele.A)
+
+     A      C      G 
+406627 369492  57227 
+> table(info$Allele.B)
+
+     C      G      T 
+ 73918 355403 404025 
+> 
+> switchStrand <- function(xx){
++ 	wA = which(xx == "A")
++ 	wC = which(xx == "C")
++ 	wG = which(xx == "G")
++ 	wT = which(xx == "T")
++   
++   if(length(wA) > 0){ xx[wA] = "T" }
++   if(length(wT) > 0){ xx[wT] = "A" }
++   if(length(wC) > 0){ xx[wC] = "G" }
++   if(length(wG) > 0){ xx[wG] = "C" }
++   
++   xx
++ }
+> 
+> wRev = which(info$Strand == "-")
+> 
+> info$Allele.A.Forward = info$Allele.A
+> info$Allele.A.Forward[wRev] = switchStrand(info$Allele.A[wRev])
+> 
+> info$Allele.B.Forward = info$Allele.B
+> info$Allele.B.Forward[wRev] = switchStrand(info$Allele.B[wRev])
+> 
+> table(info$Allele.A, info$Allele.A.Forward)
+   
+         A      C      G      T
+  A 203347      0      0 203280
+  C      0 184802 184690      0
+  G      0  28588  28639      0
+> table(info$Allele.B, info$Allele.B.Forward)
+   
+         A      C      G      T
+  C      0  37049  36869      0
+  G      0 177760 177643      0
+  T 201929      0      0 202096
+> 
+> # ------------------------------------------------------------
+> # prune SNPs (50, 5, 0.1)
+> # using sliding window of 50 SNPs, step size of 5 SNP, and 
+> # remove one of a pair of SNPs if the R2 is larger than 0.1 
+> # ------------------------------------------------------------
+> 
+> starts = seq(1, nrow(pdata)-49, 5)
+> ends   = seq(50, nrow(pdata), 5)
+> 
+> length(starts)
+[1] 166660
+> length(ends)
+[1] 166660
+> 
+> snp2drop = rep(0, nrow(pdata))
+> 
+> r2  = matrix(0, nrow=50, ncol=50)
+> lr2 = lower.tri(r2, diag = TRUE)
+> 
+> message("pruning SNPs, (50, 5, 0.1)")
+pruning SNPs, (50, 5, 0.1)
+> 
+> for(i in 1:length(starts)){
++   
++   if(i %% 1000 == 0){
++     message(i, " ", date())
++   }
++   
++   p1 = starts[i]
++   p2 = ends[i]
++   r2 = cor(t(pdata[p1:p2,]), use="pair")
++   r2 = r2*r2
++   r2[lr2] = 0
++ 
++   w2 = which(r2 > 0.1, arr.ind=TRUE)
++   
++   if(nrow(w2) > 0){
++     w3 = (p1:p2)[w2]
++     snp2drop[w3] = 1
++   }
++ }
+1000 Tue Oct 23 12:56:55 2012
+2000 Tue Oct 23 12:57:07 2012
+3000 Tue Oct 23 12:57:22 2012
+4000 Tue Oct 23 12:57:34 2012
+5000 Tue Oct 23 12:57:47 2012
+6000 Tue Oct 23 12:58:05 2012
+7000 Tue Oct 23 12:58:17 2012
+8000 Tue Oct 23 12:58:30 2012
+9000 Tue Oct 23 12:58:43 2012
+10000 Tue Oct 23 12:58:56 2012
+11000 Tue Oct 23 12:59:09 2012
+12000 Tue Oct 23 12:59:24 2012
+13000 Tue Oct 23 12:59:37 2012
+14000 Tue Oct 23 12:59:49 2012
+15000 Tue Oct 23 13:00:01 2012
+16000 Tue Oct 23 13:00:14 2012
+17000 Tue Oct 23 13:00:26 2012
+18000 Tue Oct 23 13:00:39 2012
+19000 Tue Oct 23 13:00:54 2012
+20000 Tue Oct 23 13:01:06 2012
+21000 Tue Oct 23 13:01:18 2012
+22000 Tue Oct 23 13:01:31 2012
+23000 Tue Oct 23 13:01:44 2012
+24000 Tue Oct 23 13:01:57 2012
+25000 Tue Oct 23 13:02:11 2012
+26000 Tue Oct 23 13:02:23 2012
+27000 Tue Oct 23 13:02:35 2012
+28000 Tue Oct 23 13:02:48 2012
+29000 Tue Oct 23 13:03:00 2012
+30000 Tue Oct 23 13:03:13 2012
+31000 Tue Oct 23 13:03:28 2012
+32000 Tue Oct 23 13:03:40 2012
+33000 Tue Oct 23 13:03:52 2012
+34000 Tue Oct 23 13:04:05 2012
+35000 Tue Oct 23 13:04:17 2012
+36000 Tue Oct 23 13:04:30 2012
+37000 Tue Oct 23 13:04:45 2012
+38000 Tue Oct 23 13:04:57 2012
+39000 Tue Oct 23 13:05:09 2012
+40000 Tue Oct 23 13:05:21 2012
+41000 Tue Oct 23 13:05:34 2012
+42000 Tue Oct 23 13:05:47 2012
+43000 Tue Oct 23 13:06:02 2012
+44000 Tue Oct 23 13:06:14 2012
+45000 Tue Oct 23 13:06:26 2012
+46000 Tue Oct 23 13:06:39 2012
+47000 Tue Oct 23 13:06:51 2012
+48000 Tue Oct 23 13:07:04 2012
+49000 Tue Oct 23 13:07:17 2012
+50000 Tue Oct 23 13:07:31 2012
+51000 Tue Oct 23 13:07:44 2012
+52000 Tue Oct 23 13:07:56 2012
+53000 Tue Oct 23 13:08:08 2012
+54000 Tue Oct 23 13:08:21 2012
+55000 Tue Oct 23 13:08:34 2012
+56000 Tue Oct 23 13:08:48 2012
+57000 Tue Oct 23 13:09:01 2012
+58000 Tue Oct 23 13:09:13 2012
+59000 Tue Oct 23 13:09:25 2012
+60000 Tue Oct 23 13:09:38 2012
+61000 Tue Oct 23 13:09:51 2012
+62000 Tue Oct 23 13:10:06 2012
+63000 Tue Oct 23 13:10:18 2012
+64000 Tue Oct 23 13:10:30 2012
+65000 Tue Oct 23 13:10:42 2012
+66000 Tue Oct 23 13:10:55 2012
+67000 Tue Oct 23 13:11:08 2012
+68000 Tue Oct 23 13:11:23 2012
+69000 Tue Oct 23 13:11:35 2012
+70000 Tue Oct 23 13:11:47 2012
+71000 Tue Oct 23 13:12:00 2012
+72000 Tue Oct 23 13:12:12 2012
+73000 Tue Oct 23 13:12:25 2012
+74000 Tue Oct 23 13:12:38 2012
+75000 Tue Oct 23 13:12:52 2012
+76000 Tue Oct 23 13:13:04 2012
+77000 Tue Oct 23 13:13:17 2012
+78000 Tue Oct 23 13:13:29 2012
+79000 Tue Oct 23 13:13:42 2012
+80000 Tue Oct 23 13:13:55 2012
+81000 Tue Oct 23 13:14:09 2012
+82000 Tue Oct 23 13:14:21 2012
+83000 Tue Oct 23 13:14:34 2012
+84000 Tue Oct 23 13:14:46 2012
+85000 Tue Oct 23 13:14:59 2012
+86000 Tue Oct 23 13:15:12 2012
+87000 Tue Oct 23 13:15:26 2012
+88000 Tue Oct 23 13:15:39 2012
+89000 Tue Oct 23 13:15:51 2012
+90000 Tue Oct 23 13:16:03 2012
+91000 Tue Oct 23 13:16:16 2012
+92000 Tue Oct 23 13:16:28 2012
+93000 Tue Oct 23 13:16:41 2012
+94000 Tue Oct 23 13:16:56 2012
+95000 Tue Oct 23 13:17:08 2012
+96000 Tue Oct 23 13:17:20 2012
+97000 Tue Oct 23 13:17:33 2012
+98000 Tue Oct 23 13:17:46 2012
+99000 Tue Oct 23 13:17:59 2012
+100000 Tue Oct 23 13:18:13 2012
+101000 Tue Oct 23 13:18:25 2012
+102000 Tue Oct 23 13:18:37 2012
+103000 Tue Oct 23 13:18:50 2012
+104000 Tue Oct 23 13:19:03 2012
+105000 Tue Oct 23 13:19:15 2012
+106000 Tue Oct 23 13:19:30 2012
+107000 Tue Oct 23 13:19:42 2012
+108000 Tue Oct 23 13:19:55 2012
+109000 Tue Oct 23 13:20:07 2012
+110000 Tue Oct 23 13:20:20 2012
+111000 Tue Oct 23 13:20:33 2012
+112000 Tue Oct 23 13:20:47 2012
+113000 Tue Oct 23 13:20:59 2012
+114000 Tue Oct 23 13:21:12 2012
+115000 Tue Oct 23 13:21:24 2012
+116000 Tue Oct 23 13:21:37 2012
+117000 Tue Oct 23 13:21:49 2012
+118000 Tue Oct 23 13:22:04 2012
+119000 Tue Oct 23 13:22:16 2012
+120000 Tue Oct 23 13:22:29 2012
+121000 Tue Oct 23 13:22:41 2012
+122000 Tue Oct 23 13:22:54 2012
+123000 Tue Oct 23 13:23:07 2012
+124000 Tue Oct 23 13:23:20 2012
+125000 Tue Oct 23 13:23:34 2012
+126000 Tue Oct 23 13:23:46 2012
+127000 Tue Oct 23 13:23:59 2012
+128000 Tue Oct 23 13:24:11 2012
+129000 Tue Oct 23 13:24:24 2012
+130000 Tue Oct 23 13:24:37 2012
+131000 Tue Oct 23 13:24:51 2012
+132000 Tue Oct 23 13:25:03 2012
+133000 Tue Oct 23 13:25:15 2012
+134000 Tue Oct 23 13:25:28 2012
+135000 Tue Oct 23 13:25:41 2012
+136000 Tue Oct 23 13:25:54 2012
+137000 Tue Oct 23 13:26:08 2012
+138000 Tue Oct 23 13:26:20 2012
+139000 Tue Oct 23 13:26:32 2012
+140000 Tue Oct 23 13:26:45 2012
+141000 Tue Oct 23 13:26:58 2012
+142000 Tue Oct 23 13:27:11 2012
+143000 Tue Oct 23 13:27:26 2012
+144000 Tue Oct 23 13:27:38 2012
+145000 Tue Oct 23 13:27:50 2012
+146000 Tue Oct 23 13:28:03 2012
+147000 Tue Oct 23 13:28:15 2012
+148000 Tue Oct 23 13:28:28 2012
+149000 Tue Oct 23 13:28:43 2012
+150000 Tue Oct 23 13:28:55 2012
+151000 Tue Oct 23 13:29:08 2012
+152000 Tue Oct 23 13:29:20 2012
+153000 Tue Oct 23 13:29:33 2012
+154000 Tue Oct 23 13:29:45 2012
+155000 Tue Oct 23 13:30:01 2012
+156000 Tue Oct 23 13:30:13 2012
+157000 Tue Oct 23 13:30:25 2012
+158000 Tue Oct 23 13:30:37 2012
+159000 Tue Oct 23 13:30:50 2012
+160000 Tue Oct 23 13:31:03 2012
+161000 Tue Oct 23 13:31:18 2012
+162000 Tue Oct 23 13:31:30 2012
+163000 Tue Oct 23 13:31:42 2012
+164000 Tue Oct 23 13:31:55 2012
+165000 Tue Oct 23 13:32:07 2012
+166000 Tue Oct 23 13:32:21 2012
+There were 50 or more warnings (use warnings() to see the first 50)
+> 
+> # ------------------------------------------------------------
+> # further check MAF and remove those SNPs with MAF=0
+> # ------------------------------------------------------------
+> 
+> MAF = 0.5*rowSums(pdata, na.rm=TRUE)/rowSums((!is.na(pdata)), na.rm=TRUE)
+> MAF = pmin(MAF, 1 - MAF)
+> summary(MAF)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.00000 0.06794 0.19070 0.20830 0.33790 0.50000 
+> 
+> xx = strsplit(info$Minor.Allele.Frequency, split=" // ", fixed=TRUE)
+> table(sapply(xx, length))
+
+     5 
+833346 
+> xx = matrix(unlist(xx), ncol=5, byrow=TRUE)
+> xx = as.numeric(xx[,1])
+> 
+> cor(MAF, xx)^2
+[1] 0.9297437
+> 
+> png("../figures/MAF_data_vs_affy_anno.png", width=5, height=5, 
++   res=200, units="in")
+> par(mar=c(5,4,1,1))
+> smoothScatter(xx, MAF, xlab="MAF @ Caucasian", ylab="MAF @ sample")
+KernSmooth 2.23 loaded
+Copyright M. P. Wand 1997-2009
+> dev.off()
+null device 
+          1 
+> 
+> table(snp2drop)
+snp2drop
+     0      1 
+ 27420 805926 
+> table(info$In.Hapmap)
+
+   ---    YES 
+  5679 827667 
+> table(MAF > 0)
+
+ FALSE   TRUE 
+   938 832408 
+> table(info$Strand != "---")
+
+ FALSE   TRUE 
+   897 832449 
+> 
+> snp2kp = snp2drop==0
+> table(snp2kp)
+snp2kp
+ FALSE   TRUE 
+805926  27420 
+> snp2kp = snp2kp & MAF > 0 
+> table(snp2kp)
+snp2kp
+ FALSE   TRUE 
+806864  26482 
+> snp2kp = snp2kp & info$In.Hapmap=="YES" 
+> table(snp2kp)
+snp2kp
+ FALSE   TRUE 
+807483  25863 
+> snp2kp = snp2kp & info$Strand != "---"
+> table(snp2kp)
+snp2kp
+ FALSE   TRUE 
+807504  25842 
+> 
+> snp2kp = which(snp2kp)
+> length(snp2kp)
+[1] 25842
+> 
+> # ------------------------------------------------------------
+> # select the SNPs for PCA analysis
+> # ------------------------------------------------------------
+> 
+> dat4Pr = pdata[snp2kp,]
+> dim(dat4Pr)
+[1] 25842   663
+> dat4Pr[1:2,1]
+906474 258662 
+     0      2 
+> 
+> inf4Pr = info[snp2kp, c(1:10,19,28,29)]
+> dim(inf4Pr)
+[1] 25842    13
+> inf4Pr[1:2,]
+        Probe.Set.ID dbSNP.RS.ID Chromosome Physical.Position Strand
+788828 SNP_A-8575125  rs10458597          1            564621      +
+329898 SNP_A-2236359   rs2905036          1            792480      +
+       ChrX.pseudo.autosomal.region.1 Cytoband
+788828                              0   p36.33
+329898                              0   p36.33
+                                       Flank Allele.A Allele.B
+788828 TCTCCCCTGAACTCTA[C/T]ACAACATATTTTGTCA        C        T
+329898 CTCGATTTGTGTTCAA[C/T]ATATTTCATTTGTACC        C        T
+       Strand.Versus.dbSNP Allele.A.Forward Allele.B.Forward
+788828                same                C                T
+329898             reverse                C                T
+> 
+> write.table(inf4Pr, file = "../data/snps_4_PCA.txt", append = FALSE, 
++   quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> # ------------------------------------------------------------
+> # generate genotype data in terms of nucleotides for PCA
+> # ------------------------------------------------------------
+> 
+> dat4PrN = matrix("NN", nrow=nrow(dat4Pr), ncol=ncol(dat4Pr))
+> geno0   = paste(inf4Pr$Allele.A.Forward, inf4Pr$Allele.A.Forward, sep="")
+> geno1   = paste(inf4Pr$Allele.A.Forward, inf4Pr$Allele.B.Forward, sep="")
+> geno2   = paste(inf4Pr$Allele.B.Forward, inf4Pr$Allele.B.Forward, sep="")
+> 
+> for(i in 1:nrow(dat4Pr)){
++   w0 = which(dat4Pr[i,] == 0)  
++   w1 = which(dat4Pr[i,] == 1)  
++   w2 = which(dat4Pr[i,] == 2)
++   
++   if(length(w0)>0){
++     dat4PrN[i,w0] = geno0[i]
++   }
++   
++   if(length(w1)>0){
++     dat4PrN[i,w1] = geno1[i]
++   }
++ 
++   if(length(w2)>0){
++     dat4PrN[i,w2] = geno2[i]
++   }
++ }
+> 
+> colnames(dat4PrN) = sam$DNAnorml_patientID
+> dim(dat4PrN)
+[1] 25842   663
+> dat4PrN[1:3,1:4]
+     A0D9 A0DB A13G A0AU
+[1,] "CC" "CC" "CC" "CC"
+[2,] "TT" "TT" "TT" "TT"
+[3,] "CC" "CC" "CT" "CT"
+> 
+> table(dat4PrN[,1])
+
+  AA   AC   AG   AT   CA   CC   CG   CT   GA   GC   GG   GT   NN   TA   TC   TG 
+4670   75  308   62   66 7191   96  317  315   83 7333   48   59   44  310   73 
+  TT 
+4792 
+> 
+> alleles = paste(inf4Pr$Allele.A.Forward, inf4Pr$Allele.B.Forward,sep="/")
+> db      = data.frame(rs=inf4Pr$dbSNP.RS.ID, alleles=alleles, 
++           chrom=inf4Pr$Chromosome, pos=inf4Pr$Physical.Position, 
++           dat4PrN, stringsAsFactors=FALSE)
+> dim(db)
+[1] 25842   667
+> db[1:2,1:6]
+          rs alleles chrom    pos A0D9 A0DB
+1 rs10458597     C/T     1 564621   CC   CC
+2  rs2905036     C/T     1 792480   TT   TT
+> 
+> write.table(db, file = "../data/genotype_4_PCA_forward.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> 
+> 
+> 
+> proc.time()
+    user   system  elapsed 
+2816.327  260.308 3077.426 

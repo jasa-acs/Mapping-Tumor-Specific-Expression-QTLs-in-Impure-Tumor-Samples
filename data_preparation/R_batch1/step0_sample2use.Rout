@@ -1,0 +1,647 @@
+
+R version 2.11.0 (2010-04-22)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> # --------------------------------------------------------------------
+> # check the number of samples to use, based on the QC file from Katie
+> # brca.txt
+> # --------------------------------------------------------------------
+> 
+> setwd("~/research/TCGA/BRCA/info")
+> 
+> # --------------------------------------------------------------------
+> # read in datafreeze information
+> # --------------------------------------------------------------------
+> 
+> freeze1 = read.table("BRCA.DataFreeze.20120907.txt", 
++   sep="\t", header=TRUE, as.is=TRUE)
+> dim(freeze1)
+[1] 728   3
+> freeze1[1:2,]
+                         Exome                 RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+2 TCGA-A7-A0DB-01A-11W-A019-09 TCGA-A7-A0DB-01A-11R-A00Z-07
+                 RNAseq.Normal
+1 TCGA-A7-A0D9-11A-53R-A089-07
+2 TCGA-A7-A0DB-11A-33R-A089-07
+> length(which(freeze1$RNAseq.Normal != ""))
+[1] 92
+> 
+> freeze2 = read.table("BRCA.819.DataFreeze.txt", 
++   sep="\t", header=FALSE, as.is=TRUE)
+> names(freeze2) = c("sample", "rnaseqID")
+> dim(freeze2)
+[1] 819   2
+> freeze2[1:2,]
+                        sample                        rnaseqID
+1 TCGA-A8-A07B-01A-11R-A00Z-07 110209_SN627_0058_B81DH0ABXX_3_
+2 TCGA-A8-A08B-01A-11R-A00Z-07 110209_SN627_0058_B81DH0ABXX_5_
+> 
+> rnaseq = c(freeze1$RNAseq.Tumor, freeze1$RNAseq.Normal)
+> rnaseq = rnaseq[which(rnaseq != "")]
+> all(rnaseq %in% freeze2$sample)
+[1] FALSE
+> 
+> r1 = rnaseq[which(!(rnaseq %in% freeze2$sample))]
+> r1
+[1] "TCGA-BH-A0BA-11A-22R-A19E-07"
+> r1 %in% freeze1$RNAseq.Normal
+[1] TRUE
+> 
+> mat1 = match(freeze1$RNAseq.Tumor, freeze2$sample)
+> table(is.na(mat1))
+
+FALSE 
+  728 
+> if(!all(freeze1$RNAseq.Tumor == freeze2$sample[mat1])){stop("wrong!\n")}
+> r1 = freeze2$rnaseqID[mat1]
+> 
+> mat2 = match(freeze1$RNAseq.Normal, freeze2$sample)
+> table(is.na(mat2))
+
+FALSE  TRUE 
+   91   637 
+> r2 = freeze2$rnaseqID[mat2]
+> 
+> info = data.frame(freeze1, rnaseqID.Tumor=r1, rnaseqID.Normal=r2, stringsAsFactors=FALSE)
+> dim(info)
+[1] 728   5
+> head(info)
+                         Exome                 RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+2 TCGA-A7-A0DB-01A-11W-A019-09 TCGA-A7-A0DB-01A-11R-A00Z-07
+3 TCGA-A7-A13F-01A-11D-A12Q-09 TCGA-A7-A13F-01A-11R-A12P-07
+4 TCGA-A7-A13G-01A-11D-A13L-09 TCGA-A7-A13G-01A-11R-A13Q-07
+5 TCGA-BH-A0AU-01A-11D-A12Q-09 TCGA-BH-A0AU-01A-11R-A12P-07
+6 TCGA-BH-A0AY-01A-21W-A019-09 TCGA-BH-A0AY-01A-21R-A00Z-07
+                 RNAseq.Normal                        rnaseqID.Tumor
+1 TCGA-A7-A0D9-11A-53R-A089-07       110318_SN749_0046_AB039FABXX_4_
+2 TCGA-A7-A0DB-11A-33R-A089-07 110228_UNC10-SN254_0198_BB041RABXX_3_
+3 TCGA-A7-A13F-11A-42R-A12P-07 110706_UNC12-SN629_0106_AC043GABXX_3_
+4 TCGA-A7-A13G-11A-51R-A13Q-07 110805_UNC11-SN627_0134_AC042TABXX_3_
+5 TCGA-BH-A0AU-11A-11R-A12P-07 110706_UNC12-SN629_0106_AC043GABXX_8_
+6 TCGA-BH-A0AY-11A-23R-A089-07       110225_SN254_0195_A81LH6ABXX_8_
+                        rnaseqID.Normal
+1  110909_UNC9-SN296_0240_BD0DDBABXX_1_
+2  110909_UNC9-SN296_0240_BD0DDBABXX_2_
+3 110720_UNC14-SN744_0144_AC0404ABXX_2_
+4 110901_UNC12-SN629_0126_AD0DG0ABXX_3_
+5 110720_UNC14-SN744_0145_BB086PABXX_1_
+6  110909_UNC9-SN296_0240_BD0DDBABXX_4_
+> 
+> # --------------------------------------------------------------------
+> # check RNA sample information
+> # --------------------------------------------------------------------
+> 
+> sams = strsplit(info$RNAseq.Tumor, split="-")
+> 
+> table(sapply(sams, length))
+
+  7 
+728 
+> 
+> sams = matrix(unlist(sams), byrow=TRUE, ncol=7)
+> dim(sams)
+[1] 728   7
+> sams[1:2,]
+     [,1]   [,2] [,3]   [,4]  [,5]  [,6]   [,7]
+[1,] "TCGA" "A7" "A0D9" "01A" "31R" "A056" "07"
+[2,] "TCGA" "A7" "A0DB" "01A" "11R" "A00Z" "07"
+> 
+> table(sams[,1])
+
+TCGA 
+ 728 
+> table(sams[,7])
+
+ 07 
+728 
+> 
+> sams = sams[,-c(1,7)]
+> colnames(sams) = c("institution", "patientID", "type", "portion", "plate")
+> dim(sams)
+[1] 728   5
+> sams[1:2,]
+     institution patientID type  portion plate 
+[1,] "A7"        "A0D9"    "01A" "31R"   "A056"
+[2,] "A7"        "A0DB"    "01A" "11R"   "A00Z"
+> 
+> apply(sams[,c(1,3:5)], 2, table)
+$institution
+
+ A1  A2  A7  A8  AC  AN  AO  AQ  AR  B6  BH  C8  D8  E2  E9  EW  GI 
+ 14  75  17  68   2  34  41   6  54  47 122  42  65  71  44  25   1 
+
+$type
+
+01A 01B 
+718  10 
+
+$portion
+
+02R 11R 12R 13R 21R 22R 23R 31R 32R 41R 51R 
+  1 541  28   4 104  10   1  34   2   2   1 
+
+$plate
+
+A00Z A034 A056 A084 A109 A10J A115 A12D A12P A137 A13Q A144 A14D A14M A157 A169 
+  71   87   41   45   38   21   86   38   37   15   65   37   19   29   26   46 
+A16F 
+  27 
+
+> table(table(sams[,2]))
+
+  1 
+728 
+> 
+> info = data.frame(info, sams, stringsAsFactors=FALSE)
+> dim(info)
+[1] 728  10
+> head(info)
+                         Exome                 RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+2 TCGA-A7-A0DB-01A-11W-A019-09 TCGA-A7-A0DB-01A-11R-A00Z-07
+3 TCGA-A7-A13F-01A-11D-A12Q-09 TCGA-A7-A13F-01A-11R-A12P-07
+4 TCGA-A7-A13G-01A-11D-A13L-09 TCGA-A7-A13G-01A-11R-A13Q-07
+5 TCGA-BH-A0AU-01A-11D-A12Q-09 TCGA-BH-A0AU-01A-11R-A12P-07
+6 TCGA-BH-A0AY-01A-21W-A019-09 TCGA-BH-A0AY-01A-21R-A00Z-07
+                 RNAseq.Normal                        rnaseqID.Tumor
+1 TCGA-A7-A0D9-11A-53R-A089-07       110318_SN749_0046_AB039FABXX_4_
+2 TCGA-A7-A0DB-11A-33R-A089-07 110228_UNC10-SN254_0198_BB041RABXX_3_
+3 TCGA-A7-A13F-11A-42R-A12P-07 110706_UNC12-SN629_0106_AC043GABXX_3_
+4 TCGA-A7-A13G-11A-51R-A13Q-07 110805_UNC11-SN627_0134_AC042TABXX_3_
+5 TCGA-BH-A0AU-11A-11R-A12P-07 110706_UNC12-SN629_0106_AC043GABXX_8_
+6 TCGA-BH-A0AY-11A-23R-A089-07       110225_SN254_0195_A81LH6ABXX_8_
+                        rnaseqID.Normal institution patientID type portion
+1  110909_UNC9-SN296_0240_BD0DDBABXX_1_          A7      A0D9  01A     31R
+2  110909_UNC9-SN296_0240_BD0DDBABXX_2_          A7      A0DB  01A     11R
+3 110720_UNC14-SN744_0144_AC0404ABXX_2_          A7      A13F  01A     11R
+4 110901_UNC12-SN629_0126_AD0DG0ABXX_3_          A7      A13G  01A     11R
+5 110720_UNC14-SN744_0145_BB086PABXX_1_          BH      A0AU  01A     11R
+6  110909_UNC9-SN296_0240_BD0DDBABXX_4_          BH      A0AY  01A     21R
+  plate
+1  A056
+2  A00Z
+3  A12P
+4  A13Q
+5  A12P
+6  A00Z
+> 
+> # --------------------------------------------------------------------
+> # read in DNA information
+> # --------------------------------------------------------------------
+> 
+> DNAinfo = read.table("broad.mit.edu_BRCA.Genome_Wide_SNP_6.sdrf.txt", 
++ header=TRUE, sep="\t", as.is=TRUE)
+> dim(DNAinfo)
+[1] 1818  100
+> DNAinfo[1:2,1:9]
+                          Extract.Name       Comment..TCGA.Barcode.
+1 0016bb20-f9ab-42ad-9d22-154bc12dfc14 TCGA-AC-A3TN-01A-11D-A227-01
+2 002d83af-9d57-4ddf-b6e4-99d541a4359b TCGA-AO-A1KP-10A-01D-A13N-01
+                                 Protocol.REF
+1 broad.mit.edu:labeling:Genome_Wide_SNP_6:01
+2 broad.mit.edu:labeling:Genome_Wide_SNP_6:01
+                  Labeled.Extract.Name  Label Term.Source.REF
+1 0016bb20-f9ab-42ad-9d22-154bc12dfc14 biotin   MGED Ontology
+2 002d83af-9d57-4ddf-b6e4-99d541a4359b biotin   MGED Ontology
+                                    Protocol.REF.1
+1 broad.mit.edu:hybridization:Genome_Wide_SNP_6:01
+2 broad.mit.edu:hybridization:Genome_Wide_SNP_6:01
+                                     Hybridization.Name
+1 KEBAB_p_TCGASNP_226_227_N_GenomeWideSNP_6_H07_1151588
+2   RANDS_p_TCGA_b109_SNP_1N_GenomeWideSNP_6_B06_771992
+                                      Array.Design.REF
+1 Affymetrix.com:PhysicalArrayDesign:Genome_Wide_SNP_6
+2 Affymetrix.com:PhysicalArrayDesign:Genome_Wide_SNP_6
+> names(DNAinfo)
+  [1] "Extract.Name"                         
+  [2] "Comment..TCGA.Barcode."               
+  [3] "Protocol.REF"                         
+  [4] "Labeled.Extract.Name"                 
+  [5] "Label"                                
+  [6] "Term.Source.REF"                      
+  [7] "Protocol.REF.1"                       
+  [8] "Hybridization.Name"                   
+  [9] "Array.Design.REF"                     
+ [10] "Term.Source.REF.1"                    
+ [11] "Protocol.REF.2"                       
+ [12] "Scan.Name"                            
+ [13] "Array.Data.File"                      
+ [14] "Comment..TCGA.Archive.Name."          
+ [15] "Comment..TCGA.Data.Type."             
+ [16] "Comment..TCGA.Data.Level."            
+ [17] "Comment..TCGA.Include.for.Analysis."  
+ [18] "Comment..Genome.reference."           
+ [19] "Comment..md5."                        
+ [20] "Protocol.REF.3"                       
+ [21] "Normalization.Name"                   
+ [22] "Derived.Array.Data.Matrix.File"       
+ [23] "Comment..TCGA.Archive.Name..1"        
+ [24] "Comment..TCGA.Data.Type..1"           
+ [25] "Comment..TCGA.Data.Level..1"          
+ [26] "Comment..TCGA.Include.for.Analysis..1"
+ [27] "Comment..Genome.reference..1"         
+ [28] "Comment..md5..1"                      
+ [29] "Protocol.REF.4"                       
+ [30] "Normalization.Name.1"                 
+ [31] "Derived.Array.Data.Matrix.File.1"     
+ [32] "Comment..TCGA.Archive.Name..2"        
+ [33] "Comment..TCGA.Data.Type..2"           
+ [34] "Comment..TCGA.Data.Level..2"          
+ [35] "Comment..TCGA.Include.for.Analysis..2"
+ [36] "Comment..Genome.reference..2"         
+ [37] "Comment..md5..2"                      
+ [38] "Protocol.REF.5"                       
+ [39] "Normalization.Name.2"                 
+ [40] "Derived.Array.Data.Matrix.File.2"     
+ [41] "Comment..TCGA.Archive.Name..3"        
+ [42] "Comment..TCGA.Data.Type..3"           
+ [43] "Comment..TCGA.Data.Level..3"          
+ [44] "Comment..TCGA.Include.for.Analysis..3"
+ [45] "Comment..Genome.reference..3"         
+ [46] "Comment..md5..3"                      
+ [47] "Protocol.REF.6"                       
+ [48] "Normalization.Name.3"                 
+ [49] "Derived.Array.Data.Matrix.File.3"     
+ [50] "Comment..TCGA.Archive.Name..4"        
+ [51] "Comment..TCGA.Data.Type..4"           
+ [52] "Comment..TCGA.Data.Level..4"          
+ [53] "Comment..TCGA.Include.for.Analysis..4"
+ [54] "Comment..Genome.reference..4"         
+ [55] "Comment..md5..4"                      
+ [56] "Protocol.REF.7"                       
+ [57] "Normalization.Name.4"                 
+ [58] "Derived.Array.Data.Matrix.File.4"     
+ [59] "Comment..TCGA.Archive.Name..5"        
+ [60] "Comment..TCGA.Data.Type..5"           
+ [61] "Comment..TCGA.Data.Level..5"          
+ [62] "Comment..TCGA.Include.for.Analysis..5"
+ [63] "Comment..Genome.reference..5"         
+ [64] "Comment..md5..5"                      
+ [65] "Protocol.REF.8"                       
+ [66] "Normalization.Name.5"                 
+ [67] "Derived.Array.Data.File"              
+ [68] "Comment..TCGA.Archive.Name..6"        
+ [69] "Comment..TCGA.Data.Type..6"           
+ [70] "Comment..TCGA.Data.Level..6"          
+ [71] "Comment..TCGA.Include.for.Analysis..6"
+ [72] "Comment..Genome.reference..6"         
+ [73] "Comment..md5..6"                      
+ [74] "Protocol.REF.9"                       
+ [75] "Normalization.Name.6"                 
+ [76] "Derived.Array.Data.File.1"            
+ [77] "Comment..TCGA.Archive.Name..7"        
+ [78] "Comment..TCGA.Data.Type..7"           
+ [79] "Comment..TCGA.Data.Level..7"          
+ [80] "Comment..TCGA.Include.for.Analysis..7"
+ [81] "Comment..Genome.reference..7"         
+ [82] "Comment..md5..7"                      
+ [83] "Protocol.REF.10"                      
+ [84] "Normalization.Name.7"                 
+ [85] "Derived.Array.Data.File.2"            
+ [86] "Comment..TCGA.Archive.Name..8"        
+ [87] "Comment..TCGA.Data.Type..8"           
+ [88] "Comment..TCGA.Data.Level..8"          
+ [89] "Comment..TCGA.Include.for.Analysis..8"
+ [90] "Comment..Genome.reference..8"         
+ [91] "Comment..md5..8"                      
+ [92] "Protocol.REF.11"                      
+ [93] "Normalization.Name.8"                 
+ [94] "Derived.Array.Data.File.3"            
+ [95] "Comment..TCGA.Archive.Name..9"        
+ [96] "Comment..TCGA.Data.Type..9"           
+ [97] "Comment..TCGA.Data.Level..9"          
+ [98] "Comment..TCGA.Include.for.Analysis..9"
+ [99] "Comment..Genome.reference..9"         
+[100] "Comment..md5..9"                      
+> 
+> DNAsams = strsplit(DNAinfo$Comment..TCGA.Barcode., split="-")
+> 
+> table(sapply(DNAsams, length))
+
+   7 
+1818 
+> 
+> DNAsams = matrix(unlist(DNAsams), byrow=TRUE, ncol=7)
+> dim(DNAsams)
+[1] 1818    7
+> DNAsams[1:2,]
+     [,1]   [,2] [,3]   [,4]  [,5]  [,6]   [,7]
+[1,] "TCGA" "AC" "A3TN" "01A" "11D" "A227" "01"
+[2,] "TCGA" "AO" "A1KP" "10A" "01D" "A13N" "01"
+> 
+> table(DNAsams[,1])
+
+TCGA 
+1818 
+> table(DNAsams[,7])
+
+  01 
+1818 
+> 
+> DNAsams = DNAsams[,-c(1,7)]
+> colnames(DNAsams) = c("institution", "patientID", "type", "portion", "plate")
+> 
+> apply(DNAsams[,c(1,3:5)], 2, table)
+$institution
+
+ A1  A2  A7  A8  AC  AN  AO  AQ  AR  B6  BH  C8  D8  E2  E9  EW  GI  GM  HN 
+ 27 170  62 168  56  82  94  12 131 101 308  84 141 168 108  70   4  30   2 
+
+$type
+
+01A 01B 06A 10A 10B 10C 10D 11A 11B 
+874  17   5 768  13  10   1 113  17 
+
+$portion
+
+01D 02D 03D 04D 06D 11D 12D 13D 14D 21D 22D 23D 24D 31D 32D 33D 34D 41D 42D 43D 
+775  13   4   4   1 665  53  18   1 132  30  17   1  50  11   8   3   5  11   4 
+51D 52D 53D 61D 62D 94D 
+  3   1   2   4   1   1 
+
+$plate
+
+A011 A012 A036 A037 A059 A087 A092 A107 A10L A111 A113 A12A A12N A134 A13J A13N 
+  94   94   92   92   94   94   24   78   55   88   74   91   89   33   73   73 
+A141 A14F A14J A160 A166 A16C A17C A17U A18N A19G A19X A20R A21P A227 A229 A22Q 
+  79   50   64   54   92   58   16   26   33    1   20   22   24   18   18    5 
+
+> table(table(DNAsams[,2]))
+
+  1   2   3   4 
+ 20 820  50   2 
+> 
+> # --------------------------------------------------------------------
+> # check the samples with only one DNA sample
+> # --------------------------------------------------------------------
+> 
+> DNAsams = data.frame(DNAsams, stringsAsFactors=FALSE)
+> t1 = table(DNAsams$patientID)
+> 
+> D1 = DNAsams[DNAsams$patientID %in% names(t1)[t1==1],]
+> 
+> table(D1$type)
+
+01A 10A 11A 
+ 13   6   1 
+> 
+> table(D1$patientID %in% info$patientID)
+
+FALSE  TRUE 
+    2    18 
+> 
+> # --------------------------------------------------------------------
+> # check the samples with two DNA sample
+> # --------------------------------------------------------------------
+> 
+> fun1 <- function(v){paste(sort(v), collapse="_")}
+> 
+> D2 = DNAsams[DNAsams$patientID %in% names(t1)[t1==2],]
+> types = tapply(D2$type, D2$patientID, fun1)
+> table(types)
+types
+01A_10A 01A_10B 01A_10C 01A_10D 01A_11A 01A_11B 01B_10A 01B_11A 
+    703      13      10       1      67      15      10       1 
+> 
+> # --------------------------------------------------------------------
+> # check the samples with three or four DNA sample
+> # --------------------------------------------------------------------
+> 
+> D3 = DNAsams[DNAsams$patientID %in% names(t1)[t1>=3],]
+> types = tapply(D3$type, D3$patientID, fun1)
+> table(types)
+types
+    01A_01B_10A 01A_01B_10A_11A     01A_01B_11A     01A_06A_10A 01A_06A_10A_11A 
+              4               1               1               2               1 
+    01A_06A_11A     01A_06A_11B     01A_10A_11A     01A_10A_11B 
+              1               1              40               1 
+> 
+> ## every sample has type 01A
+> all(grepl("01A", types))
+[1] TRUE
+> 
+> ## remove 06A or 01B
+> D3 = D3[which(D3$type != "06A" & D3$type != "01B"),]
+> table(D3$type)
+
+01A 10A 11A 11B 
+ 52  49  44   2 
+> types = tapply(D3$type, D3$patientID, fun1)
+> table(types)
+types
+    01A_10A 01A_10A_11A 01A_10A_11B     01A_11A     01A_11B 
+          6          42           1           2           1 
+> 
+> samsD31 = names(types)[grep("10A", types)]
+> samsD32 = names(types)[-grep("10A", types)]
+> samsD31
+ [1] "A0AY" "A0B2" "A0B3" "A0B7" "A0B8" "A0BA" "A0BC" "A0BJ" "A0BL" "A0BM"
+[11] "A0BO" "A0BV" "A0BW" "A0C0" "A0CE" "A0CH" "A0D9" "A0DB" "A0DC" "A0DE"
+[21] "A0DH" "A0DK" "A0DL" "A0DP" "A0DQ" "A0DZ" "A0E0" "A0E1" "A0H5" "A0H7"
+[31] "A0H9" "A0HK" "A13E" "A13F" "A14Y" "A153" "A158" "A15A" "A15E" "A15I"
+[41] "A15K" "A15L" "A15M" "A1B5" "A1BC" "A1KC" "A26F" "A2QH" "A3OD"
+> samsD32
+[1] "A13G" "A18V" "A1FE"
+> 
+> ww1 = which(D3$patientID %in% samsD31 & D3$type %in% c("01A", "10A"))
+> ww2 = which(D3$patientID %in% samsD32)
+> 
+> D3 = D3[c(ww1, ww2),]
+> table(table(as.character(D3$patientID)))
+
+ 2 
+52 
+> types = tapply(D3$type, D3$patientID, fun1)
+> table(types)
+types
+01A_10A 01A_11A 01A_11B 
+     49       2       1 
+> 
+> # --------------------------------------------------------------------
+> # DNA 2use
+> # --------------------------------------------------------------------
+> 
+> D2kp = rbind(D2, D3)
+> dim(D2kp)
+[1] 1744    5
+> head(D2kp)
+  institution patientID type portion plate
+1          AC      A3TN  01A     11D  A227
+2          AO      A1KP  10A     01D  A13N
+3          D8      A27T  10A     01D  A16C
+4          C8      A137  10A     02D  A113
+5          AC      A3W6  10A     01D  A229
+6          D8      A1Y1  10A     01D  A14J
+> table(table(as.character(D2kp$patientID)))
+
+  2 
+872 
+> 
+> samName = paste("TCGA", apply(D2kp, 1, paste, collapse="-"), "01", sep="-")
+> mat1    = match(samName, DNAinfo$Comment..TCGA.Barcode.)
+> all(samName == DNAinfo$Comment..TCGA.Barcode.[mat1])
+[1] TRUE
+> 
+> D2kp[["arrayFile"]] = paste(DNAinfo$Hybridization.Name[mat1], "CEL", sep=".")
+> 
+> # --------------------------------------------------------------------
+> # read in DNA sample list
+> # --------------------------------------------------------------------
+> 
+> dna = scan("brca_cel_list.txt", what=character(0))
+Read 1731 items
+> length(dna)
+[1] 1731
+> dna[1:2]
+[1] "BEAUX_p_TCGA_b109_SNP_2N_GenomeWideSNP_6_A01_772082.CEL"
+[2] "BEAUX_p_TCGA_b109_SNP_2N_GenomeWideSNP_6_A02_772068.CEL"
+> 
+> all(D2kp$arrayFile %in% D2kp$arrayFile)
+[1] TRUE
+> 
+> # --------------------------------------------------------------------
+> # intersections
+> # --------------------------------------------------------------------
+> 
+> dim(D2kp)
+[1] 1744    6
+> head(D2kp)
+  institution patientID type portion plate
+1          AC      A3TN  01A     11D  A227
+2          AO      A1KP  10A     01D  A13N
+3          D8      A27T  10A     01D  A16C
+4          C8      A137  10A     02D  A113
+5          AC      A3W6  10A     01D  A229
+6          D8      A1Y1  10A     01D  A14J
+                                                       arrayFile
+1      KEBAB_p_TCGASNP_226_227_N_GenomeWideSNP_6_H07_1151588.CEL
+2        RANDS_p_TCGA_b109_SNP_1N_GenomeWideSNP_6_B06_771992.CEL
+3 WRIED_p_TCGA_143_147_150_Hahn_N_GenomeWideSNP_6_B02_799972.CEL
+4     GHOUL_p_TCGASNP_b85and51R_N_GenomeWideSNP_6_C08_735352.CEL
+5      KEBAB_p_TCGASNP_226_227_N_GenomeWideSNP_6_B02_1151576.CEL
+6      BULGY_p_TCGA_bM1_124_SNP_N_GenomeWideSNP_6_D06_780834.CEL
+> fun1 <- function(v){paste(sort(v), collapse="_")}
+> types = tapply(D2kp$type, D2kp$patientID, fun1)
+> table(types)
+types
+01A_10A 01A_10B 01A_10C 01A_10D 01A_11A 01A_11B 01B_10A 01B_11A 
+    752      13      10       1      69      16      10       1 
+> 
+> table(as.character(D2kp$type))
+
+01A 01B 10A 10B 10C 10D 11A 11B 
+861  11 762  13  10   1  70  16 
+> 
+> sam2use = intersect(info$patientID, D2kp$patientID)
+> length(sam2use)
+[1] 710
+> 
+> wtumor = which(D2kp$type %in% c("01A", "01B"))
+> Dtumor = D2kp[wtumor,]
+> Dnorml = D2kp[-wtumor,]
+> 
+> mat1   = match(sam2use, info$patientID)
+> mat2   = match(sam2use, Dtumor$patientID)
+> mat3   = match(sam2use, Dnorml$patientID)
+> 
+> all(info$patientID[mat1] == sam2use)
+[1] TRUE
+> all(Dtumor$patientID[mat2] == sam2use)
+[1] TRUE
+> all(Dnorml$patientID[mat3] == sam2use)
+[1] TRUE
+> 
+> info   = info[mat1,]
+> Dtumor = Dtumor[mat2,]
+> Dnorml = Dnorml[mat3,]
+> 
+> RNAsam = paste("TCGA", apply(info, 1, paste, collapse="-"), "07", sep="-")
+> all(info$sample == RNAsam)
+[1] TRUE
+> 
+> names(Dtumor) = paste("DNAtumor", names(Dtumor), sep="_")
+> names(Dnorml) = paste("DNAnorml", names(Dnorml), sep="_")
+> names(info)   = paste("RNA", names(info), sep="_")
+> 
+> db = data.frame(Dtumor, Dnorml, info, stringsAsFactors=FALSE)
+> dim(db)
+[1] 710  22
+> db[1:2,]
+    DNAtumor_institution DNAtumor_patientID DNAtumor_type DNAtumor_portion
+366                   A7               A0D9           01A              31D
+966                   A7               A0DB           01A              11D
+    DNAtumor_plate                                    DNAtumor_arrayFile
+366           A059  BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_H07_697072.CEL
+966           A011 CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_B02_628292.CEL
+    DNAnorml_institution DNAnorml_patientID DNAnorml_type DNAnorml_portion
+366                   A7               A0D9           10A              01D
+966                   A7               A0DB           10A              01D
+    DNAnorml_plate                                    DNAnorml_arrayFile
+366           A059  BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+966           A012 CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL
+                       RNA_Exome             RNA_RNAseq.Tumor
+366 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+966 TCGA-A7-A0DB-01A-11W-A019-09 TCGA-A7-A0DB-01A-11R-A00Z-07
+               RNA_RNAseq.Normal                    RNA_rnaseqID.Tumor
+366 TCGA-A7-A0D9-11A-53R-A089-07       110318_SN749_0046_AB039FABXX_4_
+966 TCGA-A7-A0DB-11A-33R-A089-07 110228_UNC10-SN254_0198_BB041RABXX_3_
+                     RNA_rnaseqID.Normal RNA_institution RNA_patientID RNA_type
+366 110909_UNC9-SN296_0240_BD0DDBABXX_1_              A7          A0D9      01A
+966 110909_UNC9-SN296_0240_BD0DDBABXX_2_              A7          A0DB      01A
+    RNA_portion RNA_plate
+366         31R      A056
+966         11R      A00Z
+> 
+> if(! all(db$DNAtumor_patientID == info$RNA_patientID)){
++   stop("sample ID do not match\n")
++ }
+> 
+> if(! all(db$DNAnormal_patientID == info$RNA_patientID)){
++   stop("sample ID do not match\n")
++ }
+> 
+> # --------------------------------------------------------------------
+> # write out results
+> # --------------------------------------------------------------------
+> 
+> write.table(db, file = "brca_samples2use.txt", append = FALSE, quote = FALSE, 
++   sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> # --------------------------------------------------------------------
+> # prepare CEL file name list
+> # --------------------------------------------------------------------
+> 
+> fname = "cel_files_normal.txt"
+> cat("cel_files\n", file=fname)
+> cels = paste("/Volumes/Moon/TCGA_BRCA/data_DNA/", db$DNAnorml_arrayFile, sep="")
+> cat(cels, file=fname, sep="\n", append=TRUE)
+> 
+> 
+> fname = "cel_files_tumor.txt"
+> cat("cel_files\n", file=fname)
+> cels = paste("/Volumes/Moon/TCGA_BRCA/data_DNA/", db$DNAtumor_arrayFile, sep="")
+> cat(cels, file=fname, sep="\n", append=TRUE)
+> 
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  1.018   0.070   1.096 

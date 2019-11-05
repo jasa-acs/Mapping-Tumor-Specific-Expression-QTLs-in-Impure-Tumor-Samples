@@ -1,0 +1,211 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> # ------------------------------------------------------------
+> # read data
+> # ------------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> dat = read.table("genotype_4_PCA_forward.txt", header=TRUE, 
++ na.strings="NN", as.is=TRUE)
+> 
+> dim(dat)
+[1] 25842   667
+> dat[1:2,1:5]
+          rs alleles chrom    pos A0D9
+1 rs10458597     C/T     1 564621   CC
+2  rs2905036     C/T     1 792480   TT
+> 
+> table(dat$chrom)
+
+   1   10   11   12   13   14   15   16   17   18   19    2   20   21   22    3 
+1995 1384 1182 1195  986  837  768  805  811  787  601 1819  721  405  433 1527 
+   4    5    6    7    8    9    X    Y 
+1542 1513 1469 1275 1201 1113 1471    2 
+> 
+> # ------------------------------------------------------------
+> # read in the samples to be used
+> # ------------------------------------------------------------
+> 
+> sam = read.table("../info/brca_samples2use_after_qc_female_caucasian.txt", 
++ header=TRUE, sep="\t", as.is=TRUE)
+> dim(sam)
+[1] 551  23
+> sam[1,]
+  DNAtumor_institution DNAtumor_patientID DNAtumor_type DNAtumor_portion
+1                   A7               A0D9           01A              31D
+  DNAtumor_plate                                   DNAtumor_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_H07_697072.CEL
+  DNAnorml_institution DNAnorml_patientID DNAnorml_type DNAnorml_portion
+1                   A7               A0D9           10A              01D
+  DNAnorml_plate                                   DNAnorml_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+                     RNA_Exome             RNA_RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+             RNA_RNAseq.Normal              RNA_rnaseqID.Tumor
+1 TCGA-A7-A0D9-11A-53R-A089-07 110318_SN749_0046_AB039FABXX_4_
+                   RNA_rnaseqID.Normal RNA_institution RNA_patientID RNA_type
+1 110909_UNC9-SN296_0240_BD0DDBABXX_1_              A7          A0D9      01A
+  RNA_portion RNA_plate gender
+1         31R      A056 female
+> 
+> mat1 = match(sam$DNAnorml_patientID, names(dat))
+> 
+> pdat = as.matrix(dat[,mat1])
+> dim(pdat)
+[1] 25842   551
+> 
+> ## numerical version of genotype data
+> nDat = matrix(NA, nrow=nrow(pdat), ncol=ncol(pdat))
+> colnames(nDat) = colnames(pdat)
+> 
+> for(i in 1:nrow(nDat)){
++ 	
++   if(i %% 10000 == 0){
++     cat(i, date(), "\n")	
++   }
++   
++   pdrow = pdat[i,]
++   
++   alleles = unlist(strsplit(pdrow, split=""))
++   alleles = names(sort(table(alleles), decreasing=TRUE))
++ 
++   if(length(alleles)==1){
++     a1 = alleles[1]
++     a2 = alleles[1]
++   }else if (length(alleles)==2){
++     a1 = alleles[1]
++     a2 = alleles[2]
++   }else{
++     stop("more than 2 alleles\n") 
++   }
++ 
++   g1 = paste(a1, a1, sep="")
++   g2 = paste(a1, a2, sep="")
++   g3 = paste(a2, a2, sep="")
++   g4 = paste(a2, a1, sep="")
++   
++   which.g1 = which(pdrow==g1)
++   which.g2 = which(pdrow==g2 | pdrow==g4)
++   which.g3 = which(pdrow==g3)
++   which.na = which(is.na(pdrow))
++   
++   len.g1 = length(which.g1)
++   len.g2 = length(which.g2)
++   len.g3 = length(which.g3)
++   len.na = length(which.na)	
++   
++   if(len.g1 + len.g2 + len.g3 + len.na != ncol(pdat)){
++     next
++   }
++   
++   nDat[i, which.g2] = 1
++   
++   if(len.g1 >= len.g3){
++     nDat[i, which.g1] = 0
++     nDat[i, which.g3] = 2
++   }else{
++     nDat[i, which.g1] = 2
++     nDat[i, which.g3] = 0
++   }
++   
++ }
+10000 Fri Nov  2 16:22:10 2012 
+20000 Fri Nov  2 16:22:25 2012 
+> 
+> # ------------------------------------------------------------
+> # remove the SNPs that have more than 5% missing values 
+> # ------------------------------------------------------------
+> 
+> nNA = rowSums(is.na(nDat))
+> summary(nNA)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    0.0     0.0     4.0   117.1    20.0   551.0 
+> 
+> w2kp = which(nNA < ncol(nDat)*0.05 )
+> length(w2kp)
+[1] 20468
+> 
+> dim(nDat)
+[1] 25842   551
+> nDat = nDat[w2kp,]
+> dim(nDat)
+[1] 20468   551
+> 
+> # ------------------------------------------------------------
+> # Run PCA only use the EA TCGA samples 
+> # ------------------------------------------------------------
+> 
+> datR14Pr = nDat - rowMeans(nDat, na.rm=TRUE)
+> 
+> datR14Pr[is.na(datR14Pr)] = 0 
+> covdatR1 = t(datR14Pr) %*% datR14Pr / nrow(datR14Pr)
+> dim(covdatR1)
+[1] 551 551
+> prdatR1  = eigen(covdatR1)
+> 
+> prdatR1$values[1:20]
+ [1] 0.2779145 0.2130102 0.1953697 0.1657683 0.1528463 0.1494084 0.1482062
+ [8] 0.1478406 0.1469581 0.1464504 0.1461375 0.1459598 0.1453340 0.1439687
+[15] 0.1432679 0.1427283 0.1420969 0.1418565 0.1413704 0.1408032
+> 
+> PC1 =  prdatR1$vectors[,1]
+> PC2 =  prdatR1$vectors[,2]
+> PC3 =  prdatR1$vectors[,3]
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/figures/")
+> 
+> pdf("PCs_genotype_EA.pdf", width=6, height=6)
+> par(mar=c(5,4,1,1), mfrow=c(2,2))
+> barplot(prdatR1$values[1:20], main="", 
++ xlab="Index", ylab="Eigen-value")
+> 
+> par(mar=c(5,4,1,1))
+> plot(PC1, PC2,  bty="n")
+> plot(PC1, PC3,  bty="n")
+> plot(PC2, PC3,  bty="n")
+> 
+> dev.off()
+null device 
+          1 
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> PCs = t(prdatR1$vectors)
+> PCs = data.frame(id=paste("PC", 1:nrow(PCs), sep=""), PCs)
+> names(PCs)[-1] = colnames(nDat)
+> 
+> dim(PCs)
+[1] 551 552
+> PCs[1:2,1:5]
+   id        A0D9        A0DB       A13G        A0AU
+1 PC1 0.003564863 0.017285990 0.01890681 0.009248235
+2 PC2 0.020160383 0.005706146 0.02213477 0.007863226
+> 
+> write.table(PCs, file = "PCs_genotype_EA.txt", append = FALSE, 
++   quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> 
+> 
+> proc.time()
+   user  system elapsed 
+ 66.544   3.397  69.948 

@@ -1,0 +1,592 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library(MASS)
+> library(limma)
+> 
+> # -------------------------------------------------------------------------
+> # read the gene expression information
+> # -------------------------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> datT  = read.table(file = "gene_counts_EA_filtered.txt", sep = "\t", 
++ header = TRUE, as.is=TRUE)
+> 
+> info = read.table(file = "~/research/data/human/ens_gene_loci.txt", 
++ sep = "\t", header = TRUE, as.is=TRUE)
+> 
+> dim(datT)
+[1] 18827   550
+> dim(info)
+[1] 53561     4
+> 
+> mati = match(rownames(datT), info$id)
+> table(is.na(mati))
+
+FALSE 
+18827 
+> 
+> info = info[mati,]
+> 
+> all(rownames(datT) == info$id)
+[1] TRUE
+> datT[1:2, 1:8]
+                A0D9 A0DB A13G A0AU A0AY A0AZ A0B5 A0B7
+ENSG00000000003 2444 4707 3729 1249 2186 1846 2544 3509
+ENSG00000000005   63   65    3   36   34   41    8   78
+> info[1:2,]
+               id  chr    start      end
+1 ENSG00000000003 chrX 99883667 99894988
+2 ENSG00000000005 chrX 99839799 99854882
+> 
+> sams = names(datT)
+> 
+> # -------------------------------------------------------------------------
+> # first check the frequency of eQTL
+> # -------------------------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/trecase")
+> 
+> freqSumTReC = freqSumASE = freqSumJoint = numeric(101)
+> 
+> ffs = list.files(pattern="_freq.txt")
+> length(ffs)
+[1] 713
+> ffs[1:2]
+[1] "trecase_chr1_SNP_1-10000_freq.txt"      
+[2] "trecase_chr1_SNP_100001-110000_freq.txt"
+> 
+> for(ffi in ffs){
++   fi = read.table(ffi, header=TRUE)
++   
++   f1 = as.numeric(fi[1,-1])
++   freqSumTReC = freqSumTReC + f1
++ 
++   f1 = as.numeric(fi[2,-1])
++   freqSumASE = freqSumASE + f1
++ 
++   f1 = as.numeric(fi[3,-1])
++   freqSumJoint = freqSumJoint + f1
++ }
+> 
+> pdf("../trecase_figure/TReCASE_eQTL_freq.pdf", width=6, height=4)
+> par(mar=c(3,2,4,1))
+> 
+> barplot(freqSumTReC[-1], xlab="", main="TReC model")
+> mtext(sprintf("%d P-values", sum(freqSumTReC[-1])), side=1, line=0.5)
+> 
+> barplot(freqSumASE[-1], xlab="", main="ASE model")
+> mtext(sprintf("%d P-values", sum(freqSumASE[-1])), side=1, line=0.5)
+> 
+> barplot(freqSumJoint[-1], xlab="", main="TReCASE model")
+> mtext(sprintf("%d P-values", sum(freqSumJoint[-1])), side=1, line=0.5)
+> 
+> dev.off()
+null device 
+          1 
+> 
+> # -------------------------------------------------------------------------
+> # read in the eQTL results
+> # -------------------------------------------------------------------------
+> 
+> eqtls = NULL
+> 
+> ffs = list.files(pattern="_eqtl.txt")
+> pcutNew = 5e-5
+> 
+> kk = 0
+> for(ffi in ffs){
++   kk   = kk + 1
++   if(kk %% 100 == 0) { cat(kk, date(), "\n") }
++   
++   fnam = unlist(strsplit(ffi, split="_"))
++   chri = gsub("chr", "", fnam[2])
++   if(chri=="X"){ chri="23" }
++   if(chri=="Y"){ chri="24" }
++   if(chri=="M" || chri=="Mt"){ chri="25" }
++   chri = as.numeric(chri)
++   
++   posi = as.numeric(unlist(strsplit(fnam[4], split="-")))
++   ei   = read.table(ffi, header=TRUE)
++   ei[["Chr"]] = rep(chri, nrow(ei))
++   ei$MarkerRowID = ei$MarkerRowID + posi[1] - 1
++ 
++   ei = ei[which(ei$TReC_Pvalue < pcutNew | ei$ASE_Pvalue < pcutNew | ei$final_Pvalue < pcutNew),]
++   eqtls = rbind(eqtls, ei)
++ }
+100 Fri Dec 14 19:24:02 2012 
+200 Fri Dec 14 19:24:45 2012 
+300 Fri Dec 14 19:25:54 2012 
+400 Fri Dec 14 19:27:38 2012 
+500 Fri Dec 14 19:29:48 2012 
+600 Fri Dec 14 19:32:33 2012 
+700 Fri Dec 14 19:35:58 2012 
+> 
+> dim(eqtls)
+[1] 763650     21
+> eqtls[1:5,]
+  GeneRowID MarkerRowID     TReC_b TReC_Chisq TReC_df TReC_Pvalue    ASE_b
+5        15        1586 -0.0106020      0.013       1       0.910 -0.60799
+6        15        1587 -0.0106020      0.013       1       0.910 -0.60799
+7        15        1590 -0.0056163      0.006       1       0.940 -0.59531
+8        15        1591 -0.0056163      0.006       1       0.940 -0.59531
+9        15        1592  0.0195360      0.049       1       0.825 -0.59219
+  ASE_Chisq ASE_df ASE_Pvalue  Joint_b Joint_Chisq Joint_df Joint_Pvalue n_TReC
+5    18.577      1   1.63e-05       NA          NA       NA           NA    550
+6    18.577      1   1.63e-05       NA          NA       NA           NA    550
+7    26.515      1   2.61e-07 -0.22423      10.290        1      0.00134    550
+8    26.515      1   2.61e-07 -0.22423      10.290        1      0.00134    550
+9    26.996      1   2.04e-07 -0.21640       9.462        1      0.00210    550
+  n_ASE n_ASE_Het trans_Chisq trans_Pvalue final_Pvalue Chr
+5   546        46          NA           NA        0.910   1
+6   546        46          NA           NA        0.910   1
+7   546        69      16.231     5.61e-05        0.940   1
+8   546        69      16.231     5.61e-05        0.940   1
+9   546        71      17.583     2.75e-05        0.825   1
+> 
+> summary(eqtls$ASE_Pvalue)
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+    0.00     0.00     0.00     0.04     0.00     1.00 18848.00 
+> summary(eqtls$TReC_Pvalue)
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+    0.00     0.00     0.03     0.22     0.40     1.00 37832.00 
+> summary(eqtls$final_Pvalue)
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+    0.00     0.00     0.00     0.20     0.36     1.00 37941.00 
+> 
+> eqtls = eqtls[which(!is.na(eqtls$final_Pvalue)),]
+> 
+> summary(eqtls$ASE_Pvalue)
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max.      NA's 
+    0.000     0.000     0.000     0.042     0.000     1.000 18739.000 
+> summary(eqtls$TReC_Pvalue)
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+0.00e+00 2.05e-05 2.75e-02 2.20e-01 4.02e-01 1.00e+00 
+> summary(eqtls$final_Pvalue)
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+0.0000000 0.0000002 0.0000458 0.2013000 0.3650000 1.0000000 
+> 
+> # -------------------------------------------------------------------------
+> # looping
+> # -------------------------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> uchrs = c(1:22)
+> 
+> eqtls[["gene"]]  = rep(NA, nrow(eqtls))
+> eqtls[["start"]] = rep(NA, nrow(eqtls))
+> eqtls[["end"]]   = rep(NA, nrow(eqtls))
+> eqtls[["snp"]]   = rep(NA, nrow(eqtls))
+> 
+> for(chr1 in uchrs){
++   
++   chr2 = sprintf("chr%d", chr1)
++   
++   st1 = "\n---------------------------------------------------\n"
++   message(sprintf("%s %s, %s %s", st1, chr2, date(), st1))  
++   
++   # -------------------------------------------------------------------------
++   # Prepare gene expression info
++   # -------------------------------------------------------------------------
++   
++   wchr = which(info$chr == chr2)
++   
++   if(length(wchr) == 0){
++     warninng("no genes at", chr2)
++     next
++   }
++   
++   einfo  = info[wchr,]
++   dim(einfo)
++   einfo[1:2,]
++   
++   # -------------------------------------------------------------------
++   # read in SNP info
++   # -------------------------------------------------------------------
++   
++   datF  = sprintf("../phased_geno_EA/%s_MAF_0.02.txt", chr2)
++   infF  = sprintf("../phased_geno_EA/%s_MAF_0.02_info.txt", chr2)
++   ginfo = read.table(infF, comment.char = "", sep="\t", 
++                      header = FALSE, as.is=TRUE)
++   dim(ginfo)
++   ginfo[1:2,]
++   
++   wchr = which(eqtls$Chr == chr1)
++   geneRowIDs = as.numeric(eqtls[["GeneRowID"]][wchr])
++   
++   eqtls[["gene"]][wchr]  = einfo$id[geneRowIDs]
++   eqtls[["start"]][wchr] = einfo$start[geneRowIDs]
++   eqtls[["end"]][wchr]   = einfo$end[geneRowIDs]
++   eqtls[["snp"]][wchr]   = ginfo$V5[eqtls$MarkerRowID[wchr]]  
++ }
+
+---------------------------------------------------
+ chr1, Fri Dec 14 19:36:36 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr2, Fri Dec 14 19:36:47 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr3, Fri Dec 14 19:37:00 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr4, Fri Dec 14 19:37:08 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr5, Fri Dec 14 19:37:17 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr6, Fri Dec 14 19:37:24 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr7, Fri Dec 14 19:37:33 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr8, Fri Dec 14 19:37:40 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr9, Fri Dec 14 19:37:48 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr10, Fri Dec 14 19:37:55 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr11, Fri Dec 14 19:38:03 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr12, Fri Dec 14 19:38:10 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr13, Fri Dec 14 19:38:18 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr14, Fri Dec 14 19:38:25 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr15, Fri Dec 14 19:38:31 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr16, Fri Dec 14 19:38:38 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr17, Fri Dec 14 19:38:44 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr18, Fri Dec 14 19:38:51 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr19, Fri Dec 14 19:38:57 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr20, Fri Dec 14 19:39:04 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr21, Fri Dec 14 19:39:10 2012 
+---------------------------------------------------
+
+
+---------------------------------------------------
+ chr22, Fri Dec 14 19:39:16 2012 
+---------------------------------------------------
+
+> 
+> dim(eqtls)
+[1] 725709     25
+> eqtls[1:2,]
+  GeneRowID MarkerRowID    TReC_b TReC_Chisq TReC_df TReC_Pvalue    ASE_b
+5        15        1586 -0.010602      0.013       1        0.91 -0.60799
+6        15        1587 -0.010602      0.013       1        0.91 -0.60799
+  ASE_Chisq ASE_df ASE_Pvalue Joint_b Joint_Chisq Joint_df Joint_Pvalue n_TReC
+5    18.577      1   1.63e-05      NA          NA       NA           NA    550
+6    18.577      1   1.63e-05      NA          NA       NA           NA    550
+  n_ASE n_ASE_Het trans_Chisq trans_Pvalue final_Pvalue Chr            gene
+5   546        46          NA           NA         0.91   1 ENSG00000008128
+6   546        46          NA           NA         0.91   1 ENSG00000008128
+    start     end       snp
+5 1634169 1655966 rs2179383
+6 1634169 1655966 rs2179383
+> 
+> write.table(eqtls, file = "eqtls_5e-5.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> # -------------------------------------------------------------------------
+> # trec p-value vs. final p-value
+> # -------------------------------------------------------------------------
+> 
+> which.min(eqtls$TReC_Pvalue)
+[1] 447598
+> eqtls[which.min(eqtls$TReC_Pvalue),]
+       GeneRowID MarkerRowID  TReC_b TReC_Chisq TReC_df TReC_Pvalue   ASE_b
+549234       349      115106 -2.5331    982.432       1   1.18e-215 -3.3646
+       ASE_Chisq ASE_df ASE_Pvalue Joint_b Joint_Chisq Joint_df Joint_Pvalue
+549234   830.596      1   1.2e-182 -2.6517    1755.777        1            0
+       n_TReC n_ASE n_ASE_Het trans_Chisq trans_Pvalue final_Pvalue Chr
+549234    550   431       243      57.251     3.84e-14    1.18e-215   4
+                  gene    start      end       snp
+549234 ENSG00000163682 39455744 39460568 rs6531717
+> 
+> w1 = which(eqtls$trans_Pvalue < 0.05)
+> w2 = which(eqtls$trans_Pvalue >= 0.05)
+> 
+> dim(eqtls)
+[1] 725709     25
+> length(w1)
+[1] 362109
+> length(w2)
+[1] 258043
+> 
+> png("trecase_figure/trecP_vs_finalP.png", width=6.5, height=3.5, 
++   units="in", res=300)
+> par(mfrow=c(1,2), mar=c(5,4,4,1), bty="n")
+> 
+> plot(-log10(eqtls$TReC_Pvalue[w1]), -log10(eqtls$final_Pvalue[w1]), 
++   main="trans-eQTL", xlab="TReC p-value", ylab="Final p-value", cex=0.5, 
++   col=rgb(0, 100/256, 0, 0.3))
+> abline(0, 1, lty=2, col="red")
+> 
+> plot(-log10(eqtls$TReC_Pvalue[w2]), -log10(eqtls$final_Pvalue[w2]),
++   main="cis-eQTL", xlab="TReC p-value", ylab="Final p-value", cex=0.5,
++   col=rgb(0, 100/256, 0, 0.3))
+> abline(0, 1, lty=2, col="red")
+> dev.off()
+null device 
+          1 
+> 
+> # -------------------------------------------------------------------------
+> # keep the most significant eQTL per gene
+> # -------------------------------------------------------------------------
+> 
+> geneIDs = paste(eqtls$Chr, eqtls$GeneRowID, sep=":") 
+> length(geneIDs)
+[1] 725709
+> 
+> eqtls   = eqtls[order(geneIDs),]
+> geneIDs = paste(eqtls$Chr, eqtls$GeneRowID, sep=":") 
+> ugeneID = unique(geneIDs)
+> length(ugeneID)
+[1] 7231
+> length(geneIDs)
+[1] 725709
+> 
+> tmin = tapply(eqtls$final_Pvalue, geneIDs, which.min)
+> tt1  = table(geneIDs)
+> csum = cumsum(tt1)
+> 
+> if(any(ugeneID != names(tt1))){ stop("ugeneID != names(tt1)\n") }
+> if(any(ugeneID != names(tmin))){ stop("ugeneID == names(tmin)\n") }
+> if(any(ugeneID != names(csum))){ stop("ugeneID == names(csum)\n") }
+> 
+> tt1[1:5]
+geneIDs
+  1:10  1:100 1:1001 1:1003 1:1006 
+   236     29     34     10     10 
+> csum[1:5]
+  1:10  1:100 1:1001 1:1003 1:1006 
+   236    265    299    309    319 
+> tmin[1:5]
+  1:10  1:100 1:1001 1:1003 1:1006 
+    18     15      1      1      7 
+> ugeneID[1:5]
+[1] "1:10"   "1:100"  "1:1001" "1:1003" "1:1006"
+> 
+> w2kp = tmin + c(0, csum[-length(csum)])
+> geneFinal = eqtls[w2kp,]
+> geneFinal = geneFinal[order(geneFinal$Chr, geneFinal$GeneRowID),]
+> geneFinal[1:5,]
+      GeneRowID MarkerRowID   TReC_b TReC_Chisq TReC_df TReC_Pvalue     ASE_b
+13380         4      387666 -0.02879      0.117       1    7.33e-01 -0.091686
+76104         5       59048 -0.20648     16.528       1    4.79e-05 -0.228670
+31390         7       74811  0.10328      6.293       1    1.21e-02  0.485360
+2300          9      117124  0.13685      0.935       1    3.34e-01  0.322640
+5150         10      257212 -0.43966    122.740       1    1.59e-28 -0.238390
+      ASE_Chisq ASE_df ASE_Pvalue   Joint_b Joint_Chisq Joint_df Joint_Pvalue
+13380    33.690      1   6.46e-09 -0.089727      33.278        1     7.99e-09
+76104    10.081      1   1.50e-03 -0.214020      26.546        1     2.57e-07
+31390    18.751      1   1.49e-05  0.147890      14.692        1     1.27e-04
+2300     20.184      1   7.03e-06  0.285940      19.766        1     8.75e-06
+5150     22.107      1   2.58e-06        NA          NA       NA           NA
+      n_TReC n_ASE n_ASE_Het trans_Chisq trans_Pvalue final_Pvalue Chr
+13380    550   416       259       0.529      0.46700     7.99e-09   1
+76104    550   419       190       0.063      0.80200     2.57e-07   1
+31390    550   247        99      10.352      0.00129     1.21e-02   1
+2300     550   320       206       1.353      0.24500     8.75e-06   1
+5150     550   353       269          NA           NA     1.59e-28   1
+                 gene     start       end        snp
+13380 ENSG00000000971 196621008 196716634 rs11805258
+76104 ENSG00000001460  24683489  24743424 rs11583039
+31390 ENSG00000004455  33473585  33546597  rs6660261
+2300  ENSG00000006555  55245385  55266940  rs1180936
+5150  ENSG00000007341 113066140 113163447   rs351372
+> 
+> write.table(geneFinal, file = "eqtls_5e-5_per_gene.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> # -------------------------------------------------------------------------
+> # for different p-value cutoffs of pvalTReC, check the proportion of 
+> # cis-eQTL
+> # -------------------------------------------------------------------------
+> 
+> pcuts = c(1e-5, 1e-7, 1e-10, 1e-15)
+> 
+> nAll = nCis = nTrans = rep(NA, length(pcuts))
+> 
+> for(i in 1:length(pcuts)){
++   pcut1     = pcuts[i]
++   nAll[i]   = length(which(geneFinal$TReC_Pvalue < pcut1))
++   nCis[i]   = length(which(geneFinal$TReC_Pvalue < pcut1 & geneFinal$trans_Pvalue >= 0.05))
++   nTrans[i] = length(which(geneFinal$TReC_Pvalue < pcut1 & geneFinal$trans_Pvalue < 0.05))
++ }
+> 
+> nTest   = nCis+nTrans
+> cisProp = round(nCis/nTest,3)
+> cisP    = rbind(pcuts, nAll, nTest, nCis, cisProp)
+> 
+> write.table(cisP, sep=" & ", quote=FALSE, col.names=FALSE)
+pcuts & 1e-05 & 1e-07 & 1e-10 & 1e-15
+nAll & 2015 & 888 & 500 & 259
+nTest & 1552 & 716 & 416 & 215
+nCis & 857 & 468 & 295 & 146
+cisProp & 0.552 & 0.654 & 0.709 & 0.679
+> 
+> # -------------------------------------------------------------------------
+> # try another cutoff of transPval 
+> # -------------------------------------------------------------------------
+> 
+> nAll = nCis = nTrans = rep(NA, length(pcuts))
+> 
+> for(i in 1:length(pcuts)){
++   pcut1     = pcuts[i]
++   nAll[i]   = length(which(geneFinal$TReC_Pvalue < pcut1))
++   nCis[i]   = length(which(geneFinal$TReC_Pvalue < pcut1 & geneFinal$trans_Pvalue >= 0.001))
++   nTrans[i] = length(which(geneFinal$TReC_Pvalue < pcut1 & geneFinal$trans_Pvalue <  0.001))
++ }
+> 
+> nTest   = nCis+nTrans
+> cisProp = round(nCis/nTest,3)
+> cisP    = rbind(pcuts, nAll, nTest, nCis, cisProp)
+> 
+> write.table(cisP, sep=" & ", quote=FALSE, col.names=FALSE)
+pcuts & 1e-05 & 1e-07 & 1e-10 & 1e-15
+nAll & 2015 & 888 & 500 & 259
+nTest & 1552 & 716 & 416 & 215
+nCis & 1152 & 552 & 333 & 163
+cisProp & 0.742 & 0.771 & 0.8 & 0.758
+> 
+> # -------------------------------------------------------------------------
+> # plot Venn Diagram
+> # -------------------------------------------------------------------------
+> 
+> geneIDs = paste(eqtls$Chr, eqtls$GeneRowID, sep=":") 
+> 
+> pminTReC = tapply(eqtls$TReC_Pvalue,  geneIDs, min)
+> pminASE  = tapply(eqtls$ASE_Pvalue,   geneIDs, min)
+> pminJoin = tapply(eqtls$final_Pvalue, geneIDs, min)
+> 
+> is.numeric(pminTReC)
+[1] TRUE
+> is.numeric(pminASE)
+[1] TRUE
+> is.numeric(pminJoin)
+[1] TRUE
+> 
+> length(pminTReC)
+[1] 7231
+> length(pminASE)
+[1] 7231
+> length(pminJoin)
+[1] 7231
+> 
+> png("trecase_figure/vennDiag.png", width=6, height=6, units="in", res=200)
+> par(mfrow=c(2,2))
+> 
+> pvals = cbind(pminTReC, pminASE, pminJoin)
+> pvals[is.na(pvals)] = 1.0
+> colnames(pvals) = c("TReC", "ASE", "Joint")
+> 
+> a1 = data.matrix(pvals <= 1e-6)
+> b1 = vennCounts(a1)
+> vennDiagram(b1, mar=rep(0,4), cex=1)
+> mtext("P-value <= 1e-6", line=2, font=2)
+> 
+> a1 = data.matrix(pvals <= 1e-8)
+> b1 = vennCounts(a1)
+> vennDiagram(b1, mar=rep(0,4), cex=1)
+> mtext("P-value <= 1e-8", line=2, font=2)
+> 
+> a1 = data.matrix(pvals <= 1e-10)
+> b1 = vennCounts(a1)
+> vennDiagram(b1, mar=rep(0,4), cex=1)
+> mtext("P-value <= 1e-10", line=2, font=2)
+> 
+> a1 = data.matrix(pvals <= 1e-15)
+> b1 = vennCounts(a1)
+> vennDiagram(b1, mar=rep(0,4), cex=1)
+> mtext("P-value <= 1e-15", line=2, font=2)
+> 
+> dev.off()
+null device 
+          1 
+> 
+> proc.time()
+    user   system  elapsed 
+ 754.392  261.883 1017.253 

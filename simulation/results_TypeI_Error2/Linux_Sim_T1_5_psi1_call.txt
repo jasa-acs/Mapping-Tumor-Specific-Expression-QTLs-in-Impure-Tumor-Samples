@@ -1,0 +1,31 @@
+Sender: LSF System <lsfadmin@c-194-26>
+Subject: Job 915582: <R CMD BATCH --no-save --no-restore "--args foldT.val=1 foldS.val=1.8 psi_val=0.1" Step1_b_Linux_Sim.R ./Run_Output/Linux_sim_T1_5_psi1.rout> in cluster <killdevil> Done
+
+Job <R CMD BATCH --no-save --no-restore "--args foldT.val=1 foldS.val=1.8 psi_val=0.1" Step1_b_Linux_Sim.R ./Run_Output/Linux_sim_T1_5_psi1.rout> was submitted from host <c-183-19> by user <drwilson> in cluster <killdevil>.
+Job was executed on host(s) <c-194-26>, in queue <week>, as user <drwilson> in cluster <killdevil>.
+</nas02/home/d/r/drwilson> was used as the home directory.
+</netscr/drwilson/2016-05-17 Paper 2/Programs> was used as the working directory.
+Started at Sat Feb 11 09:29:39 2017
+Results reported on Sat Feb 11 15:44:39 2017
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+R CMD BATCH --no-save --no-restore "--args foldT.val=1 foldS.val=1.8 psi_val=0.1" Step1_b_Linux_Sim.R ./Run_Output/Linux_sim_T1_5_psi1.rout
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   22479.65 sec.
+    Total Requested Memory :                     0.50 GB
+    Delta Memory :                               -
+    Max Processes :                              4
+    Max Threads :                                5
+    Run time :                                   22500 sec.
+    Turnaround time :                            22503 sec.
+
+The output (if any) follows:
+

@@ -1,0 +1,4042 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library(MatrixEQTL)
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> grp='EA'
+> 
+> SNP_file_name        = sprintf("../genotype_normal/dat%s.txt", grp)
+> covariates_file_name = sprintf("covariates_%s.txt", grp)
+> expression_file_name = sprintf("log_TReC_%s.txt", grp)
+> output_file_name     = sprintf("eQTL_log_TReC_%s.txt", grp)
+> 
+> useModel              = modelLINEAR;
+> pvOutputThreshold     = 1e-5;
+> 
+> #errorCovariance = numeric();
+> 
+> snps = SlicedData$new(); 
+> snps$fileDelimiter = '\t'; # the TAB character 
+> snps$fileOmitCharacters = 'NA'; # denote missing values; 
+> snps$fileSkipRows = 1; # one row of column labels 
+> snps$fileSkipColumns = 1; # one column of row labels 
+> snps$fileSliceSize = 2000; # read file in pieces of 2000 rows 
+> snps$LoadFile( SNP_file_name );
+Rows read:  2000 
+Rows read:  4000 
+Rows read:  6000 
+Rows read:  8000 
+Rows read:  10000 
+Rows read:  12000 
+Rows read:  14000 
+Rows read:  16000 
+Rows read:  18000 
+Rows read:  20000 
+Rows read:  22000 
+Rows read:  24000 
+Rows read:  26000 
+Rows read:  28000 
+Rows read:  30000 
+Rows read:  32000 
+Rows read:  34000 
+Rows read:  36000 
+Rows read:  38000 
+Rows read:  40000 
+Rows read:  42000 
+Rows read:  44000 
+Rows read:  46000 
+Rows read:  48000 
+Rows read:  50000 
+Rows read:  52000 
+Rows read:  54000 
+Rows read:  56000 
+Rows read:  58000 
+Rows read:  60000 
+Rows read:  62000 
+Rows read:  64000 
+Rows read:  66000 
+Rows read:  68000 
+Rows read:  70000 
+Rows read:  72000 
+Rows read:  74000 
+Rows read:  76000 
+Rows read:  78000 
+Rows read:  80000 
+Rows read:  82000 
+Rows read:  84000 
+Rows read:  86000 
+Rows read:  88000 
+Rows read:  90000 
+Rows read:  92000 
+Rows read:  94000 
+Rows read:  96000 
+Rows read:  98000 
+Rows read:  1e+05 
+Rows read:  102000 
+Rows read:  104000 
+Rows read:  106000 
+Rows read:  108000 
+Rows read:  110000 
+Rows read:  112000 
+Rows read:  114000 
+Rows read:  116000 
+Rows read:  118000 
+Rows read:  120000 
+Rows read:  122000 
+Rows read:  124000 
+Rows read:  126000 
+Rows read:  128000 
+Rows read:  130000 
+Rows read:  132000 
+Rows read:  134000 
+Rows read:  136000 
+Rows read:  138000 
+Rows read:  140000 
+Rows read:  142000 
+Rows read:  144000 
+Rows read:  146000 
+Rows read:  148000 
+Rows read:  150000 
+Rows read:  152000 
+Rows read:  154000 
+Rows read:  156000 
+Rows read:  158000 
+Rows read:  160000 
+Rows read:  162000 
+Rows read:  164000 
+Rows read:  166000 
+Rows read:  168000 
+Rows read:  170000 
+Rows read:  172000 
+Rows read:  174000 
+Rows read:  176000 
+Rows read:  178000 
+Rows read:  180000 
+Rows read:  182000 
+Rows read:  184000 
+Rows read:  186000 
+Rows read:  188000 
+Rows read:  190000 
+Rows read:  192000 
+Rows read:  194000 
+Rows read:  196000 
+Rows read:  198000 
+Rows read:  2e+05 
+Rows read:  202000 
+Rows read:  204000 
+Rows read:  206000 
+Rows read:  208000 
+Rows read:  210000 
+Rows read:  212000 
+Rows read:  214000 
+Rows read:  216000 
+Rows read:  218000 
+Rows read:  220000 
+Rows read:  222000 
+Rows read:  224000 
+Rows read:  226000 
+Rows read:  228000 
+Rows read:  230000 
+Rows read:  232000 
+Rows read:  234000 
+Rows read:  236000 
+Rows read:  238000 
+Rows read:  240000 
+Rows read:  242000 
+Rows read:  244000 
+Rows read:  246000 
+Rows read:  248000 
+Rows read:  250000 
+Rows read:  252000 
+Rows read:  254000 
+Rows read:  256000 
+Rows read:  258000 
+Rows read:  260000 
+Rows read:  262000 
+Rows read:  264000 
+Rows read:  266000 
+Rows read:  268000 
+Rows read:  270000 
+Rows read:  272000 
+Rows read:  274000 
+Rows read:  276000 
+Rows read:  278000 
+Rows read:  280000 
+Rows read:  282000 
+Rows read:  284000 
+Rows read:  286000 
+Rows read:  288000 
+Rows read:  290000 
+Rows read:  292000 
+Rows read:  294000 
+Rows read:  296000 
+Rows read:  298000 
+Rows read:  3e+05 
+Rows read:  302000 
+Rows read:  304000 
+Rows read:  306000 
+Rows read:  308000 
+Rows read:  310000 
+Rows read:  312000 
+Rows read:  314000 
+Rows read:  316000 
+Rows read:  318000 
+Rows read:  320000 
+Rows read:  322000 
+Rows read:  324000 
+Rows read:  326000 
+Rows read:  328000 
+Rows read:  330000 
+Rows read:  332000 
+Rows read:  334000 
+Rows read:  336000 
+Rows read:  338000 
+Rows read:  340000 
+Rows read:  342000 
+Rows read:  344000 
+Rows read:  346000 
+Rows read:  348000 
+Rows read:  350000 
+Rows read:  352000 
+Rows read:  354000 
+Rows read:  356000 
+Rows read:  358000 
+Rows read:  360000 
+Rows read:  362000 
+Rows read:  364000 
+Rows read:  366000 
+Rows read:  368000 
+Rows read:  370000 
+Rows read:  372000 
+Rows read:  374000 
+Rows read:  376000 
+Rows read:  378000 
+Rows read:  380000 
+Rows read:  382000 
+Rows read:  384000 
+Rows read:  386000 
+Rows read:  388000 
+Rows read:  390000 
+Rows read:  392000 
+Rows read:  394000 
+Rows read:  396000 
+Rows read:  398000 
+Rows read:  4e+05 
+Rows read:  402000 
+Rows read:  404000 
+Rows read:  406000 
+Rows read:  408000 
+Rows read:  410000 
+Rows read:  412000 
+Rows read:  414000 
+Rows read:  416000 
+Rows read:  418000 
+Rows read:  420000 
+Rows read:  422000 
+Rows read:  424000 
+Rows read:  426000 
+Rows read:  428000 
+Rows read:  430000 
+Rows read:  432000 
+Rows read:  434000 
+Rows read:  436000 
+Rows read:  438000 
+Rows read:  440000 
+Rows read:  442000 
+Rows read:  444000 
+Rows read:  446000 
+Rows read:  448000 
+Rows read:  450000 
+Rows read:  452000 
+Rows read:  454000 
+Rows read:  456000 
+Rows read:  458000 
+Rows read:  460000 
+Rows read:  462000 
+Rows read:  464000 
+Rows read:  466000 
+Rows read:  468000 
+Rows read:  470000 
+Rows read:  472000 
+Rows read:  474000 
+Rows read:  476000 
+Rows read:  478000 
+Rows read:  480000 
+Rows read:  482000 
+Rows read:  484000 
+Rows read:  486000 
+Rows read:  488000 
+Rows read:  490000 
+Rows read:  492000 
+Rows read:  494000 
+Rows read:  496000 
+Rows read:  498000 
+Rows read:  5e+05 
+Rows read:  502000 
+Rows read:  504000 
+Rows read:  506000 
+Rows read:  508000 
+Rows read:  510000 
+Rows read:  512000 
+Rows read:  514000 
+Rows read:  516000 
+Rows read:  518000 
+Rows read:  520000 
+Rows read:  522000 
+Rows read:  524000 
+Rows read:  526000 
+Rows read:  528000 
+Rows read:  530000 
+Rows read:  532000 
+Rows read:  534000 
+Rows read:  536000 
+Rows read:  538000 
+Rows read:  540000 
+Rows read:  542000 
+Rows read:  544000 
+Rows read:  546000 
+Rows read:  548000 
+Rows read:  550000 
+Rows read:  552000 
+Rows read:  554000 
+Rows read:  556000 
+Rows read:  558000 
+Rows read:  560000 
+Rows read:  562000 
+Rows read:  564000 
+Rows read:  566000 
+Rows read:  568000 
+Rows read:  570000 
+Rows read:  572000 
+Rows read:  574000 
+Rows read:  576000 
+Rows read:  578000 
+Rows read:  580000 
+Rows read:  582000 
+Rows read:  584000 
+Rows read:  586000 
+Rows read:  588000 
+Rows read:  590000 
+Rows read:  592000 
+Rows read:  594000 
+Rows read:  596000 
+Rows read:  598000 
+Rows read:  6e+05 
+Rows read:  602000 
+Rows read:  604000 
+Rows read:  606000 
+Rows read:  608000 
+Rows read:  610000 
+Rows read:  612000 
+Rows read:  614000 
+Rows read:  616000 
+Rows read:  618000 
+Rows read:  620000 
+Rows read:  622000 
+Rows read:  624000 
+Rows read:  626000 
+Rows read:  628000 
+Rows read:  630000 
+Rows read:  632000 
+Rows read:  634000 
+Rows read:  636000 
+Rows read:  638000 
+Rows read:  640000 
+Rows read:  642000 
+Rows read:  644000 
+Rows read:  646000 
+Rows read:  648000 
+Rows read:  650000 
+Rows read:  652000 
+Rows read:  654000 
+Rows read:  656000 
+Rows read:  658000 
+Rows read:  660000 
+Rows read:  662000 
+Rows read:  664000 
+Rows read:  666000 
+Rows read:  668000 
+Rows read:  670000 
+Rows read:  672000 
+Rows read:  674000 
+Rows read:  676000 
+Rows read:  678000 
+Rows read:  680000 
+Rows read:  682000 
+Rows read:  684000 
+Rows read:  686000 
+Rows read:  688000 
+Rows read:  690000 
+Rows read:  692000 
+Rows read:  694000 
+Rows read:  696000 
+Rows read:  698000 
+Rows read:  7e+05 
+Rows read:  702000 
+Rows read:  704000 
+Rows read:  706000 
+Rows read:  708000 
+Rows read:  710000 
+Rows read:  712000 
+Rows read:  714000 
+Rows read:  715178  done.
+> 
+> genes = SlicedData$new(); 
+> genes$fileDelimiter = '\t'; # the TAB character 
+> genes$fileOmitCharacters = 'NA'; # denote missing values; 
+> genes$fileSkipRows = 1; # one row of column labels 
+> genes$fileSkipColumns = 1; # one column of row labels 
+> genes$fileSliceSize = 2000; # read file in pieces of 2000 rows 
+> genes$LoadFile( expression_file_name );
+Rows read:  2000 
+Rows read:  4000 
+Rows read:  6000 
+Rows read:  8000 
+Rows read:  10000 
+Rows read:  12000 
+Rows read:  14000 
+Rows read:  16000 
+Rows read:  18000 
+Rows read:  18827  done.
+> 
+> 
+> cvrt = SlicedData$new(); 
+> cvrt$fileDelimiter = '\t'; # the TAB character 
+> cvrt$fileOmitCharacters = 'NA'; # denote missing values; 
+> cvrt$fileSkipRows = 1; # one row of column labels 
+> cvrt$fileSkipColumns = 1; # one column of row labels 
+> cvrt$fileSliceSize = 2000; # read file in pieces of 2000 rows 
+> cvrt$LoadFile( covariates_file_name );
+Rows read:  38  done.
+> 
+> gc()
+            used   (Mb) gc trigger   (Mb)  max used   (Mb)
+Ncells    956941   51.2    1476915   78.9   1476915   78.9
+Vcells 210263881 1604.2  289633993 2209.8 219129244 1671.9
+> 
+> me = Matrix_eQTL_main(
++ snps, 
++ genes, 
++ cvrt, 
++ output_file_name = output_file_name, 
++ pvOutputThreshold = pvOutputThreshold,
++ useModel = modelLINEAR, 
++ errorCovariance = numeric(), 
++ verbose = TRUE, 
++ pvalue.hist = T
++ )
+Creating output file(s) 
+Task finished in  0.046  seconds
+Processing covariates 
+Task finished in  0.011  seconds
+Processing gene expression data (imputation, residualization, etc.) 
+Task finished in  2.47  seconds
+Performing eQTL analysis 
+ 0.03% done, 50 eQTLs found
+ 0.06% done, 87 eQTLs found
+ 0.08% done, 129 eQTLs found
+ 0.11% done, 186 eQTLs found
+ 0.14% done, 236 eQTLs found
+ 0.17% done, 273 eQTLs found
+ 0.20% done, 308 eQTLs found
+ 0.22% done, 359 eQTLs found
+ 0.25% done, 418 eQTLs found
+ 0.28% done, 432 eQTLs found
+ 0.31% done, 490 eQTLs found
+ 0.34% done, 530 eQTLs found
+ 0.36% done, 589 eQTLs found
+ 0.39% done, 624 eQTLs found
+ 0.42% done, 677 eQTLs found
+ 0.45% done, 733 eQTLs found
+ 0.47% done, 787 eQTLs found
+ 0.50% done, 853 eQTLs found
+ 0.53% done, 908 eQTLs found
+ 0.56% done, 928 eQTLs found
+ 0.59% done, 973 eQTLs found
+ 0.61% done, 1016 eQTLs found
+ 0.64% done, 1056 eQTLs found
+ 0.67% done, 1113 eQTLs found
+ 0.70% done, 1149 eQTLs found
+ 0.73% done, 1194 eQTLs found
+ 0.75% done, 1250 eQTLs found
+ 0.78% done, 1302 eQTLs found
+ 0.81% done, 1366 eQTLs found
+ 0.84% done, 1377 eQTLs found
+ 0.87% done, 1422 eQTLs found
+ 0.89% done, 1477 eQTLs found
+ 0.92% done, 1528 eQTLs found
+ 0.95% done, 1578 eQTLs found
+ 0.98% done, 1634 eQTLs found
+ 1.01% done, 1682 eQTLs found
+ 1.03% done, 1743 eQTLs found
+ 1.06% done, 1792 eQTLs found
+ 1.09% done, 1855 eQTLs found
+ 1.12% done, 1876 eQTLs found
+ 1.15% done, 1918 eQTLs found
+ 1.17% done, 1965 eQTLs found
+ 1.20% done, 2027 eQTLs found
+ 1.23% done, 2080 eQTLs found
+ 1.26% done, 2142 eQTLs found
+ 1.28% done, 2199 eQTLs found
+ 1.31% done, 2242 eQTLs found
+ 1.34% done, 2290 eQTLs found
+ 1.37% done, 2352 eQTLs found
+ 1.40% done, 2390 eQTLs found
+ 1.42% done, 2429 eQTLs found
+ 1.45% done, 2463 eQTLs found
+ 1.48% done, 2528 eQTLs found
+ 1.51% done, 2571 eQTLs found
+ 1.54% done, 2624 eQTLs found
+ 1.56% done, 2682 eQTLs found
+ 1.59% done, 2728 eQTLs found
+ 1.62% done, 2767 eQTLs found
+ 1.65% done, 2801 eQTLs found
+ 1.68% done, 2839 eQTLs found
+ 1.70% done, 2877 eQTLs found
+ 1.73% done, 2910 eQTLs found
+ 1.76% done, 2963 eQTLs found
+ 1.79% done, 3014 eQTLs found
+ 1.82% done, 3057 eQTLs found
+ 1.84% done, 3103 eQTLs found
+ 1.87% done, 3148 eQTLs found
+ 1.90% done, 3195 eQTLs found
+ 1.93% done, 3242 eQTLs found
+ 1.96% done, 3281 eQTLs found
+ 1.98% done, 3332 eQTLs found
+ 2.01% done, 3361 eQTLs found
+ 2.04% done, 3406 eQTLs found
+ 2.07% done, 3438 eQTLs found
+ 2.09% done, 3477 eQTLs found
+ 2.12% done, 3530 eQTLs found
+ 2.15% done, 3571 eQTLs found
+ 2.18% done, 3628 eQTLs found
+ 2.21% done, 3667 eQTLs found
+ 2.23% done, 3708 eQTLs found
+ 2.26% done, 3763 eQTLs found
+ 2.29% done, 3810 eQTLs found
+ 2.32% done, 3862 eQTLs found
+ 2.35% done, 3906 eQTLs found
+ 2.37% done, 3961 eQTLs found
+ 2.40% done, 4022 eQTLs found
+ 2.43% done, 4067 eQTLs found
+ 2.46% done, 4123 eQTLs found
+ 2.49% done, 4176 eQTLs found
+ 2.51% done, 4200 eQTLs found
+ 2.54% done, 4244 eQTLs found
+ 2.57% done, 4302 eQTLs found
+ 2.60% done, 4353 eQTLs found
+ 2.63% done, 4398 eQTLs found
+ 2.65% done, 4461 eQTLs found
+ 2.68% done, 4521 eQTLs found
+ 2.71% done, 4601 eQTLs found
+ 2.74% done, 4726 eQTLs found
+ 2.77% done, 4800 eQTLs found
+ 2.79% done, 4817 eQTLs found
+ 2.82% done, 4861 eQTLs found
+ 2.85% done, 4920 eQTLs found
+ 2.88% done, 4967 eQTLs found
+ 2.91% done, 5012 eQTLs found
+ 2.93% done, 5061 eQTLs found
+ 2.96% done, 5124 eQTLs found
+ 2.99% done, 5176 eQTLs found
+ 3.02% done, 5225 eQTLs found
+ 3.04% done, 5284 eQTLs found
+ 3.07% done, 5302 eQTLs found
+ 3.10% done, 5353 eQTLs found
+ 3.13% done, 5393 eQTLs found
+ 3.16% done, 5428 eQTLs found
+ 3.18% done, 5485 eQTLs found
+ 3.21% done, 5544 eQTLs found
+ 3.24% done, 5591 eQTLs found
+ 3.27% done, 5632 eQTLs found
+ 3.30% done, 5681 eQTLs found
+ 3.32% done, 5756 eQTLs found
+ 3.35% done, 5776 eQTLs found
+ 3.38% done, 5827 eQTLs found
+ 3.41% done, 5877 eQTLs found
+ 3.44% done, 5933 eQTLs found
+ 3.46% done, 5982 eQTLs found
+ 3.49% done, 6021 eQTLs found
+ 3.52% done, 6075 eQTLs found
+ 3.55% done, 6122 eQTLs found
+ 3.58% done, 6175 eQTLs found
+ 3.60% done, 6234 eQTLs found
+ 3.63% done, 6259 eQTLs found
+ 3.66% done, 6301 eQTLs found
+ 3.69% done, 6341 eQTLs found
+ 3.72% done, 6388 eQTLs found
+ 3.74% done, 6433 eQTLs found
+ 3.77% done, 6495 eQTLs found
+ 3.80% done, 6530 eQTLs found
+ 3.83% done, 6571 eQTLs found
+ 3.85% done, 6613 eQTLs found
+ 3.88% done, 6651 eQTLs found
+ 3.91% done, 6675 eQTLs found
+ 3.94% done, 6715 eQTLs found
+ 3.97% done, 6759 eQTLs found
+ 3.99% done, 6798 eQTLs found
+ 4.02% done, 6831 eQTLs found
+ 4.05% done, 6888 eQTLs found
+ 4.08% done, 6926 eQTLs found
+ 4.11% done, 6970 eQTLs found
+ 4.13% done, 7013 eQTLs found
+ 4.16% done, 7050 eQTLs found
+ 4.19% done, 7065 eQTLs found
+ 4.22% done, 7108 eQTLs found
+ 4.25% done, 7145 eQTLs found
+ 4.27% done, 7189 eQTLs found
+ 4.30% done, 7229 eQTLs found
+ 4.33% done, 7283 eQTLs found
+ 4.36% done, 7327 eQTLs found
+ 4.39% done, 7364 eQTLs found
+ 4.41% done, 7420 eQTLs found
+ 4.44% done, 7482 eQTLs found
+ 4.47% done, 7503 eQTLs found
+ 4.50% done, 7543 eQTLs found
+ 4.53% done, 7598 eQTLs found
+ 4.55% done, 7637 eQTLs found
+ 4.58% done, 7673 eQTLs found
+ 4.61% done, 7711 eQTLs found
+ 4.64% done, 7758 eQTLs found
+ 4.66% done, 7795 eQTLs found
+ 4.69% done, 7832 eQTLs found
+ 4.72% done, 7945 eQTLs found
+ 4.75% done, 7962 eQTLs found
+ 4.78% done, 8002 eQTLs found
+ 4.80% done, 8057 eQTLs found
+ 4.83% done, 8103 eQTLs found
+ 4.86% done, 8156 eQTLs found
+ 4.89% done, 8199 eQTLs found
+ 4.92% done, 8235 eQTLs found
+ 4.94% done, 8287 eQTLs found
+ 4.97% done, 8346 eQTLs found
+ 5.00% done, 8425 eQTLs found
+ 5.03% done, 8450 eQTLs found
+ 5.06% done, 8485 eQTLs found
+ 5.08% done, 8527 eQTLs found
+ 5.11% done, 8574 eQTLs found
+ 5.14% done, 8624 eQTLs found
+ 5.17% done, 8684 eQTLs found
+ 5.20% done, 8739 eQTLs found
+ 5.22% done, 8788 eQTLs found
+ 5.25% done, 8833 eQTLs found
+ 5.28% done, 8887 eQTLs found
+ 5.31% done, 8904 eQTLs found
+ 5.34% done, 8956 eQTLs found
+ 5.36% done, 9006 eQTLs found
+ 5.39% done, 9051 eQTLs found
+ 5.42% done, 9095 eQTLs found
+ 5.45% done, 9140 eQTLs found
+ 5.47% done, 9185 eQTLs found
+ 5.50% done, 9254 eQTLs found
+ 5.53% done, 9334 eQTLs found
+ 5.56% done, 9389 eQTLs found
+ 5.59% done, 9427 eQTLs found
+ 5.61% done, 9460 eQTLs found
+ 5.64% done, 9510 eQTLs found
+ 5.67% done, 9552 eQTLs found
+ 5.70% done, 9603 eQTLs found
+ 5.73% done, 9640 eQTLs found
+ 5.75% done, 9675 eQTLs found
+ 5.78% done, 9721 eQTLs found
+ 5.81% done, 9755 eQTLs found
+ 5.84% done, 9821 eQTLs found
+ 5.87% done, 9845 eQTLs found
+ 5.89% done, 9892 eQTLs found
+ 5.92% done, 9933 eQTLs found
+ 5.95% done, 9988 eQTLs found
+ 5.98% done, 10025 eQTLs found
+ 6.01% done, 10061 eQTLs found
+ 6.03% done, 10105 eQTLs found
+ 6.06% done, 10154 eQTLs found
+ 6.09% done, 10217 eQTLs found
+ 6.12% done, 10281 eQTLs found
+ 6.15% done, 10301 eQTLs found
+ 6.17% done, 10340 eQTLs found
+ 6.20% done, 10393 eQTLs found
+ 6.23% done, 10438 eQTLs found
+ 6.26% done, 10464 eQTLs found
+ 6.28% done, 10489 eQTLs found
+ 6.31% done, 10544 eQTLs found
+ 6.34% done, 10594 eQTLs found
+ 6.37% done, 10660 eQTLs found
+ 6.40% done, 10718 eQTLs found
+ 6.42% done, 10743 eQTLs found
+ 6.45% done, 10801 eQTLs found
+ 6.48% done, 10853 eQTLs found
+ 6.51% done, 10895 eQTLs found
+ 6.54% done, 10942 eQTLs found
+ 6.56% done, 10999 eQTLs found
+ 6.59% done, 11044 eQTLs found
+ 6.62% done, 11082 eQTLs found
+ 6.65% done, 11116 eQTLs found
+ 6.68% done, 11155 eQTLs found
+ 6.70% done, 11171 eQTLs found
+ 6.73% done, 11218 eQTLs found
+ 6.76% done, 11272 eQTLs found
+ 6.79% done, 11322 eQTLs found
+ 6.82% done, 11370 eQTLs found
+ 6.84% done, 11407 eQTLs found
+ 6.87% done, 11456 eQTLs found
+ 6.90% done, 11497 eQTLs found
+ 6.93% done, 11542 eQTLs found
+ 6.96% done, 11609 eQTLs found
+ 6.98% done, 11632 eQTLs found
+ 7.01% done, 11681 eQTLs found
+ 7.04% done, 11732 eQTLs found
+ 7.07% done, 11800 eQTLs found
+ 7.09% done, 11863 eQTLs found
+ 7.12% done, 11929 eQTLs found
+ 7.15% done, 11991 eQTLs found
+ 7.18% done, 12037 eQTLs found
+ 7.21% done, 12097 eQTLs found
+ 7.23% done, 12152 eQTLs found
+ 7.26% done, 12180 eQTLs found
+ 7.29% done, 12246 eQTLs found
+ 7.32% done, 12300 eQTLs found
+ 7.35% done, 12353 eQTLs found
+ 7.37% done, 12406 eQTLs found
+ 7.40% done, 12474 eQTLs found
+ 7.43% done, 12536 eQTLs found
+ 7.46% done, 12604 eQTLs found
+ 7.49% done, 12682 eQTLs found
+ 7.51% done, 12751 eQTLs found
+ 7.54% done, 12778 eQTLs found
+ 7.57% done, 12810 eQTLs found
+ 7.60% done, 12862 eQTLs found
+ 7.63% done, 12902 eQTLs found
+ 7.65% done, 12937 eQTLs found
+ 7.68% done, 12977 eQTLs found
+ 7.71% done, 13010 eQTLs found
+ 7.74% done, 13051 eQTLs found
+ 7.77% done, 13090 eQTLs found
+ 7.79% done, 13137 eQTLs found
+ 7.82% done, 13162 eQTLs found
+ 7.85% done, 13206 eQTLs found
+ 7.88% done, 13252 eQTLs found
+ 7.91% done, 13304 eQTLs found
+ 7.93% done, 13337 eQTLs found
+ 7.96% done, 13378 eQTLs found
+ 7.99% done, 13425 eQTLs found
+ 8.02% done, 13477 eQTLs found
+ 8.04% done, 13524 eQTLs found
+ 8.07% done, 13566 eQTLs found
+ 8.10% done, 13577 eQTLs found
+ 8.13% done, 13632 eQTLs found
+ 8.16% done, 13669 eQTLs found
+ 8.18% done, 13708 eQTLs found
+ 8.21% done, 13762 eQTLs found
+ 8.24% done, 13807 eQTLs found
+ 8.27% done, 13845 eQTLs found
+ 8.30% done, 13889 eQTLs found
+ 8.32% done, 13935 eQTLs found
+ 8.35% done, 14021 eQTLs found
+ 8.38% done, 14038 eQTLs found
+ 8.41% done, 14095 eQTLs found
+ 8.44% done, 14143 eQTLs found
+ 8.46% done, 14183 eQTLs found
+ 8.49% done, 14225 eQTLs found
+ 8.52% done, 14313 eQTLs found
+ 8.55% done, 14370 eQTLs found
+ 8.58% done, 14454 eQTLs found
+ 8.60% done, 14516 eQTLs found
+ 8.63% done, 14571 eQTLs found
+ 8.66% done, 14613 eQTLs found
+ 8.69% done, 14659 eQTLs found
+ 8.72% done, 14703 eQTLs found
+ 8.74% done, 14747 eQTLs found
+ 8.77% done, 14797 eQTLs found
+ 8.80% done, 14842 eQTLs found
+ 8.83% done, 14909 eQTLs found
+ 8.85% done, 14957 eQTLs found
+ 8.88% done, 15025 eQTLs found
+ 8.91% done, 15098 eQTLs found
+ 8.94% done, 15125 eQTLs found
+ 8.97% done, 15173 eQTLs found
+ 8.99% done, 15223 eQTLs found
+ 9.02% done, 15265 eQTLs found
+ 9.05% done, 15314 eQTLs found
+ 9.08% done, 15364 eQTLs found
+ 9.11% done, 15417 eQTLs found
+ 9.13% done, 15460 eQTLs found
+ 9.16% done, 15532 eQTLs found
+ 9.19% done, 15595 eQTLs found
+ 9.22% done, 15620 eQTLs found
+ 9.25% done, 15668 eQTLs found
+ 9.27% done, 15714 eQTLs found
+ 9.30% done, 15769 eQTLs found
+ 9.33% done, 15823 eQTLs found
+ 9.36% done, 15862 eQTLs found
+ 9.39% done, 15917 eQTLs found
+ 9.41% done, 15985 eQTLs found
+ 9.44% done, 16053 eQTLs found
+ 9.47% done, 16117 eQTLs found
+ 9.50% done, 16146 eQTLs found
+ 9.53% done, 16190 eQTLs found
+ 9.55% done, 16244 eQTLs found
+ 9.58% done, 16291 eQTLs found
+ 9.61% done, 16334 eQTLs found
+ 9.64% done, 16399 eQTLs found
+ 9.66% done, 16452 eQTLs found
+ 9.69% done, 16513 eQTLs found
+ 9.72% done, 16571 eQTLs found
+ 9.75% done, 16633 eQTLs found
+ 9.78% done, 16655 eQTLs found
+ 9.80% done, 16705 eQTLs found
+ 9.83% done, 16757 eQTLs found
+ 9.86% done, 16801 eQTLs found
+ 9.89% done, 16853 eQTLs found
+ 9.92% done, 16900 eQTLs found
+ 9.94% done, 16950 eQTLs found
+ 9.97% done, 17009 eQTLs found
+10.00% done, 17086 eQTLs found
+10.03% done, 17155 eQTLs found
+10.06% done, 17185 eQTLs found
+10.08% done, 17236 eQTLs found
+10.11% done, 17276 eQTLs found
+10.14% done, 17331 eQTLs found
+10.17% done, 17377 eQTLs found
+10.20% done, 17427 eQTLs found
+10.22% done, 17480 eQTLs found
+10.25% done, 17537 eQTLs found
+10.28% done, 17598 eQTLs found
+10.31% done, 17645 eQTLs found
+10.34% done, 17667 eQTLs found
+10.36% done, 17709 eQTLs found
+10.39% done, 17757 eQTLs found
+10.42% done, 17796 eQTLs found
+10.45% done, 17835 eQTLs found
+10.47% done, 17894 eQTLs found
+10.50% done, 17943 eQTLs found
+10.53% done, 18000 eQTLs found
+10.56% done, 18056 eQTLs found
+10.59% done, 18124 eQTLs found
+10.61% done, 18150 eQTLs found
+10.64% done, 18199 eQTLs found
+10.67% done, 18248 eQTLs found
+10.70% done, 18295 eQTLs found
+10.73% done, 18334 eQTLs found
+10.75% done, 18373 eQTLs found
+10.78% done, 18417 eQTLs found
+10.81% done, 18471 eQTLs found
+10.84% done, 18526 eQTLs found
+10.87% done, 18592 eQTLs found
+10.89% done, 18612 eQTLs found
+10.92% done, 18658 eQTLs found
+10.95% done, 18709 eQTLs found
+10.98% done, 18751 eQTLs found
+11.01% done, 18800 eQTLs found
+11.03% done, 18857 eQTLs found
+11.06% done, 18889 eQTLs found
+11.09% done, 18940 eQTLs found
+11.12% done, 18983 eQTLs found
+11.15% done, 19050 eQTLs found
+11.17% done, 19074 eQTLs found
+11.20% done, 19125 eQTLs found
+11.23% done, 19177 eQTLs found
+11.26% done, 19220 eQTLs found
+11.28% done, 19253 eQTLs found
+11.31% done, 19311 eQTLs found
+11.34% done, 19367 eQTLs found
+11.37% done, 19424 eQTLs found
+11.40% done, 19472 eQTLs found
+11.42% done, 19541 eQTLs found
+11.45% done, 19571 eQTLs found
+11.48% done, 19613 eQTLs found
+11.51% done, 19656 eQTLs found
+11.54% done, 19708 eQTLs found
+11.56% done, 19746 eQTLs found
+11.59% done, 19796 eQTLs found
+11.62% done, 19862 eQTLs found
+11.65% done, 19908 eQTLs found
+11.68% done, 19967 eQTLs found
+11.70% done, 20022 eQTLs found
+11.73% done, 20037 eQTLs found
+11.76% done, 20100 eQTLs found
+11.79% done, 20158 eQTLs found
+11.82% done, 20216 eQTLs found
+11.84% done, 20268 eQTLs found
+11.87% done, 20314 eQTLs found
+11.90% done, 20365 eQTLs found
+11.93% done, 20408 eQTLs found
+11.96% done, 20471 eQTLs found
+11.98% done, 20520 eQTLs found
+12.01% done, 20551 eQTLs found
+12.04% done, 20593 eQTLs found
+12.07% done, 20635 eQTLs found
+12.09% done, 20672 eQTLs found
+12.12% done, 20719 eQTLs found
+12.15% done, 20756 eQTLs found
+12.18% done, 20792 eQTLs found
+12.21% done, 20837 eQTLs found
+12.23% done, 20906 eQTLs found
+12.26% done, 20953 eQTLs found
+12.29% done, 20981 eQTLs found
+12.32% done, 21031 eQTLs found
+12.35% done, 21080 eQTLs found
+12.37% done, 21132 eQTLs found
+12.40% done, 21178 eQTLs found
+12.43% done, 21225 eQTLs found
+12.46% done, 21272 eQTLs found
+12.49% done, 21321 eQTLs found
+12.51% done, 21366 eQTLs found
+12.54% done, 21431 eQTLs found
+12.57% done, 21451 eQTLs found
+12.60% done, 21495 eQTLs found
+12.63% done, 21548 eQTLs found
+12.65% done, 21579 eQTLs found
+12.68% done, 21632 eQTLs found
+12.71% done, 21669 eQTLs found
+12.74% done, 21718 eQTLs found
+12.77% done, 21758 eQTLs found
+12.79% done, 21810 eQTLs found
+12.82% done, 21863 eQTLs found
+12.85% done, 21891 eQTLs found
+12.88% done, 21927 eQTLs found
+12.91% done, 21981 eQTLs found
+12.93% done, 22019 eQTLs found
+12.96% done, 22057 eQTLs found
+12.99% done, 22099 eQTLs found
+13.02% done, 22143 eQTLs found
+13.04% done, 22190 eQTLs found
+13.07% done, 22259 eQTLs found
+13.10% done, 22310 eQTLs found
+13.13% done, 22335 eQTLs found
+13.16% done, 22383 eQTLs found
+13.18% done, 22420 eQTLs found
+13.21% done, 22463 eQTLs found
+13.24% done, 22492 eQTLs found
+13.27% done, 22545 eQTLs found
+13.30% done, 22589 eQTLs found
+13.32% done, 22640 eQTLs found
+13.35% done, 22715 eQTLs found
+13.38% done, 22770 eQTLs found
+13.41% done, 22796 eQTLs found
+13.44% done, 22840 eQTLs found
+13.46% done, 22890 eQTLs found
+13.49% done, 22932 eQTLs found
+13.52% done, 22969 eQTLs found
+13.55% done, 23001 eQTLs found
+13.58% done, 23046 eQTLs found
+13.60% done, 23102 eQTLs found
+13.63% done, 23167 eQTLs found
+13.66% done, 23214 eQTLs found
+13.69% done, 23244 eQTLs found
+13.72% done, 23297 eQTLs found
+13.74% done, 23343 eQTLs found
+13.77% done, 23390 eQTLs found
+13.80% done, 23444 eQTLs found
+13.83% done, 23479 eQTLs found
+13.85% done, 23527 eQTLs found
+13.88% done, 23584 eQTLs found
+13.91% done, 23637 eQTLs found
+13.94% done, 23699 eQTLs found
+13.97% done, 23724 eQTLs found
+13.99% done, 23774 eQTLs found
+14.02% done, 23835 eQTLs found
+14.05% done, 23891 eQTLs found
+14.08% done, 23937 eQTLs found
+14.11% done, 23985 eQTLs found
+14.13% done, 24054 eQTLs found
+14.16% done, 24114 eQTLs found
+14.19% done, 24193 eQTLs found
+14.22% done, 24268 eQTLs found
+14.25% done, 24295 eQTLs found
+14.27% done, 24352 eQTLs found
+14.30% done, 24399 eQTLs found
+14.33% done, 24441 eQTLs found
+14.36% done, 24487 eQTLs found
+14.39% done, 24526 eQTLs found
+14.41% done, 24579 eQTLs found
+14.44% done, 24634 eQTLs found
+14.47% done, 24699 eQTLs found
+14.50% done, 24759 eQTLs found
+14.53% done, 24782 eQTLs found
+14.55% done, 24832 eQTLs found
+14.58% done, 24869 eQTLs found
+14.61% done, 24916 eQTLs found
+14.64% done, 24958 eQTLs found
+14.66% done, 25003 eQTLs found
+14.69% done, 25052 eQTLs found
+14.72% done, 25104 eQTLs found
+14.75% done, 25147 eQTLs found
+14.78% done, 25218 eQTLs found
+14.80% done, 25245 eQTLs found
+14.83% done, 25290 eQTLs found
+14.86% done, 25336 eQTLs found
+14.89% done, 25392 eQTLs found
+14.92% done, 25434 eQTLs found
+14.94% done, 25475 eQTLs found
+14.97% done, 25518 eQTLs found
+15.00% done, 25567 eQTLs found
+15.03% done, 25620 eQTLs found
+15.06% done, 25696 eQTLs found
+15.08% done, 25721 eQTLs found
+15.11% done, 25779 eQTLs found
+15.14% done, 25835 eQTLs found
+15.17% done, 25877 eQTLs found
+15.20% done, 25921 eQTLs found
+15.22% done, 25973 eQTLs found
+15.25% done, 26037 eQTLs found
+15.28% done, 26079 eQTLs found
+15.31% done, 26136 eQTLs found
+15.34% done, 26189 eQTLs found
+15.36% done, 26213 eQTLs found
+15.39% done, 26265 eQTLs found
+15.42% done, 26305 eQTLs found
+15.45% done, 26366 eQTLs found
+15.47% done, 26419 eQTLs found
+15.50% done, 26474 eQTLs found
+15.53% done, 26527 eQTLs found
+15.56% done, 26582 eQTLs found
+15.59% done, 26634 eQTLs found
+15.61% done, 26685 eQTLs found
+15.64% done, 26705 eQTLs found
+15.67% done, 26748 eQTLs found
+15.70% done, 26803 eQTLs found
+15.73% done, 26847 eQTLs found
+15.75% done, 26895 eQTLs found
+15.78% done, 26944 eQTLs found
+15.81% done, 26987 eQTLs found
+15.84% done, 27042 eQTLs found
+15.87% done, 27084 eQTLs found
+15.89% done, 27120 eQTLs found
+15.92% done, 27141 eQTLs found
+15.95% done, 27188 eQTLs found
+15.98% done, 27246 eQTLs found
+16.01% done, 27289 eQTLs found
+16.03% done, 27331 eQTLs found
+16.06% done, 27370 eQTLs found
+16.09% done, 27417 eQTLs found
+16.12% done, 27467 eQTLs found
+16.15% done, 27527 eQTLs found
+16.17% done, 27600 eQTLs found
+16.20% done, 27633 eQTLs found
+16.23% done, 27683 eQTLs found
+16.26% done, 27734 eQTLs found
+16.28% done, 27791 eQTLs found
+16.31% done, 27836 eQTLs found
+16.34% done, 27863 eQTLs found
+16.37% done, 27913 eQTLs found
+16.40% done, 27966 eQTLs found
+16.42% done, 28027 eQTLs found
+16.45% done, 28076 eQTLs found
+16.48% done, 28110 eQTLs found
+16.51% done, 28158 eQTLs found
+16.54% done, 28206 eQTLs found
+16.56% done, 28261 eQTLs found
+16.59% done, 28307 eQTLs found
+16.62% done, 28348 eQTLs found
+16.65% done, 28392 eQTLs found
+16.68% done, 28458 eQTLs found
+16.70% done, 28527 eQTLs found
+16.73% done, 28589 eQTLs found
+16.76% done, 28616 eQTLs found
+16.79% done, 28668 eQTLs found
+16.82% done, 28714 eQTLs found
+16.84% done, 28767 eQTLs found
+16.87% done, 28817 eQTLs found
+16.90% done, 28872 eQTLs found
+16.93% done, 28920 eQTLs found
+16.96% done, 28972 eQTLs found
+16.98% done, 29030 eQTLs found
+17.01% done, 29076 eQTLs found
+17.04% done, 29097 eQTLs found
+17.07% done, 29144 eQTLs found
+17.09% done, 29198 eQTLs found
+17.12% done, 29249 eQTLs found
+17.15% done, 29302 eQTLs found
+17.18% done, 29335 eQTLs found
+17.21% done, 29382 eQTLs found
+17.23% done, 29428 eQTLs found
+17.26% done, 29501 eQTLs found
+17.29% done, 29565 eQTLs found
+17.32% done, 29588 eQTLs found
+17.35% done, 29643 eQTLs found
+17.37% done, 29704 eQTLs found
+17.40% done, 29744 eQTLs found
+17.43% done, 29803 eQTLs found
+17.46% done, 29850 eQTLs found
+17.49% done, 29905 eQTLs found
+17.51% done, 29952 eQTLs found
+17.54% done, 30024 eQTLs found
+17.57% done, 30092 eQTLs found
+17.60% done, 30129 eQTLs found
+17.63% done, 30168 eQTLs found
+17.65% done, 30203 eQTLs found
+17.68% done, 30248 eQTLs found
+17.71% done, 30292 eQTLs found
+17.74% done, 30329 eQTLs found
+17.77% done, 30372 eQTLs found
+17.79% done, 30423 eQTLs found
+17.82% done, 30479 eQTLs found
+17.85% done, 30531 eQTLs found
+17.88% done, 30567 eQTLs found
+17.91% done, 30608 eQTLs found
+17.93% done, 30654 eQTLs found
+17.96% done, 30695 eQTLs found
+17.99% done, 30738 eQTLs found
+18.02% done, 30783 eQTLs found
+18.04% done, 30824 eQTLs found
+18.07% done, 30868 eQTLs found
+18.10% done, 30943 eQTLs found
+18.13% done, 30998 eQTLs found
+18.16% done, 31030 eQTLs found
+18.18% done, 31075 eQTLs found
+18.21% done, 31123 eQTLs found
+18.24% done, 31170 eQTLs found
+18.27% done, 31219 eQTLs found
+18.30% done, 31274 eQTLs found
+18.32% done, 31320 eQTLs found
+18.35% done, 31381 eQTLs found
+18.38% done, 31437 eQTLs found
+18.41% done, 31492 eQTLs found
+18.44% done, 31516 eQTLs found
+18.46% done, 31575 eQTLs found
+18.49% done, 31631 eQTLs found
+18.52% done, 31678 eQTLs found
+18.55% done, 31732 eQTLs found
+18.58% done, 31767 eQTLs found
+18.60% done, 31818 eQTLs found
+18.63% done, 31858 eQTLs found
+18.66% done, 31908 eQTLs found
+18.69% done, 31969 eQTLs found
+18.72% done, 31989 eQTLs found
+18.74% done, 32033 eQTLs found
+18.77% done, 32085 eQTLs found
+18.80% done, 32135 eQTLs found
+18.83% done, 32173 eQTLs found
+18.85% done, 32214 eQTLs found
+18.88% done, 32263 eQTLs found
+18.91% done, 32311 eQTLs found
+18.94% done, 32375 eQTLs found
+18.97% done, 32438 eQTLs found
+18.99% done, 32461 eQTLs found
+19.02% done, 32506 eQTLs found
+19.05% done, 32554 eQTLs found
+19.08% done, 32607 eQTLs found
+19.11% done, 32663 eQTLs found
+19.13% done, 32717 eQTLs found
+19.16% done, 32761 eQTLs found
+19.19% done, 32790 eQTLs found
+19.22% done, 32844 eQTLs found
+19.25% done, 32901 eQTLs found
+19.27% done, 32922 eQTLs found
+19.30% done, 32967 eQTLs found
+19.33% done, 33021 eQTLs found
+19.36% done, 33050 eQTLs found
+19.39% done, 33090 eQTLs found
+19.41% done, 33140 eQTLs found
+19.44% done, 33169 eQTLs found
+19.47% done, 33220 eQTLs found
+19.50% done, 33275 eQTLs found
+19.53% done, 33326 eQTLs found
+19.55% done, 33348 eQTLs found
+19.58% done, 33392 eQTLs found
+19.61% done, 33437 eQTLs found
+19.64% done, 33472 eQTLs found
+19.66% done, 33519 eQTLs found
+19.69% done, 33560 eQTLs found
+19.72% done, 33609 eQTLs found
+19.75% done, 33651 eQTLs found
+19.78% done, 33705 eQTLs found
+19.80% done, 33761 eQTLs found
+19.83% done, 33780 eQTLs found
+19.86% done, 33837 eQTLs found
+19.89% done, 33882 eQTLs found
+19.92% done, 33938 eQTLs found
+19.94% done, 33983 eQTLs found
+19.97% done, 34036 eQTLs found
+20.00% done, 34085 eQTLs found
+20.03% done, 34136 eQTLs found
+20.06% done, 34197 eQTLs found
+20.08% done, 34261 eQTLs found
+20.11% done, 34290 eQTLs found
+20.14% done, 34335 eQTLs found
+20.17% done, 34385 eQTLs found
+20.20% done, 34440 eQTLs found
+20.22% done, 34498 eQTLs found
+20.25% done, 34532 eQTLs found
+20.28% done, 34584 eQTLs found
+20.31% done, 34636 eQTLs found
+20.34% done, 34703 eQTLs found
+20.36% done, 34763 eQTLs found
+20.39% done, 34785 eQTLs found
+20.42% done, 34817 eQTLs found
+20.45% done, 34869 eQTLs found
+20.47% done, 34893 eQTLs found
+20.50% done, 34935 eQTLs found
+20.53% done, 34968 eQTLs found
+20.56% done, 35012 eQTLs found
+20.59% done, 35057 eQTLs found
+20.61% done, 35111 eQTLs found
+20.64% done, 35173 eQTLs found
+20.67% done, 35205 eQTLs found
+20.70% done, 35240 eQTLs found
+20.73% done, 35285 eQTLs found
+20.75% done, 35321 eQTLs found
+20.78% done, 35368 eQTLs found
+20.81% done, 35410 eQTLs found
+20.84% done, 35466 eQTLs found
+20.87% done, 35510 eQTLs found
+20.89% done, 35557 eQTLs found
+20.92% done, 35617 eQTLs found
+20.95% done, 35648 eQTLs found
+20.98% done, 35706 eQTLs found
+21.01% done, 35745 eQTLs found
+21.03% done, 35785 eQTLs found
+21.06% done, 35818 eQTLs found
+21.09% done, 35862 eQTLs found
+21.12% done, 35912 eQTLs found
+21.15% done, 35960 eQTLs found
+21.17% done, 36011 eQTLs found
+21.20% done, 36050 eQTLs found
+21.23% done, 36066 eQTLs found
+21.26% done, 36108 eQTLs found
+21.28% done, 36158 eQTLs found
+21.31% done, 36216 eQTLs found
+21.34% done, 36266 eQTLs found
+21.37% done, 36317 eQTLs found
+21.40% done, 36374 eQTLs found
+21.42% done, 36434 eQTLs found
+21.45% done, 36492 eQTLs found
+21.48% done, 36537 eQTLs found
+21.51% done, 36560 eQTLs found
+21.54% done, 36612 eQTLs found
+21.56% done, 36678 eQTLs found
+21.59% done, 36729 eQTLs found
+21.62% done, 36796 eQTLs found
+21.65% done, 36853 eQTLs found
+21.68% done, 36906 eQTLs found
+21.70% done, 36967 eQTLs found
+21.73% done, 37022 eQTLs found
+21.76% done, 37087 eQTLs found
+21.79% done, 37113 eQTLs found
+21.82% done, 37163 eQTLs found
+21.84% done, 37198 eQTLs found
+21.87% done, 37252 eQTLs found
+21.90% done, 37287 eQTLs found
+21.93% done, 37356 eQTLs found
+21.96% done, 37393 eQTLs found
+21.98% done, 37442 eQTLs found
+22.01% done, 37520 eQTLs found
+22.04% done, 37584 eQTLs found
+22.07% done, 37601 eQTLs found
+22.09% done, 37637 eQTLs found
+22.12% done, 37669 eQTLs found
+22.15% done, 37719 eQTLs found
+22.18% done, 37762 eQTLs found
+22.21% done, 37811 eQTLs found
+22.23% done, 37857 eQTLs found
+22.26% done, 37898 eQTLs found
+22.29% done, 37950 eQTLs found
+22.32% done, 37993 eQTLs found
+22.35% done, 38020 eQTLs found
+22.37% done, 38095 eQTLs found
+22.40% done, 38150 eQTLs found
+22.43% done, 38218 eQTLs found
+22.46% done, 38283 eQTLs found
+22.49% done, 38357 eQTLs found
+22.51% done, 38411 eQTLs found
+22.54% done, 38474 eQTLs found
+22.57% done, 38544 eQTLs found
+22.60% done, 38614 eQTLs found
+22.63% done, 38642 eQTLs found
+22.65% done, 38683 eQTLs found
+22.68% done, 38733 eQTLs found
+22.71% done, 38793 eQTLs found
+22.74% done, 38839 eQTLs found
+22.77% done, 38881 eQTLs found
+22.79% done, 38935 eQTLs found
+22.82% done, 38983 eQTLs found
+22.85% done, 39032 eQTLs found
+22.88% done, 39100 eQTLs found
+22.91% done, 39118 eQTLs found
+22.93% done, 39167 eQTLs found
+22.96% done, 39215 eQTLs found
+22.99% done, 39266 eQTLs found
+23.02% done, 39323 eQTLs found
+23.04% done, 39377 eQTLs found
+23.07% done, 39435 eQTLs found
+23.10% done, 39480 eQTLs found
+23.13% done, 39528 eQTLs found
+23.16% done, 39587 eQTLs found
+23.18% done, 39608 eQTLs found
+23.21% done, 39664 eQTLs found
+23.24% done, 39713 eQTLs found
+23.27% done, 39764 eQTLs found
+23.30% done, 39807 eQTLs found
+23.32% done, 39856 eQTLs found
+23.35% done, 39903 eQTLs found
+23.38% done, 39960 eQTLs found
+23.41% done, 40023 eQTLs found
+23.44% done, 40090 eQTLs found
+23.46% done, 40109 eQTLs found
+23.49% done, 40144 eQTLs found
+23.52% done, 40179 eQTLs found
+23.55% done, 40229 eQTLs found
+23.58% done, 40262 eQTLs found
+23.60% done, 40303 eQTLs found
+23.63% done, 40338 eQTLs found
+23.66% done, 40388 eQTLs found
+23.69% done, 40450 eQTLs found
+23.72% done, 40502 eQTLs found
+23.74% done, 40537 eQTLs found
+23.77% done, 40581 eQTLs found
+23.80% done, 40626 eQTLs found
+23.83% done, 40681 eQTLs found
+23.85% done, 40715 eQTLs found
+23.88% done, 40756 eQTLs found
+23.91% done, 40811 eQTLs found
+23.94% done, 40870 eQTLs found
+23.97% done, 40927 eQTLs found
+23.99% done, 41004 eQTLs found
+24.02% done, 41026 eQTLs found
+24.05% done, 41059 eQTLs found
+24.08% done, 41096 eQTLs found
+24.11% done, 41125 eQTLs found
+24.13% done, 41172 eQTLs found
+24.16% done, 41206 eQTLs found
+24.19% done, 41249 eQTLs found
+24.22% done, 41300 eQTLs found
+24.25% done, 41348 eQTLs found
+24.27% done, 41392 eQTLs found
+24.30% done, 41419 eQTLs found
+24.33% done, 41465 eQTLs found
+24.36% done, 41492 eQTLs found
+24.39% done, 41528 eQTLs found
+24.41% done, 41561 eQTLs found
+24.44% done, 41599 eQTLs found
+24.47% done, 41635 eQTLs found
+24.50% done, 41692 eQTLs found
+24.53% done, 41762 eQTLs found
+24.55% done, 41816 eQTLs found
+24.58% done, 41847 eQTLs found
+24.61% done, 41894 eQTLs found
+24.64% done, 41959 eQTLs found
+24.66% done, 42013 eQTLs found
+24.69% done, 42078 eQTLs found
+24.72% done, 42143 eQTLs found
+24.75% done, 42194 eQTLs found
+24.78% done, 42244 eQTLs found
+24.80% done, 42308 eQTLs found
+24.83% done, 42376 eQTLs found
+24.86% done, 42412 eQTLs found
+24.89% done, 42469 eQTLs found
+24.92% done, 42521 eQTLs found
+24.94% done, 42565 eQTLs found
+24.97% done, 42614 eQTLs found
+25.00% done, 42660 eQTLs found
+25.03% done, 42714 eQTLs found
+25.06% done, 42764 eQTLs found
+25.08% done, 42827 eQTLs found
+25.11% done, 42883 eQTLs found
+25.14% done, 42912 eQTLs found
+25.17% done, 42948 eQTLs found
+25.20% done, 42992 eQTLs found
+25.22% done, 43047 eQTLs found
+25.25% done, 43088 eQTLs found
+25.28% done, 43125 eQTLs found
+25.31% done, 43174 eQTLs found
+25.34% done, 43224 eQTLs found
+25.36% done, 43282 eQTLs found
+25.39% done, 43344 eQTLs found
+25.42% done, 43366 eQTLs found
+25.45% done, 43431 eQTLs found
+25.47% done, 43480 eQTLs found
+25.50% done, 43519 eQTLs found
+25.53% done, 43555 eQTLs found
+25.56% done, 43594 eQTLs found
+25.59% done, 43647 eQTLs found
+25.61% done, 43707 eQTLs found
+25.64% done, 43762 eQTLs found
+25.67% done, 43814 eQTLs found
+25.70% done, 43839 eQTLs found
+25.73% done, 43885 eQTLs found
+25.75% done, 43937 eQTLs found
+25.78% done, 43982 eQTLs found
+25.81% done, 44033 eQTLs found
+25.84% done, 44085 eQTLs found
+25.87% done, 44127 eQTLs found
+25.89% done, 44160 eQTLs found
+25.92% done, 44210 eQTLs found
+25.95% done, 44262 eQTLs found
+25.98% done, 44290 eQTLs found
+26.01% done, 44313 eQTLs found
+26.03% done, 44345 eQTLs found
+26.06% done, 44375 eQTLs found
+26.09% done, 44414 eQTLs found
+26.12% done, 44447 eQTLs found
+26.15% done, 44485 eQTLs found
+26.17% done, 44528 eQTLs found
+26.20% done, 44562 eQTLs found
+26.23% done, 44617 eQTLs found
+26.26% done, 44637 eQTLs found
+26.28% done, 44691 eQTLs found
+26.31% done, 44742 eQTLs found
+26.34% done, 44781 eQTLs found
+26.37% done, 44830 eQTLs found
+26.40% done, 44875 eQTLs found
+26.42% done, 44923 eQTLs found
+26.45% done, 44966 eQTLs found
+26.48% done, 45039 eQTLs found
+26.51% done, 45104 eQTLs found
+26.54% done, 45126 eQTLs found
+26.56% done, 45173 eQTLs found
+26.59% done, 45222 eQTLs found
+26.62% done, 45281 eQTLs found
+26.65% done, 45347 eQTLs found
+26.68% done, 45411 eQTLs found
+26.70% done, 45466 eQTLs found
+26.73% done, 45537 eQTLs found
+26.76% done, 45612 eQTLs found
+26.79% done, 45698 eQTLs found
+26.82% done, 45731 eQTLs found
+26.84% done, 45785 eQTLs found
+26.87% done, 45833 eQTLs found
+26.90% done, 45883 eQTLs found
+26.93% done, 45923 eQTLs found
+26.96% done, 45978 eQTLs found
+26.98% done, 46022 eQTLs found
+27.01% done, 46076 eQTLs found
+27.04% done, 46147 eQTLs found
+27.07% done, 46209 eQTLs found
+27.09% done, 46234 eQTLs found
+27.12% done, 46270 eQTLs found
+27.15% done, 46315 eQTLs found
+27.18% done, 46354 eQTLs found
+27.21% done, 46397 eQTLs found
+27.23% done, 46448 eQTLs found
+27.26% done, 46502 eQTLs found
+27.29% done, 46551 eQTLs found
+27.32% done, 46600 eQTLs found
+27.35% done, 46634 eQTLs found
+27.37% done, 46654 eQTLs found
+27.40% done, 46707 eQTLs found
+27.43% done, 46767 eQTLs found
+27.46% done, 46829 eQTLs found
+27.49% done, 46887 eQTLs found
+27.51% done, 46943 eQTLs found
+27.54% done, 46990 eQTLs found
+27.57% done, 47048 eQTLs found
+27.60% done, 47127 eQTLs found
+27.63% done, 47199 eQTLs found
+27.65% done, 47225 eQTLs found
+27.68% done, 47265 eQTLs found
+27.71% done, 47307 eQTLs found
+27.74% done, 47354 eQTLs found
+27.77% done, 47402 eQTLs found
+27.79% done, 47455 eQTLs found
+27.82% done, 47502 eQTLs found
+27.85% done, 47565 eQTLs found
+27.88% done, 47629 eQTLs found
+27.91% done, 47694 eQTLs found
+27.93% done, 47715 eQTLs found
+27.96% done, 47768 eQTLs found
+27.99% done, 47820 eQTLs found
+28.02% done, 47858 eQTLs found
+28.04% done, 47897 eQTLs found
+28.07% done, 47943 eQTLs found
+28.10% done, 47988 eQTLs found
+28.13% done, 48045 eQTLs found
+28.16% done, 48097 eQTLs found
+28.18% done, 48151 eQTLs found
+28.21% done, 48172 eQTLs found
+28.24% done, 48224 eQTLs found
+28.27% done, 48280 eQTLs found
+28.30% done, 48315 eQTLs found
+28.32% done, 48357 eQTLs found
+28.35% done, 48407 eQTLs found
+28.38% done, 48459 eQTLs found
+28.41% done, 48516 eQTLs found
+28.44% done, 48576 eQTLs found
+28.46% done, 48648 eQTLs found
+28.49% done, 48681 eQTLs found
+28.52% done, 48718 eQTLs found
+28.55% done, 48766 eQTLs found
+28.58% done, 48814 eQTLs found
+28.60% done, 48849 eQTLs found
+28.63% done, 48890 eQTLs found
+28.66% done, 48930 eQTLs found
+28.69% done, 48995 eQTLs found
+28.72% done, 49051 eQTLs found
+28.74% done, 49097 eQTLs found
+28.77% done, 49116 eQTLs found
+28.80% done, 49171 eQTLs found
+28.83% done, 49222 eQTLs found
+28.85% done, 49283 eQTLs found
+28.88% done, 49330 eQTLs found
+28.91% done, 49374 eQTLs found
+28.94% done, 49443 eQTLs found
+28.97% done, 49506 eQTLs found
+28.99% done, 49566 eQTLs found
+29.02% done, 49618 eQTLs found
+29.05% done, 49644 eQTLs found
+29.08% done, 49697 eQTLs found
+29.11% done, 49752 eQTLs found
+29.13% done, 49793 eQTLs found
+29.16% done, 49851 eQTLs found
+29.19% done, 49896 eQTLs found
+29.22% done, 49943 eQTLs found
+29.25% done, 49995 eQTLs found
+29.27% done, 50052 eQTLs found
+29.30% done, 50103 eQTLs found
+29.33% done, 50130 eQTLs found
+29.36% done, 50165 eQTLs found
+29.39% done, 50197 eQTLs found
+29.41% done, 50235 eQTLs found
+29.44% done, 50273 eQTLs found
+29.47% done, 50312 eQTLs found
+29.50% done, 50350 eQTLs found
+29.53% done, 50393 eQTLs found
+29.55% done, 50449 eQTLs found
+29.58% done, 50502 eQTLs found
+29.61% done, 50527 eQTLs found
+29.64% done, 50576 eQTLs found
+29.66% done, 50617 eQTLs found
+29.69% done, 50663 eQTLs found
+29.72% done, 50702 eQTLs found
+29.75% done, 50736 eQTLs found
+29.78% done, 50785 eQTLs found
+29.80% done, 50841 eQTLs found
+29.83% done, 50905 eQTLs found
+29.86% done, 50973 eQTLs found
+29.89% done, 50999 eQTLs found
+29.92% done, 51047 eQTLs found
+29.94% done, 51081 eQTLs found
+29.97% done, 51124 eQTLs found
+30.00% done, 51169 eQTLs found
+30.03% done, 51218 eQTLs found
+30.06% done, 51267 eQTLs found
+30.08% done, 51322 eQTLs found
+30.11% done, 51377 eQTLs found
+30.14% done, 51430 eQTLs found
+30.17% done, 51452 eQTLs found
+30.20% done, 51500 eQTLs found
+30.22% done, 51550 eQTLs found
+30.25% done, 51588 eQTLs found
+30.28% done, 51632 eQTLs found
+30.31% done, 51672 eQTLs found
+30.34% done, 51723 eQTLs found
+30.36% done, 51786 eQTLs found
+30.39% done, 51864 eQTLs found
+30.42% done, 51936 eQTLs found
+30.45% done, 51961 eQTLs found
+30.47% done, 52022 eQTLs found
+30.50% done, 52055 eQTLs found
+30.53% done, 52102 eQTLs found
+30.56% done, 52162 eQTLs found
+30.59% done, 52210 eQTLs found
+30.61% done, 52268 eQTLs found
+30.64% done, 52315 eQTLs found
+30.67% done, 52373 eQTLs found
+30.70% done, 52441 eQTLs found
+30.73% done, 52463 eQTLs found
+30.75% done, 52508 eQTLs found
+30.78% done, 52556 eQTLs found
+30.81% done, 52603 eQTLs found
+30.84% done, 52648 eQTLs found
+30.87% done, 52698 eQTLs found
+30.89% done, 52765 eQTLs found
+30.92% done, 52829 eQTLs found
+30.95% done, 52888 eQTLs found
+30.98% done, 52955 eQTLs found
+31.01% done, 52974 eQTLs found
+31.03% done, 53011 eQTLs found
+31.06% done, 53056 eQTLs found
+31.09% done, 53101 eQTLs found
+31.12% done, 53128 eQTLs found
+31.15% done, 53169 eQTLs found
+31.17% done, 53230 eQTLs found
+31.20% done, 53267 eQTLs found
+31.23% done, 53320 eQTLs found
+31.26% done, 53365 eQTLs found
+31.28% done, 53381 eQTLs found
+31.31% done, 53416 eQTLs found
+31.34% done, 53466 eQTLs found
+31.37% done, 53516 eQTLs found
+31.40% done, 53556 eQTLs found
+31.42% done, 53601 eQTLs found
+31.45% done, 53656 eQTLs found
+31.48% done, 53703 eQTLs found
+31.51% done, 53762 eQTLs found
+31.54% done, 53832 eQTLs found
+31.56% done, 53857 eQTLs found
+31.59% done, 53913 eQTLs found
+31.62% done, 53979 eQTLs found
+31.65% done, 54029 eQTLs found
+31.68% done, 54072 eQTLs found
+31.70% done, 54113 eQTLs found
+31.73% done, 54165 eQTLs found
+31.76% done, 54224 eQTLs found
+31.79% done, 54295 eQTLs found
+31.82% done, 54348 eQTLs found
+31.84% done, 54377 eQTLs found
+31.87% done, 54421 eQTLs found
+31.90% done, 54462 eQTLs found
+31.93% done, 54519 eQTLs found
+31.96% done, 54570 eQTLs found
+31.98% done, 54620 eQTLs found
+32.01% done, 54670 eQTLs found
+32.04% done, 54728 eQTLs found
+32.07% done, 54770 eQTLs found
+32.09% done, 54829 eQTLs found
+32.12% done, 54855 eQTLs found
+32.15% done, 54905 eQTLs found
+32.18% done, 54961 eQTLs found
+32.21% done, 55016 eQTLs found
+32.23% done, 55073 eQTLs found
+32.26% done, 55116 eQTLs found
+32.29% done, 55155 eQTLs found
+32.32% done, 55217 eQTLs found
+32.35% done, 55273 eQTLs found
+32.37% done, 55327 eQTLs found
+32.40% done, 55352 eQTLs found
+32.43% done, 55401 eQTLs found
+32.46% done, 55464 eQTLs found
+32.49% done, 55519 eQTLs found
+32.51% done, 55571 eQTLs found
+32.54% done, 55623 eQTLs found
+32.57% done, 55680 eQTLs found
+32.60% done, 55745 eQTLs found
+32.63% done, 55796 eQTLs found
+32.65% done, 55854 eQTLs found
+32.68% done, 55882 eQTLs found
+32.71% done, 55936 eQTLs found
+32.74% done, 55990 eQTLs found
+32.77% done, 56045 eQTLs found
+32.79% done, 56092 eQTLs found
+32.82% done, 56140 eQTLs found
+32.85% done, 56194 eQTLs found
+32.88% done, 56247 eQTLs found
+32.91% done, 56322 eQTLs found
+32.93% done, 56397 eQTLs found
+32.96% done, 56435 eQTLs found
+32.99% done, 56483 eQTLs found
+33.02% done, 56529 eQTLs found
+33.04% done, 56572 eQTLs found
+33.07% done, 56622 eQTLs found
+33.10% done, 56664 eQTLs found
+33.13% done, 56697 eQTLs found
+33.16% done, 56738 eQTLs found
+33.18% done, 56794 eQTLs found
+33.21% done, 56848 eQTLs found
+33.24% done, 56869 eQTLs found
+33.27% done, 56912 eQTLs found
+33.30% done, 56950 eQTLs found
+33.32% done, 56995 eQTLs found
+33.35% done, 57048 eQTLs found
+33.38% done, 57089 eQTLs found
+33.41% done, 57125 eQTLs found
+33.44% done, 57175 eQTLs found
+33.46% done, 57227 eQTLs found
+33.49% done, 57287 eQTLs found
+33.52% done, 57313 eQTLs found
+33.55% done, 57364 eQTLs found
+33.58% done, 57419 eQTLs found
+33.60% done, 57467 eQTLs found
+33.63% done, 57518 eQTLs found
+33.66% done, 57560 eQTLs found
+33.69% done, 57608 eQTLs found
+33.72% done, 57663 eQTLs found
+33.74% done, 57716 eQTLs found
+33.77% done, 57767 eQTLs found
+33.80% done, 57795 eQTLs found
+33.83% done, 57855 eQTLs found
+33.85% done, 57915 eQTLs found
+33.88% done, 57974 eQTLs found
+33.91% done, 58026 eQTLs found
+33.94% done, 58089 eQTLs found
+33.97% done, 58146 eQTLs found
+33.99% done, 58203 eQTLs found
+34.02% done, 58271 eQTLs found
+34.05% done, 58347 eQTLs found
+34.08% done, 58376 eQTLs found
+34.11% done, 58429 eQTLs found
+34.13% done, 58480 eQTLs found
+34.16% done, 58525 eQTLs found
+34.19% done, 58575 eQTLs found
+34.22% done, 58614 eQTLs found
+34.25% done, 58660 eQTLs found
+34.27% done, 58719 eQTLs found
+34.30% done, 58788 eQTLs found
+34.33% done, 58860 eQTLs found
+34.36% done, 58881 eQTLs found
+34.39% done, 58934 eQTLs found
+34.41% done, 58979 eQTLs found
+34.44% done, 59017 eQTLs found
+34.47% done, 59074 eQTLs found
+34.50% done, 59127 eQTLs found
+34.53% done, 59180 eQTLs found
+34.55% done, 59230 eQTLs found
+34.58% done, 59296 eQTLs found
+34.61% done, 59351 eQTLs found
+34.64% done, 59374 eQTLs found
+34.66% done, 59413 eQTLs found
+34.69% done, 59457 eQTLs found
+34.72% done, 59496 eQTLs found
+34.75% done, 59533 eQTLs found
+34.78% done, 59583 eQTLs found
+34.80% done, 59626 eQTLs found
+34.83% done, 59684 eQTLs found
+34.86% done, 59733 eQTLs found
+34.89% done, 59790 eQTLs found
+34.92% done, 59821 eQTLs found
+34.94% done, 59852 eQTLs found
+34.97% done, 59894 eQTLs found
+35.00% done, 59936 eQTLs found
+35.03% done, 59985 eQTLs found
+35.06% done, 60019 eQTLs found
+35.08% done, 60064 eQTLs found
+35.11% done, 60121 eQTLs found
+35.14% done, 60170 eQTLs found
+35.17% done, 60241 eQTLs found
+35.20% done, 60272 eQTLs found
+35.22% done, 60314 eQTLs found
+35.25% done, 60367 eQTLs found
+35.28% done, 60415 eQTLs found
+35.31% done, 60463 eQTLs found
+35.34% done, 60516 eQTLs found
+35.36% done, 60578 eQTLs found
+35.39% done, 60638 eQTLs found
+35.42% done, 60702 eQTLs found
+35.45% done, 60760 eQTLs found
+35.47% done, 60781 eQTLs found
+35.50% done, 60821 eQTLs found
+35.53% done, 60881 eQTLs found
+35.56% done, 60929 eQTLs found
+35.59% done, 60978 eQTLs found
+35.61% done, 61029 eQTLs found
+35.64% done, 61072 eQTLs found
+35.67% done, 61115 eQTLs found
+35.70% done, 61172 eQTLs found
+35.73% done, 61241 eQTLs found
+35.75% done, 61262 eQTLs found
+35.78% done, 61306 eQTLs found
+35.81% done, 61350 eQTLs found
+35.84% done, 61409 eQTLs found
+35.87% done, 61452 eQTLs found
+35.89% done, 61500 eQTLs found
+35.92% done, 61558 eQTLs found
+35.95% done, 61615 eQTLs found
+35.98% done, 61687 eQTLs found
+36.01% done, 61735 eQTLs found
+36.03% done, 61765 eQTLs found
+36.06% done, 61803 eQTLs found
+36.09% done, 61845 eQTLs found
+36.12% done, 61900 eQTLs found
+36.15% done, 61945 eQTLs found
+36.17% done, 62001 eQTLs found
+36.20% done, 62055 eQTLs found
+36.23% done, 62099 eQTLs found
+36.26% done, 62155 eQTLs found
+36.28% done, 62212 eQTLs found
+36.31% done, 62233 eQTLs found
+36.34% done, 62292 eQTLs found
+36.37% done, 62346 eQTLs found
+36.40% done, 62393 eQTLs found
+36.42% done, 62436 eQTLs found
+36.45% done, 62479 eQTLs found
+36.48% done, 62525 eQTLs found
+36.51% done, 62582 eQTLs found
+36.54% done, 62634 eQTLs found
+36.56% done, 62681 eQTLs found
+36.59% done, 62695 eQTLs found
+36.62% done, 62755 eQTLs found
+36.65% done, 62800 eQTLs found
+36.68% done, 62841 eQTLs found
+36.70% done, 62874 eQTLs found
+36.73% done, 62926 eQTLs found
+36.76% done, 62973 eQTLs found
+36.79% done, 63030 eQTLs found
+36.82% done, 63088 eQTLs found
+36.84% done, 63159 eQTLs found
+36.87% done, 63181 eQTLs found
+36.90% done, 63219 eQTLs found
+36.93% done, 63257 eQTLs found
+36.96% done, 63299 eQTLs found
+36.98% done, 63346 eQTLs found
+37.01% done, 63389 eQTLs found
+37.04% done, 63449 eQTLs found
+37.07% done, 63505 eQTLs found
+37.09% done, 63581 eQTLs found
+37.12% done, 63636 eQTLs found
+37.15% done, 63661 eQTLs found
+37.18% done, 63701 eQTLs found
+37.21% done, 63744 eQTLs found
+37.23% done, 63796 eQTLs found
+37.26% done, 63837 eQTLs found
+37.29% done, 63875 eQTLs found
+37.32% done, 63919 eQTLs found
+37.35% done, 63968 eQTLs found
+37.37% done, 64030 eQTLs found
+37.40% done, 64074 eQTLs found
+37.43% done, 64090 eQTLs found
+37.46% done, 64149 eQTLs found
+37.49% done, 64202 eQTLs found
+37.51% done, 64255 eQTLs found
+37.54% done, 64311 eQTLs found
+37.57% done, 64373 eQTLs found
+37.60% done, 64436 eQTLs found
+37.63% done, 64500 eQTLs found
+37.65% done, 64568 eQTLs found
+37.68% done, 64657 eQTLs found
+37.71% done, 64683 eQTLs found
+37.74% done, 64724 eQTLs found
+37.77% done, 64764 eQTLs found
+37.79% done, 64817 eQTLs found
+37.82% done, 64861 eQTLs found
+37.85% done, 64907 eQTLs found
+37.88% done, 64956 eQTLs found
+37.91% done, 65009 eQTLs found
+37.93% done, 65070 eQTLs found
+37.96% done, 65119 eQTLs found
+37.99% done, 65151 eQTLs found
+38.02% done, 65190 eQTLs found
+38.04% done, 65229 eQTLs found
+38.07% done, 65269 eQTLs found
+38.10% done, 65326 eQTLs found
+38.13% done, 65380 eQTLs found
+38.16% done, 65438 eQTLs found
+38.18% done, 65497 eQTLs found
+38.21% done, 65569 eQTLs found
+38.24% done, 65625 eQTLs found
+38.27% done, 65652 eQTLs found
+38.30% done, 65705 eQTLs found
+38.32% done, 65748 eQTLs found
+38.35% done, 65803 eQTLs found
+38.38% done, 65859 eQTLs found
+38.41% done, 65893 eQTLs found
+38.44% done, 65948 eQTLs found
+38.46% done, 66013 eQTLs found
+38.49% done, 66070 eQTLs found
+38.52% done, 66120 eQTLs found
+38.55% done, 66152 eQTLs found
+38.58% done, 66205 eQTLs found
+38.60% done, 66251 eQTLs found
+38.63% done, 66309 eQTLs found
+38.66% done, 66355 eQTLs found
+38.69% done, 66387 eQTLs found
+38.72% done, 66431 eQTLs found
+38.74% done, 66485 eQTLs found
+38.77% done, 66550 eQTLs found
+38.80% done, 66622 eQTLs found
+38.83% done, 66648 eQTLs found
+38.85% done, 66717 eQTLs found
+38.88% done, 66758 eQTLs found
+38.91% done, 66816 eQTLs found
+38.94% done, 66871 eQTLs found
+38.97% done, 66920 eQTLs found
+38.99% done, 66989 eQTLs found
+39.02% done, 67040 eQTLs found
+39.05% done, 67103 eQTLs found
+39.08% done, 67166 eQTLs found
+39.11% done, 67196 eQTLs found
+39.13% done, 67244 eQTLs found
+39.16% done, 67298 eQTLs found
+39.19% done, 67334 eQTLs found
+39.22% done, 67388 eQTLs found
+39.25% done, 67427 eQTLs found
+39.27% done, 67469 eQTLs found
+39.30% done, 67524 eQTLs found
+39.33% done, 67574 eQTLs found
+39.36% done, 67642 eQTLs found
+39.39% done, 67663 eQTLs found
+39.41% done, 67710 eQTLs found
+39.44% done, 67754 eQTLs found
+39.47% done, 67803 eQTLs found
+39.50% done, 67854 eQTLs found
+39.53% done, 67906 eQTLs found
+39.55% done, 67966 eQTLs found
+39.58% done, 68024 eQTLs found
+39.61% done, 68080 eQTLs found
+39.64% done, 68137 eQTLs found
+39.66% done, 68160 eQTLs found
+39.69% done, 68208 eQTLs found
+39.72% done, 68243 eQTLs found
+39.75% done, 68284 eQTLs found
+39.78% done, 68327 eQTLs found
+39.80% done, 68372 eQTLs found
+39.83% done, 68414 eQTLs found
+39.86% done, 68470 eQTLs found
+39.89% done, 68542 eQTLs found
+39.92% done, 68612 eQTLs found
+39.94% done, 68636 eQTLs found
+39.97% done, 68685 eQTLs found
+40.00% done, 68751 eQTLs found
+40.03% done, 68807 eQTLs found
+40.06% done, 68875 eQTLs found
+40.08% done, 68928 eQTLs found
+40.11% done, 68979 eQTLs found
+40.14% done, 69043 eQTLs found
+40.17% done, 69121 eQTLs found
+40.20% done, 69180 eQTLs found
+40.22% done, 69210 eQTLs found
+40.25% done, 69252 eQTLs found
+40.28% done, 69288 eQTLs found
+40.31% done, 69333 eQTLs found
+40.34% done, 69382 eQTLs found
+40.36% done, 69435 eQTLs found
+40.39% done, 69486 eQTLs found
+40.42% done, 69547 eQTLs found
+40.45% done, 69608 eQTLs found
+40.47% done, 69672 eQTLs found
+40.50% done, 69697 eQTLs found
+40.53% done, 69737 eQTLs found
+40.56% done, 69785 eQTLs found
+40.59% done, 69842 eQTLs found
+40.61% done, 69888 eQTLs found
+40.64% done, 69943 eQTLs found
+40.67% done, 69990 eQTLs found
+40.70% done, 70047 eQTLs found
+40.73% done, 70107 eQTLs found
+40.75% done, 70164 eQTLs found
+40.78% done, 70191 eQTLs found
+40.81% done, 70236 eQTLs found
+40.84% done, 70289 eQTLs found
+40.87% done, 70346 eQTLs found
+40.89% done, 70388 eQTLs found
+40.92% done, 70426 eQTLs found
+40.95% done, 70464 eQTLs found
+40.98% done, 70500 eQTLs found
+41.01% done, 70551 eQTLs found
+41.03% done, 70631 eQTLs found
+41.06% done, 70652 eQTLs found
+41.09% done, 70691 eQTLs found
+41.12% done, 70733 eQTLs found
+41.15% done, 70777 eQTLs found
+41.17% done, 70818 eQTLs found
+41.20% done, 70866 eQTLs found
+41.23% done, 70908 eQTLs found
+41.26% done, 70978 eQTLs found
+41.28% done, 71039 eQTLs found
+41.31% done, 71102 eQTLs found
+41.34% done, 71122 eQTLs found
+41.37% done, 71166 eQTLs found
+41.40% done, 71213 eQTLs found
+41.42% done, 71265 eQTLs found
+41.45% done, 71304 eQTLs found
+41.48% done, 71353 eQTLs found
+41.51% done, 71412 eQTLs found
+41.54% done, 71458 eQTLs found
+41.56% done, 71516 eQTLs found
+41.59% done, 71569 eQTLs found
+41.62% done, 71596 eQTLs found
+41.65% done, 71643 eQTLs found
+41.68% done, 71688 eQTLs found
+41.70% done, 71729 eQTLs found
+41.73% done, 71780 eQTLs found
+41.76% done, 71819 eQTLs found
+41.79% done, 71874 eQTLs found
+41.82% done, 71930 eQTLs found
+41.84% done, 72004 eQTLs found
+41.87% done, 72058 eQTLs found
+41.90% done, 72089 eQTLs found
+41.93% done, 72137 eQTLs found
+41.96% done, 72184 eQTLs found
+41.98% done, 72238 eQTLs found
+42.01% done, 72282 eQTLs found
+42.04% done, 72329 eQTLs found
+42.07% done, 72380 eQTLs found
+42.09% done, 72431 eQTLs found
+42.12% done, 72488 eQTLs found
+42.15% done, 72543 eQTLs found
+42.18% done, 72571 eQTLs found
+42.21% done, 72615 eQTLs found
+42.23% done, 72653 eQTLs found
+42.26% done, 72689 eQTLs found
+42.29% done, 72727 eQTLs found
+42.32% done, 72775 eQTLs found
+42.35% done, 72831 eQTLs found
+42.37% done, 72890 eQTLs found
+42.40% done, 72956 eQTLs found
+42.43% done, 73030 eQTLs found
+42.46% done, 73060 eQTLs found
+42.49% done, 73101 eQTLs found
+42.51% done, 73147 eQTLs found
+42.54% done, 73192 eQTLs found
+42.57% done, 73239 eQTLs found
+42.60% done, 73277 eQTLs found
+42.63% done, 73340 eQTLs found
+42.65% done, 73386 eQTLs found
+42.68% done, 73447 eQTLs found
+42.71% done, 73517 eQTLs found
+42.74% done, 73549 eQTLs found
+42.77% done, 73605 eQTLs found
+42.79% done, 73670 eQTLs found
+42.82% done, 73724 eQTLs found
+42.85% done, 73794 eQTLs found
+42.88% done, 73845 eQTLs found
+42.91% done, 73904 eQTLs found
+42.93% done, 73972 eQTLs found
+42.96% done, 74037 eQTLs found
+42.99% done, 74116 eQTLs found
+43.02% done, 74144 eQTLs found
+43.04% done, 74198 eQTLs found
+43.07% done, 74249 eQTLs found
+43.10% done, 74287 eQTLs found
+43.13% done, 74323 eQTLs found
+43.16% done, 74363 eQTLs found
+43.18% done, 74423 eQTLs found
+43.21% done, 74481 eQTLs found
+43.24% done, 74539 eQTLs found
+43.27% done, 74593 eQTLs found
+43.30% done, 74628 eQTLs found
+43.32% done, 74674 eQTLs found
+43.35% done, 74719 eQTLs found
+43.38% done, 74751 eQTLs found
+43.41% done, 74788 eQTLs found
+43.44% done, 74822 eQTLs found
+43.46% done, 74865 eQTLs found
+43.49% done, 74911 eQTLs found
+43.52% done, 74977 eQTLs found
+43.55% done, 75023 eQTLs found
+43.58% done, 75048 eQTLs found
+43.60% done, 75086 eQTLs found
+43.63% done, 75142 eQTLs found
+43.66% done, 75186 eQTLs found
+43.69% done, 75221 eQTLs found
+43.72% done, 75259 eQTLs found
+43.74% done, 75315 eQTLs found
+43.77% done, 75364 eQTLs found
+43.80% done, 75430 eQTLs found
+43.83% done, 75486 eQTLs found
+43.85% done, 75503 eQTLs found
+43.88% done, 75548 eQTLs found
+43.91% done, 75597 eQTLs found
+43.94% done, 75648 eQTLs found
+43.97% done, 75705 eQTLs found
+43.99% done, 75752 eQTLs found
+44.02% done, 75812 eQTLs found
+44.05% done, 75878 eQTLs found
+44.08% done, 75936 eQTLs found
+44.11% done, 76032 eQTLs found
+44.13% done, 76062 eQTLs found
+44.16% done, 76105 eQTLs found
+44.19% done, 76166 eQTLs found
+44.22% done, 76211 eQTLs found
+44.25% done, 76268 eQTLs found
+44.27% done, 76313 eQTLs found
+44.30% done, 76366 eQTLs found
+44.33% done, 76412 eQTLs found
+44.36% done, 76460 eQTLs found
+44.39% done, 76517 eQTLs found
+44.41% done, 76537 eQTLs found
+44.44% done, 76596 eQTLs found
+44.47% done, 76648 eQTLs found
+44.50% done, 76695 eQTLs found
+44.53% done, 76733 eQTLs found
+44.55% done, 76776 eQTLs found
+44.58% done, 76820 eQTLs found
+44.61% done, 76871 eQTLs found
+44.64% done, 76913 eQTLs found
+44.66% done, 76970 eQTLs found
+44.69% done, 76990 eQTLs found
+44.72% done, 77046 eQTLs found
+44.75% done, 77096 eQTLs found
+44.78% done, 77144 eQTLs found
+44.80% done, 77187 eQTLs found
+44.83% done, 77241 eQTLs found
+44.86% done, 77295 eQTLs found
+44.89% done, 77348 eQTLs found
+44.92% done, 77398 eQTLs found
+44.94% done, 77462 eQTLs found
+44.97% done, 77488 eQTLs found
+45.00% done, 77524 eQTLs found
+45.03% done, 77578 eQTLs found
+45.06% done, 77619 eQTLs found
+45.08% done, 77662 eQTLs found
+45.11% done, 77705 eQTLs found
+45.14% done, 77760 eQTLs found
+45.17% done, 77814 eQTLs found
+45.20% done, 77875 eQTLs found
+45.22% done, 77927 eQTLs found
+45.25% done, 77962 eQTLs found
+45.28% done, 78013 eQTLs found
+45.31% done, 78070 eQTLs found
+45.34% done, 78114 eQTLs found
+45.36% done, 78165 eQTLs found
+45.39% done, 78222 eQTLs found
+45.42% done, 78277 eQTLs found
+45.45% done, 78330 eQTLs found
+45.47% done, 78403 eQTLs found
+45.50% done, 78465 eQTLs found
+45.53% done, 78485 eQTLs found
+45.56% done, 78523 eQTLs found
+45.59% done, 78557 eQTLs found
+45.61% done, 78595 eQTLs found
+45.64% done, 78647 eQTLs found
+45.67% done, 78677 eQTLs found
+45.70% done, 78719 eQTLs found
+45.73% done, 78775 eQTLs found
+45.75% done, 78845 eQTLs found
+45.78% done, 78894 eQTLs found
+45.81% done, 78911 eQTLs found
+45.84% done, 78965 eQTLs found
+45.87% done, 79036 eQTLs found
+45.89% done, 79083 eQTLs found
+45.92% done, 79136 eQTLs found
+45.95% done, 79183 eQTLs found
+45.98% done, 79240 eQTLs found
+46.01% done, 79297 eQTLs found
+46.03% done, 79379 eQTLs found
+46.06% done, 79431 eQTLs found
+46.09% done, 79451 eQTLs found
+46.12% done, 79496 eQTLs found
+46.15% done, 79537 eQTLs found
+46.17% done, 79575 eQTLs found
+46.20% done, 79614 eQTLs found
+46.23% done, 79655 eQTLs found
+46.26% done, 79700 eQTLs found
+46.28% done, 79749 eQTLs found
+46.31% done, 79797 eQTLs found
+46.34% done, 79852 eQTLs found
+46.37% done, 79874 eQTLs found
+46.40% done, 79931 eQTLs found
+46.42% done, 79964 eQTLs found
+46.45% done, 80007 eQTLs found
+46.48% done, 80073 eQTLs found
+46.51% done, 80131 eQTLs found
+46.54% done, 80177 eQTLs found
+46.56% done, 80234 eQTLs found
+46.59% done, 80310 eQTLs found
+46.62% done, 80360 eQTLs found
+46.65% done, 80382 eQTLs found
+46.68% done, 80435 eQTLs found
+46.70% done, 80482 eQTLs found
+46.73% done, 80526 eQTLs found
+46.76% done, 80578 eQTLs found
+46.79% done, 80627 eQTLs found
+46.82% done, 80672 eQTLs found
+46.84% done, 80716 eQTLs found
+46.87% done, 80768 eQTLs found
+46.90% done, 80817 eQTLs found
+46.93% done, 80843 eQTLs found
+46.96% done, 80893 eQTLs found
+46.98% done, 80938 eQTLs found
+47.01% done, 80984 eQTLs found
+47.04% done, 81024 eQTLs found
+47.07% done, 81073 eQTLs found
+47.09% done, 81123 eQTLs found
+47.12% done, 81159 eQTLs found
+47.15% done, 81216 eQTLs found
+47.18% done, 81270 eQTLs found
+47.21% done, 81291 eQTLs found
+47.23% done, 81335 eQTLs found
+47.26% done, 81378 eQTLs found
+47.29% done, 81415 eQTLs found
+47.32% done, 81461 eQTLs found
+47.35% done, 81498 eQTLs found
+47.37% done, 81534 eQTLs found
+47.40% done, 81584 eQTLs found
+47.43% done, 81632 eQTLs found
+47.46% done, 81688 eQTLs found
+47.49% done, 81715 eQTLs found
+47.51% done, 81760 eQTLs found
+47.54% done, 81809 eQTLs found
+47.57% done, 81843 eQTLs found
+47.60% done, 81893 eQTLs found
+47.63% done, 81934 eQTLs found
+47.65% done, 81985 eQTLs found
+47.68% done, 82027 eQTLs found
+47.71% done, 82077 eQTLs found
+47.74% done, 82134 eQTLs found
+47.77% done, 82153 eQTLs found
+47.79% done, 82191 eQTLs found
+47.82% done, 82225 eQTLs found
+47.85% done, 82275 eQTLs found
+47.88% done, 82319 eQTLs found
+47.91% done, 82366 eQTLs found
+47.93% done, 82416 eQTLs found
+47.96% done, 82465 eQTLs found
+47.99% done, 82522 eQTLs found
+48.02% done, 82592 eQTLs found
+48.04% done, 82621 eQTLs found
+48.07% done, 82668 eQTLs found
+48.10% done, 82701 eQTLs found
+48.13% done, 82751 eQTLs found
+48.16% done, 82781 eQTLs found
+48.18% done, 82826 eQTLs found
+48.21% done, 82878 eQTLs found
+48.24% done, 82923 eQTLs found
+48.27% done, 82990 eQTLs found
+48.30% done, 83059 eQTLs found
+48.32% done, 83084 eQTLs found
+48.35% done, 83135 eQTLs found
+48.38% done, 83188 eQTLs found
+48.41% done, 83234 eQTLs found
+48.44% done, 83293 eQTLs found
+48.46% done, 83340 eQTLs found
+48.49% done, 83386 eQTLs found
+48.52% done, 83440 eQTLs found
+48.55% done, 83482 eQTLs found
+48.58% done, 83548 eQTLs found
+48.60% done, 83565 eQTLs found
+48.63% done, 83611 eQTLs found
+48.66% done, 83653 eQTLs found
+48.69% done, 83706 eQTLs found
+48.72% done, 83753 eQTLs found
+48.74% done, 83799 eQTLs found
+48.77% done, 83839 eQTLs found
+48.80% done, 83889 eQTLs found
+48.83% done, 83945 eQTLs found
+48.85% done, 83988 eQTLs found
+48.88% done, 84003 eQTLs found
+48.91% done, 84051 eQTLs found
+48.94% done, 84111 eQTLs found
+48.97% done, 84149 eQTLs found
+48.99% done, 84206 eQTLs found
+49.02% done, 84256 eQTLs found
+49.05% done, 84315 eQTLs found
+49.08% done, 84367 eQTLs found
+49.11% done, 84435 eQTLs found
+49.13% done, 84490 eQTLs found
+49.16% done, 84518 eQTLs found
+49.19% done, 84560 eQTLs found
+49.22% done, 84616 eQTLs found
+49.25% done, 84677 eQTLs found
+49.27% done, 84723 eQTLs found
+49.30% done, 84763 eQTLs found
+49.33% done, 84822 eQTLs found
+49.36% done, 84871 eQTLs found
+49.39% done, 84956 eQTLs found
+49.41% done, 85009 eQTLs found
+49.44% done, 85033 eQTLs found
+49.47% done, 85070 eQTLs found
+49.50% done, 85120 eQTLs found
+49.53% done, 85170 eQTLs found
+49.55% done, 85208 eQTLs found
+49.58% done, 85259 eQTLs found
+49.61% done, 85298 eQTLs found
+49.64% done, 85353 eQTLs found
+49.66% done, 85409 eQTLs found
+49.69% done, 85469 eQTLs found
+49.72% done, 85500 eQTLs found
+49.75% done, 85549 eQTLs found
+49.78% done, 85610 eQTLs found
+49.80% done, 85660 eQTLs found
+49.83% done, 85717 eQTLs found
+49.86% done, 85761 eQTLs found
+49.89% done, 85816 eQTLs found
+49.92% done, 85877 eQTLs found
+49.94% done, 85942 eQTLs found
+49.97% done, 86006 eQTLs found
+50.00% done, 86036 eQTLs found
+50.03% done, 86076 eQTLs found
+50.06% done, 86132 eQTLs found
+50.08% done, 86191 eQTLs found
+50.11% done, 86238 eQTLs found
+50.14% done, 86275 eQTLs found
+50.17% done, 86328 eQTLs found
+50.20% done, 86365 eQTLs found
+50.22% done, 86416 eQTLs found
+50.25% done, 86475 eQTLs found
+50.28% done, 86493 eQTLs found
+50.31% done, 86540 eQTLs found
+50.34% done, 86591 eQTLs found
+50.36% done, 86633 eQTLs found
+50.39% done, 86683 eQTLs found
+50.42% done, 86727 eQTLs found
+50.45% done, 86773 eQTLs found
+50.47% done, 86824 eQTLs found
+50.50% done, 86883 eQTLs found
+50.53% done, 86968 eQTLs found
+50.56% done, 86990 eQTLs found
+50.59% done, 87027 eQTLs found
+50.61% done, 87061 eQTLs found
+50.64% done, 87114 eQTLs found
+50.67% done, 87153 eQTLs found
+50.70% done, 87204 eQTLs found
+50.73% done, 87247 eQTLs found
+50.75% done, 87297 eQTLs found
+50.78% done, 87345 eQTLs found
+50.81% done, 87389 eQTLs found
+50.84% done, 87414 eQTLs found
+50.87% done, 87459 eQTLs found
+50.89% done, 87501 eQTLs found
+50.92% done, 87530 eQTLs found
+50.95% done, 87559 eQTLs found
+50.98% done, 87598 eQTLs found
+51.01% done, 87633 eQTLs found
+51.03% done, 87685 eQTLs found
+51.06% done, 87745 eQTLs found
+51.09% done, 87805 eQTLs found
+51.12% done, 87829 eQTLs found
+51.15% done, 87872 eQTLs found
+51.17% done, 87919 eQTLs found
+51.20% done, 87961 eQTLs found
+51.23% done, 88009 eQTLs found
+51.26% done, 88055 eQTLs found
+51.28% done, 88090 eQTLs found
+51.31% done, 88140 eQTLs found
+51.34% done, 88190 eQTLs found
+51.37% done, 88235 eQTLs found
+51.40% done, 88262 eQTLs found
+51.42% done, 88314 eQTLs found
+51.45% done, 88381 eQTLs found
+51.48% done, 88426 eQTLs found
+51.51% done, 88481 eQTLs found
+51.54% done, 88528 eQTLs found
+51.56% done, 88568 eQTLs found
+51.59% done, 88618 eQTLs found
+51.62% done, 88674 eQTLs found
+51.65% done, 88739 eQTLs found
+51.68% done, 88773 eQTLs found
+51.70% done, 88824 eQTLs found
+51.73% done, 88880 eQTLs found
+51.76% done, 88930 eQTLs found
+51.79% done, 88976 eQTLs found
+51.82% done, 89019 eQTLs found
+51.84% done, 89076 eQTLs found
+51.87% done, 89141 eQTLs found
+51.90% done, 89203 eQTLs found
+51.93% done, 89277 eQTLs found
+51.96% done, 89293 eQTLs found
+51.98% done, 89332 eQTLs found
+52.01% done, 89375 eQTLs found
+52.04% done, 89416 eQTLs found
+52.07% done, 89456 eQTLs found
+52.09% done, 89495 eQTLs found
+52.12% done, 89537 eQTLs found
+52.15% done, 89595 eQTLs found
+52.18% done, 89655 eQTLs found
+52.21% done, 89702 eQTLs found
+52.23% done, 89723 eQTLs found
+52.26% done, 89781 eQTLs found
+52.29% done, 89837 eQTLs found
+52.32% done, 89885 eQTLs found
+52.35% done, 89933 eQTLs found
+52.37% done, 89982 eQTLs found
+52.40% done, 90028 eQTLs found
+52.43% done, 90083 eQTLs found
+52.46% done, 90149 eQTLs found
+52.49% done, 90205 eQTLs found
+52.51% done, 90230 eQTLs found
+52.54% done, 90262 eQTLs found
+52.57% done, 90303 eQTLs found
+52.60% done, 90348 eQTLs found
+52.63% done, 90392 eQTLs found
+52.65% done, 90441 eQTLs found
+52.68% done, 90480 eQTLs found
+52.71% done, 90520 eQTLs found
+52.74% done, 90580 eQTLs found
+52.77% done, 90634 eQTLs found
+52.79% done, 90665 eQTLs found
+52.82% done, 90732 eQTLs found
+52.85% done, 90784 eQTLs found
+52.88% done, 90844 eQTLs found
+52.91% done, 90900 eQTLs found
+52.93% done, 90941 eQTLs found
+52.96% done, 91003 eQTLs found
+52.99% done, 91058 eQTLs found
+53.02% done, 91132 eQTLs found
+53.04% done, 91208 eQTLs found
+53.07% done, 91237 eQTLs found
+53.10% done, 91283 eQTLs found
+53.13% done, 91324 eQTLs found
+53.16% done, 91365 eQTLs found
+53.18% done, 91408 eQTLs found
+53.21% done, 91451 eQTLs found
+53.24% done, 91490 eQTLs found
+53.27% done, 91547 eQTLs found
+53.30% done, 91605 eQTLs found
+53.32% done, 91668 eQTLs found
+53.35% done, 91693 eQTLs found
+53.38% done, 91754 eQTLs found
+53.41% done, 91797 eQTLs found
+53.44% done, 91866 eQTLs found
+53.46% done, 91915 eQTLs found
+53.49% done, 91981 eQTLs found
+53.52% done, 92046 eQTLs found
+53.55% done, 92095 eQTLs found
+53.58% done, 92154 eQTLs found
+53.60% done, 92221 eQTLs found
+53.63% done, 92247 eQTLs found
+53.66% done, 92306 eQTLs found
+53.69% done, 92366 eQTLs found
+53.72% done, 92421 eQTLs found
+53.74% done, 92492 eQTLs found
+53.77% done, 92561 eQTLs found
+53.80% done, 92610 eQTLs found
+53.83% done, 92678 eQTLs found
+53.85% done, 92741 eQTLs found
+53.88% done, 92805 eQTLs found
+53.91% done, 92829 eQTLs found
+53.94% done, 92887 eQTLs found
+53.97% done, 92935 eQTLs found
+53.99% done, 92997 eQTLs found
+54.02% done, 93055 eQTLs found
+54.05% done, 93108 eQTLs found
+54.08% done, 93162 eQTLs found
+54.11% done, 93217 eQTLs found
+54.13% done, 93267 eQTLs found
+54.16% done, 93313 eQTLs found
+54.19% done, 93333 eQTLs found
+54.22% done, 93385 eQTLs found
+54.25% done, 93436 eQTLs found
+54.27% done, 93478 eQTLs found
+54.30% done, 93522 eQTLs found
+54.33% done, 93568 eQTLs found
+54.36% done, 93615 eQTLs found
+54.39% done, 93672 eQTLs found
+54.41% done, 93742 eQTLs found
+54.44% done, 93795 eQTLs found
+54.47% done, 93821 eQTLs found
+54.50% done, 93869 eQTLs found
+54.53% done, 93912 eQTLs found
+54.55% done, 93968 eQTLs found
+54.58% done, 94023 eQTLs found
+54.61% done, 94064 eQTLs found
+54.64% done, 94106 eQTLs found
+54.66% done, 94154 eQTLs found
+54.69% done, 94208 eQTLs found
+54.72% done, 94279 eQTLs found
+54.75% done, 94299 eQTLs found
+54.78% done, 94360 eQTLs found
+54.80% done, 94436 eQTLs found
+54.83% done, 94503 eQTLs found
+54.86% done, 94567 eQTLs found
+54.89% done, 94631 eQTLs found
+54.92% done, 94693 eQTLs found
+54.94% done, 94753 eQTLs found
+54.97% done, 94816 eQTLs found
+55.00% done, 94916 eQTLs found
+55.03% done, 94940 eQTLs found
+55.06% done, 94973 eQTLs found
+55.08% done, 95012 eQTLs found
+55.11% done, 95066 eQTLs found
+55.14% done, 95099 eQTLs found
+55.17% done, 95145 eQTLs found
+55.20% done, 95194 eQTLs found
+55.22% done, 95230 eQTLs found
+55.25% done, 95288 eQTLs found
+55.28% done, 95333 eQTLs found
+55.31% done, 95352 eQTLs found
+55.34% done, 95393 eQTLs found
+55.36% done, 95437 eQTLs found
+55.39% done, 95488 eQTLs found
+55.42% done, 95522 eQTLs found
+55.45% done, 95565 eQTLs found
+55.47% done, 95619 eQTLs found
+55.50% done, 95678 eQTLs found
+55.53% done, 95720 eQTLs found
+55.56% done, 95787 eQTLs found
+55.59% done, 95811 eQTLs found
+55.61% done, 95849 eQTLs found
+55.64% done, 95876 eQTLs found
+55.67% done, 95920 eQTLs found
+55.70% done, 95960 eQTLs found
+55.73% done, 96001 eQTLs found
+55.75% done, 96041 eQTLs found
+55.78% done, 96079 eQTLs found
+55.81% done, 96121 eQTLs found
+55.84% done, 96159 eQTLs found
+55.87% done, 96179 eQTLs found
+55.89% done, 96217 eQTLs found
+55.92% done, 96265 eQTLs found
+55.95% done, 96304 eQTLs found
+55.98% done, 96353 eQTLs found
+56.01% done, 96388 eQTLs found
+56.03% done, 96438 eQTLs found
+56.06% done, 96467 eQTLs found
+56.09% done, 96511 eQTLs found
+56.12% done, 96576 eQTLs found
+56.15% done, 96598 eQTLs found
+56.17% done, 96654 eQTLs found
+56.20% done, 96712 eQTLs found
+56.23% done, 96769 eQTLs found
+56.26% done, 96832 eQTLs found
+56.28% done, 96889 eQTLs found
+56.31% done, 96932 eQTLs found
+56.34% done, 96998 eQTLs found
+56.37% done, 97037 eQTLs found
+56.40% done, 97092 eQTLs found
+56.42% done, 97120 eQTLs found
+56.45% done, 97150 eQTLs found
+56.48% done, 97189 eQTLs found
+56.51% done, 97230 eQTLs found
+56.54% done, 97270 eQTLs found
+56.56% done, 97309 eQTLs found
+56.59% done, 97363 eQTLs found
+56.62% done, 97410 eQTLs found
+56.65% done, 97448 eQTLs found
+56.68% done, 97492 eQTLs found
+56.70% done, 97506 eQTLs found
+56.73% done, 97556 eQTLs found
+56.76% done, 97610 eQTLs found
+56.79% done, 97651 eQTLs found
+56.82% done, 97695 eQTLs found
+56.84% done, 97740 eQTLs found
+56.87% done, 97800 eQTLs found
+56.90% done, 97840 eQTLs found
+56.93% done, 97910 eQTLs found
+56.96% done, 97970 eQTLs found
+56.98% done, 97992 eQTLs found
+57.01% done, 98037 eQTLs found
+57.04% done, 98078 eQTLs found
+57.07% done, 98125 eQTLs found
+57.09% done, 98178 eQTLs found
+57.12% done, 98216 eQTLs found
+57.15% done, 98268 eQTLs found
+57.18% done, 98330 eQTLs found
+57.21% done, 98386 eQTLs found
+57.23% done, 98423 eQTLs found
+57.26% done, 98439 eQTLs found
+57.29% done, 98494 eQTLs found
+57.32% done, 98543 eQTLs found
+57.35% done, 98592 eQTLs found
+57.37% done, 98631 eQTLs found
+57.40% done, 98685 eQTLs found
+57.43% done, 98732 eQTLs found
+57.46% done, 98785 eQTLs found
+57.49% done, 98849 eQTLs found
+57.51% done, 98911 eQTLs found
+57.54% done, 98932 eQTLs found
+57.57% done, 99007 eQTLs found
+57.60% done, 99078 eQTLs found
+57.63% done, 99139 eQTLs found
+57.65% done, 99203 eQTLs found
+57.68% done, 99278 eQTLs found
+57.71% done, 99341 eQTLs found
+57.74% done, 99398 eQTLs found
+57.77% done, 99454 eQTLs found
+57.79% done, 99528 eQTLs found
+57.82% done, 99548 eQTLs found
+57.85% done, 99591 eQTLs found
+57.88% done, 99632 eQTLs found
+57.91% done, 99684 eQTLs found
+57.93% done, 99733 eQTLs found
+57.96% done, 99792 eQTLs found
+57.99% done, 99836 eQTLs found
+58.02% done, 99878 eQTLs found
+58.04% done, 99922 eQTLs found
+58.07% done, 99977 eQTLs found
+58.10% done, 99989 eQTLs found
+58.13% done, 100029 eQTLs found
+58.16% done, 100069 eQTLs found
+58.18% done, 100108 eQTLs found
+58.21% done, 100150 eQTLs found
+58.24% done, 100184 eQTLs found
+58.27% done, 100227 eQTLs found
+58.30% done, 100277 eQTLs found
+58.32% done, 100344 eQTLs found
+58.35% done, 100405 eQTLs found
+58.38% done, 100425 eQTLs found
+58.41% done, 100468 eQTLs found
+58.44% done, 100504 eQTLs found
+58.46% done, 100533 eQTLs found
+58.49% done, 100570 eQTLs found
+58.52% done, 100611 eQTLs found
+58.55% done, 100638 eQTLs found
+58.58% done, 100679 eQTLs found
+58.60% done, 100724 eQTLs found
+58.63% done, 100792 eQTLs found
+58.66% done, 100817 eQTLs found
+58.69% done, 100863 eQTLs found
+58.72% done, 100914 eQTLs found
+58.74% done, 100956 eQTLs found
+58.77% done, 100996 eQTLs found
+58.80% done, 101038 eQTLs found
+58.83% done, 101078 eQTLs found
+58.85% done, 101121 eQTLs found
+58.88% done, 101183 eQTLs found
+58.91% done, 101230 eQTLs found
+58.94% done, 101259 eQTLs found
+58.97% done, 101304 eQTLs found
+58.99% done, 101339 eQTLs found
+59.02% done, 101375 eQTLs found
+59.05% done, 101419 eQTLs found
+59.08% done, 101461 eQTLs found
+59.11% done, 101510 eQTLs found
+59.13% done, 101545 eQTLs found
+59.16% done, 101575 eQTLs found
+59.19% done, 101652 eQTLs found
+59.22% done, 101666 eQTLs found
+59.25% done, 101711 eQTLs found
+59.27% done, 101759 eQTLs found
+59.30% done, 101809 eQTLs found
+59.33% done, 101859 eQTLs found
+59.36% done, 101893 eQTLs found
+59.39% done, 101947 eQTLs found
+59.41% done, 101994 eQTLs found
+59.44% done, 102035 eQTLs found
+59.47% done, 102076 eQTLs found
+59.50% done, 102090 eQTLs found
+59.53% done, 102136 eQTLs found
+59.55% done, 102183 eQTLs found
+59.58% done, 102230 eQTLs found
+59.61% done, 102273 eQTLs found
+59.64% done, 102316 eQTLs found
+59.66% done, 102371 eQTLs found
+59.69% done, 102428 eQTLs found
+59.72% done, 102487 eQTLs found
+59.75% done, 102533 eQTLs found
+59.78% done, 102558 eQTLs found
+59.80% done, 102618 eQTLs found
+59.83% done, 102665 eQTLs found
+59.86% done, 102729 eQTLs found
+59.89% done, 102782 eQTLs found
+59.92% done, 102837 eQTLs found
+59.94% done, 102895 eQTLs found
+59.97% done, 102948 eQTLs found
+60.00% done, 103002 eQTLs found
+60.03% done, 103077 eQTLs found
+60.06% done, 103097 eQTLs found
+60.08% done, 103135 eQTLs found
+60.11% done, 103172 eQTLs found
+60.14% done, 103215 eQTLs found
+60.17% done, 103261 eQTLs found
+60.20% done, 103306 eQTLs found
+60.22% done, 103354 eQTLs found
+60.25% done, 103390 eQTLs found
+60.28% done, 103432 eQTLs found
+60.31% done, 103481 eQTLs found
+60.34% done, 103503 eQTLs found
+60.36% done, 103551 eQTLs found
+60.39% done, 103604 eQTLs found
+60.42% done, 103646 eQTLs found
+60.45% done, 103682 eQTLs found
+60.47% done, 103726 eQTLs found
+60.50% done, 103763 eQTLs found
+60.53% done, 103813 eQTLs found
+60.56% done, 103852 eQTLs found
+60.59% done, 103909 eQTLs found
+60.61% done, 103930 eQTLs found
+60.64% done, 103982 eQTLs found
+60.67% done, 104041 eQTLs found
+60.70% done, 104078 eQTLs found
+60.73% done, 104123 eQTLs found
+60.75% done, 104184 eQTLs found
+60.78% done, 104217 eQTLs found
+60.81% done, 104287 eQTLs found
+60.84% done, 104346 eQTLs found
+60.87% done, 104421 eQTLs found
+60.89% done, 104439 eQTLs found
+60.92% done, 104486 eQTLs found
+60.95% done, 104541 eQTLs found
+60.98% done, 104596 eQTLs found
+61.01% done, 104649 eQTLs found
+61.03% done, 104701 eQTLs found
+61.06% done, 104750 eQTLs found
+61.09% done, 104803 eQTLs found
+61.12% done, 104858 eQTLs found
+61.15% done, 104940 eQTLs found
+61.17% done, 104965 eQTLs found
+61.20% done, 105013 eQTLs found
+61.23% done, 105063 eQTLs found
+61.26% done, 105115 eQTLs found
+61.28% done, 105155 eQTLs found
+61.31% done, 105181 eQTLs found
+61.34% done, 105227 eQTLs found
+61.37% done, 105270 eQTLs found
+61.40% done, 105318 eQTLs found
+61.42% done, 105365 eQTLs found
+61.45% done, 105392 eQTLs found
+61.48% done, 105434 eQTLs found
+61.51% done, 105471 eQTLs found
+61.54% done, 105536 eQTLs found
+61.56% done, 105588 eQTLs found
+61.59% done, 105629 eQTLs found
+61.62% done, 105678 eQTLs found
+61.65% done, 105732 eQTLs found
+61.68% done, 105774 eQTLs found
+61.70% done, 105829 eQTLs found
+61.73% done, 105845 eQTLs found
+61.76% done, 105889 eQTLs found
+61.79% done, 105937 eQTLs found
+61.82% done, 105983 eQTLs found
+61.84% done, 106029 eQTLs found
+61.87% done, 106077 eQTLs found
+61.90% done, 106117 eQTLs found
+61.93% done, 106150 eQTLs found
+61.96% done, 106207 eQTLs found
+61.98% done, 106247 eQTLs found
+62.01% done, 106269 eQTLs found
+62.04% done, 106300 eQTLs found
+62.07% done, 106353 eQTLs found
+62.09% done, 106403 eQTLs found
+62.12% done, 106437 eQTLs found
+62.15% done, 106487 eQTLs found
+62.18% done, 106538 eQTLs found
+62.21% done, 106580 eQTLs found
+62.23% done, 106626 eQTLs found
+62.26% done, 106672 eQTLs found
+62.29% done, 106699 eQTLs found
+62.32% done, 106761 eQTLs found
+62.35% done, 106813 eQTLs found
+62.37% done, 106864 eQTLs found
+62.40% done, 106917 eQTLs found
+62.43% done, 106954 eQTLs found
+62.46% done, 107013 eQTLs found
+62.49% done, 107068 eQTLs found
+62.51% done, 107127 eQTLs found
+62.54% done, 107201 eQTLs found
+62.57% done, 107229 eQTLs found
+62.60% done, 107270 eQTLs found
+62.63% done, 107315 eQTLs found
+62.65% done, 107359 eQTLs found
+62.68% done, 107404 eQTLs found
+62.71% done, 107458 eQTLs found
+62.74% done, 107489 eQTLs found
+62.77% done, 107528 eQTLs found
+62.79% done, 107574 eQTLs found
+62.82% done, 107622 eQTLs found
+62.85% done, 107645 eQTLs found
+62.88% done, 107701 eQTLs found
+62.91% done, 107748 eQTLs found
+62.93% done, 107786 eQTLs found
+62.96% done, 107827 eQTLs found
+62.99% done, 107877 eQTLs found
+63.02% done, 107923 eQTLs found
+63.04% done, 107964 eQTLs found
+63.07% done, 108018 eQTLs found
+63.10% done, 108061 eQTLs found
+63.13% done, 108084 eQTLs found
+63.16% done, 108130 eQTLs found
+63.18% done, 108180 eQTLs found
+63.21% done, 108234 eQTLs found
+63.24% done, 108279 eQTLs found
+63.27% done, 108349 eQTLs found
+63.30% done, 108399 eQTLs found
+63.32% done, 108465 eQTLs found
+63.35% done, 108526 eQTLs found
+63.38% done, 108597 eQTLs found
+63.41% done, 108619 eQTLs found
+63.44% done, 108655 eQTLs found
+63.46% done, 108697 eQTLs found
+63.49% done, 108759 eQTLs found
+63.52% done, 108802 eQTLs found
+63.55% done, 108839 eQTLs found
+63.58% done, 108870 eQTLs found
+63.60% done, 108928 eQTLs found
+63.63% done, 108986 eQTLs found
+63.66% done, 109032 eQTLs found
+63.69% done, 109049 eQTLs found
+63.72% done, 109101 eQTLs found
+63.74% done, 109155 eQTLs found
+63.77% done, 109207 eQTLs found
+63.80% done, 109259 eQTLs found
+63.83% done, 109329 eQTLs found
+63.85% done, 109380 eQTLs found
+63.88% done, 109427 eQTLs found
+63.91% done, 109489 eQTLs found
+63.94% done, 109533 eQTLs found
+63.97% done, 109559 eQTLs found
+63.99% done, 109613 eQTLs found
+64.02% done, 109662 eQTLs found
+64.05% done, 109704 eQTLs found
+64.08% done, 109754 eQTLs found
+64.11% done, 109813 eQTLs found
+64.13% done, 109845 eQTLs found
+64.16% done, 109903 eQTLs found
+64.19% done, 109955 eQTLs found
+64.22% done, 110009 eQTLs found
+64.25% done, 110034 eQTLs found
+64.27% done, 110087 eQTLs found
+64.30% done, 110138 eQTLs found
+64.33% done, 110194 eQTLs found
+64.36% done, 110251 eQTLs found
+64.39% done, 110289 eQTLs found
+64.41% done, 110346 eQTLs found
+64.44% done, 110397 eQTLs found
+64.47% done, 110455 eQTLs found
+64.50% done, 110512 eQTLs found
+64.53% done, 110527 eQTLs found
+64.55% done, 110594 eQTLs found
+64.58% done, 110640 eQTLs found
+64.61% done, 110692 eQTLs found
+64.64% done, 110750 eQTLs found
+64.66% done, 110801 eQTLs found
+64.69% done, 110863 eQTLs found
+64.72% done, 110928 eQTLs found
+64.75% done, 110997 eQTLs found
+64.78% done, 111049 eQTLs found
+64.80% done, 111069 eQTLs found
+64.83% done, 111108 eQTLs found
+64.86% done, 111151 eQTLs found
+64.89% done, 111207 eQTLs found
+64.92% done, 111259 eQTLs found
+64.94% done, 111324 eQTLs found
+64.97% done, 111387 eQTLs found
+65.00% done, 111438 eQTLs found
+65.03% done, 111512 eQTLs found
+65.06% done, 111568 eQTLs found
+65.08% done, 111593 eQTLs found
+65.11% done, 111638 eQTLs found
+65.14% done, 111685 eQTLs found
+65.17% done, 111731 eQTLs found
+65.20% done, 111781 eQTLs found
+65.22% done, 111831 eQTLs found
+65.25% done, 111892 eQTLs found
+65.28% done, 111949 eQTLs found
+65.31% done, 111997 eQTLs found
+65.34% done, 112053 eQTLs found
+65.36% done, 112076 eQTLs found
+65.39% done, 112108 eQTLs found
+65.42% done, 112150 eQTLs found
+65.45% done, 112205 eQTLs found
+65.47% done, 112253 eQTLs found
+65.50% done, 112306 eQTLs found
+65.53% done, 112350 eQTLs found
+65.56% done, 112401 eQTLs found
+65.59% done, 112461 eQTLs found
+65.61% done, 112513 eQTLs found
+65.64% done, 112540 eQTLs found
+65.67% done, 112590 eQTLs found
+65.70% done, 112633 eQTLs found
+65.73% done, 112677 eQTLs found
+65.75% done, 112720 eQTLs found
+65.78% done, 112770 eQTLs found
+65.81% done, 112816 eQTLs found
+65.84% done, 112875 eQTLs found
+65.87% done, 112925 eQTLs found
+65.89% done, 112974 eQTLs found
+65.92% done, 112999 eQTLs found
+65.95% done, 113068 eQTLs found
+65.98% done, 113123 eQTLs found
+66.01% done, 113172 eQTLs found
+66.03% done, 113237 eQTLs found
+66.06% done, 113292 eQTLs found
+66.09% done, 113348 eQTLs found
+66.12% done, 113414 eQTLs found
+66.15% done, 113476 eQTLs found
+66.17% done, 113527 eQTLs found
+66.20% done, 113550 eQTLs found
+66.23% done, 113604 eQTLs found
+66.26% done, 113651 eQTLs found
+66.28% done, 113699 eQTLs found
+66.31% done, 113745 eQTLs found
+66.34% done, 113797 eQTLs found
+66.37% done, 113834 eQTLs found
+66.40% done, 113892 eQTLs found
+66.42% done, 113950 eQTLs found
+66.45% done, 114022 eQTLs found
+66.48% done, 114052 eQTLs found
+66.51% done, 114098 eQTLs found
+66.54% done, 114147 eQTLs found
+66.56% done, 114214 eQTLs found
+66.59% done, 114270 eQTLs found
+66.62% done, 114330 eQTLs found
+66.65% done, 114386 eQTLs found
+66.68% done, 114444 eQTLs found
+66.70% done, 114536 eQTLs found
+66.73% done, 114621 eQTLs found
+66.76% done, 114642 eQTLs found
+66.79% done, 114686 eQTLs found
+66.82% done, 114735 eQTLs found
+66.84% done, 114775 eQTLs found
+66.87% done, 114853 eQTLs found
+66.90% done, 114904 eQTLs found
+66.93% done, 114959 eQTLs found
+66.96% done, 115019 eQTLs found
+66.98% done, 115080 eQTLs found
+67.01% done, 115131 eQTLs found
+67.04% done, 115149 eQTLs found
+67.07% done, 115190 eQTLs found
+67.09% done, 115245 eQTLs found
+67.12% done, 115296 eQTLs found
+67.15% done, 115330 eQTLs found
+67.18% done, 115380 eQTLs found
+67.21% done, 115427 eQTLs found
+67.23% done, 115480 eQTLs found
+67.26% done, 115522 eQTLs found
+67.29% done, 115561 eQTLs found
+67.32% done, 115584 eQTLs found
+67.35% done, 115642 eQTLs found
+67.37% done, 115685 eQTLs found
+67.40% done, 115731 eQTLs found
+67.43% done, 115770 eQTLs found
+67.46% done, 115815 eQTLs found
+67.49% done, 115869 eQTLs found
+67.51% done, 115911 eQTLs found
+67.54% done, 115955 eQTLs found
+67.57% done, 116012 eQTLs found
+67.60% done, 116040 eQTLs found
+67.63% done, 116088 eQTLs found
+67.65% done, 116122 eQTLs found
+67.68% done, 116168 eQTLs found
+67.71% done, 116215 eQTLs found
+67.74% done, 116248 eQTLs found
+67.77% done, 116289 eQTLs found
+67.79% done, 116338 eQTLs found
+67.82% done, 116387 eQTLs found
+67.85% done, 116444 eQTLs found
+67.88% done, 116465 eQTLs found
+67.91% done, 116513 eQTLs found
+67.93% done, 116554 eQTLs found
+67.96% done, 116607 eQTLs found
+67.99% done, 116664 eQTLs found
+68.02% done, 116722 eQTLs found
+68.04% done, 116765 eQTLs found
+68.07% done, 116813 eQTLs found
+68.10% done, 116873 eQTLs found
+68.13% done, 116930 eQTLs found
+68.16% done, 116955 eQTLs found
+68.18% done, 117004 eQTLs found
+68.21% done, 117046 eQTLs found
+68.24% done, 117090 eQTLs found
+68.27% done, 117135 eQTLs found
+68.30% done, 117180 eQTLs found
+68.32% done, 117220 eQTLs found
+68.35% done, 117280 eQTLs found
+68.38% done, 117334 eQTLs found
+68.41% done, 117397 eQTLs found
+68.44% done, 117422 eQTLs found
+68.46% done, 117474 eQTLs found
+68.49% done, 117537 eQTLs found
+68.52% done, 117585 eQTLs found
+68.55% done, 117657 eQTLs found
+68.58% done, 117701 eQTLs found
+68.60% done, 117759 eQTLs found
+68.63% done, 117825 eQTLs found
+68.66% done, 117882 eQTLs found
+68.69% done, 117945 eQTLs found
+68.72% done, 117965 eQTLs found
+68.74% done, 118002 eQTLs found
+68.77% done, 118045 eQTLs found
+68.80% done, 118087 eQTLs found
+68.83% done, 118133 eQTLs found
+68.85% done, 118179 eQTLs found
+68.88% done, 118221 eQTLs found
+68.91% done, 118274 eQTLs found
+68.94% done, 118339 eQTLs found
+68.97% done, 118387 eQTLs found
+68.99% done, 118408 eQTLs found
+69.02% done, 118456 eQTLs found
+69.05% done, 118504 eQTLs found
+69.08% done, 118558 eQTLs found
+69.11% done, 118605 eQTLs found
+69.13% done, 118646 eQTLs found
+69.16% done, 118691 eQTLs found
+69.19% done, 118750 eQTLs found
+69.22% done, 118803 eQTLs found
+69.25% done, 118860 eQTLs found
+69.27% done, 118876 eQTLs found
+69.30% done, 118917 eQTLs found
+69.33% done, 118952 eQTLs found
+69.36% done, 118981 eQTLs found
+69.39% done, 119018 eQTLs found
+69.41% done, 119056 eQTLs found
+69.44% done, 119093 eQTLs found
+69.47% done, 119134 eQTLs found
+69.50% done, 119176 eQTLs found
+69.53% done, 119242 eQTLs found
+69.55% done, 119265 eQTLs found
+69.58% done, 119315 eQTLs found
+69.61% done, 119359 eQTLs found
+69.64% done, 119416 eQTLs found
+69.66% done, 119459 eQTLs found
+69.69% done, 119511 eQTLs found
+69.72% done, 119556 eQTLs found
+69.75% done, 119610 eQTLs found
+69.78% done, 119648 eQTLs found
+69.80% done, 119708 eQTLs found
+69.83% done, 119728 eQTLs found
+69.86% done, 119779 eQTLs found
+69.89% done, 119840 eQTLs found
+69.92% done, 119890 eQTLs found
+69.94% done, 119936 eQTLs found
+69.97% done, 119995 eQTLs found
+70.00% done, 120046 eQTLs found
+70.03% done, 120100 eQTLs found
+70.06% done, 120158 eQTLs found
+70.08% done, 120222 eQTLs found
+70.11% done, 120246 eQTLs found
+70.14% done, 120286 eQTLs found
+70.17% done, 120338 eQTLs found
+70.20% done, 120377 eQTLs found
+70.22% done, 120421 eQTLs found
+70.25% done, 120466 eQTLs found
+70.28% done, 120505 eQTLs found
+70.31% done, 120552 eQTLs found
+70.34% done, 120593 eQTLs found
+70.36% done, 120636 eQTLs found
+70.39% done, 120644 eQTLs found
+70.42% done, 120692 eQTLs found
+70.45% done, 120738 eQTLs found
+70.47% done, 120775 eQTLs found
+70.50% done, 120829 eQTLs found
+70.53% done, 120877 eQTLs found
+70.56% done, 120934 eQTLs found
+70.59% done, 120978 eQTLs found
+70.61% done, 121037 eQTLs found
+70.64% done, 121093 eQTLs found
+70.67% done, 121112 eQTLs found
+70.70% done, 121151 eQTLs found
+70.73% done, 121218 eQTLs found
+70.75% done, 121272 eQTLs found
+70.78% done, 121327 eQTLs found
+70.81% done, 121366 eQTLs found
+70.84% done, 121417 eQTLs found
+70.87% done, 121464 eQTLs found
+70.89% done, 121510 eQTLs found
+70.92% done, 121595 eQTLs found
+70.95% done, 121618 eQTLs found
+70.98% done, 121679 eQTLs found
+71.01% done, 121722 eQTLs found
+71.03% done, 121761 eQTLs found
+71.06% done, 121812 eQTLs found
+71.09% done, 121857 eQTLs found
+71.12% done, 121906 eQTLs found
+71.15% done, 121944 eQTLs found
+71.17% done, 121994 eQTLs found
+71.20% done, 122045 eQTLs found
+71.23% done, 122063 eQTLs found
+71.26% done, 122103 eQTLs found
+71.28% done, 122151 eQTLs found
+71.31% done, 122194 eQTLs found
+71.34% done, 122251 eQTLs found
+71.37% done, 122308 eQTLs found
+71.40% done, 122356 eQTLs found
+71.42% done, 122410 eQTLs found
+71.45% done, 122461 eQTLs found
+71.48% done, 122529 eQTLs found
+71.51% done, 122555 eQTLs found
+71.54% done, 122614 eQTLs found
+71.56% done, 122667 eQTLs found
+71.59% done, 122714 eQTLs found
+71.62% done, 122766 eQTLs found
+71.65% done, 122812 eQTLs found
+71.68% done, 122859 eQTLs found
+71.70% done, 122911 eQTLs found
+71.73% done, 122962 eQTLs found
+71.76% done, 123026 eQTLs found
+71.79% done, 123052 eQTLs found
+71.82% done, 123103 eQTLs found
+71.84% done, 123154 eQTLs found
+71.87% done, 123202 eQTLs found
+71.90% done, 123247 eQTLs found
+71.93% done, 123287 eQTLs found
+71.96% done, 123330 eQTLs found
+71.98% done, 123395 eQTLs found
+72.01% done, 123457 eQTLs found
+72.04% done, 123511 eQTLs found
+72.07% done, 123533 eQTLs found
+72.09% done, 123574 eQTLs found
+72.12% done, 123623 eQTLs found
+72.15% done, 123678 eQTLs found
+72.18% done, 123712 eQTLs found
+72.21% done, 123760 eQTLs found
+72.23% done, 123803 eQTLs found
+72.26% done, 123849 eQTLs found
+72.29% done, 123884 eQTLs found
+72.32% done, 123929 eQTLs found
+72.35% done, 123948 eQTLs found
+72.37% done, 123980 eQTLs found
+72.40% done, 124020 eQTLs found
+72.43% done, 124074 eQTLs found
+72.46% done, 124115 eQTLs found
+72.49% done, 124155 eQTLs found
+72.51% done, 124198 eQTLs found
+72.54% done, 124232 eQTLs found
+72.57% done, 124279 eQTLs found
+72.60% done, 124338 eQTLs found
+72.63% done, 124357 eQTLs found
+72.65% done, 124390 eQTLs found
+72.68% done, 124425 eQTLs found
+72.71% done, 124470 eQTLs found
+72.74% done, 124502 eQTLs found
+72.77% done, 124540 eQTLs found
+72.79% done, 124581 eQTLs found
+72.82% done, 124639 eQTLs found
+72.85% done, 124682 eQTLs found
+72.88% done, 124723 eQTLs found
+72.91% done, 124738 eQTLs found
+72.93% done, 124804 eQTLs found
+72.96% done, 124863 eQTLs found
+72.99% done, 124913 eQTLs found
+73.02% done, 124967 eQTLs found
+73.04% done, 125019 eQTLs found
+73.07% done, 125070 eQTLs found
+73.10% done, 125135 eQTLs found
+73.13% done, 125204 eQTLs found
+73.16% done, 125270 eQTLs found
+73.18% done, 125291 eQTLs found
+73.21% done, 125334 eQTLs found
+73.24% done, 125375 eQTLs found
+73.27% done, 125416 eQTLs found
+73.30% done, 125452 eQTLs found
+73.32% done, 125496 eQTLs found
+73.35% done, 125534 eQTLs found
+73.38% done, 125579 eQTLs found
+73.41% done, 125649 eQTLs found
+73.44% done, 125708 eQTLs found
+73.46% done, 125731 eQTLs found
+73.49% done, 125774 eQTLs found
+73.52% done, 125816 eQTLs found
+73.55% done, 125865 eQTLs found
+73.58% done, 125901 eQTLs found
+73.60% done, 125944 eQTLs found
+73.63% done, 125988 eQTLs found
+73.66% done, 126038 eQTLs found
+73.69% done, 126081 eQTLs found
+73.72% done, 126151 eQTLs found
+73.74% done, 126175 eQTLs found
+73.77% done, 126226 eQTLs found
+73.80% done, 126275 eQTLs found
+73.83% done, 126323 eQTLs found
+73.85% done, 126377 eQTLs found
+73.88% done, 126422 eQTLs found
+73.91% done, 126471 eQTLs found
+73.94% done, 126529 eQTLs found
+73.97% done, 126597 eQTLs found
+73.99% done, 126662 eQTLs found
+74.02% done, 126681 eQTLs found
+74.05% done, 126735 eQTLs found
+74.08% done, 126780 eQTLs found
+74.11% done, 126832 eQTLs found
+74.13% done, 126876 eQTLs found
+74.16% done, 126914 eQTLs found
+74.19% done, 126958 eQTLs found
+74.22% done, 127002 eQTLs found
+74.25% done, 127038 eQTLs found
+74.27% done, 127103 eQTLs found
+74.30% done, 127122 eQTLs found
+74.33% done, 127154 eQTLs found
+74.36% done, 127200 eQTLs found
+74.39% done, 127255 eQTLs found
+74.41% done, 127299 eQTLs found
+74.44% done, 127359 eQTLs found
+74.47% done, 127406 eQTLs found
+74.50% done, 127449 eQTLs found
+74.53% done, 127498 eQTLs found
+74.55% done, 127562 eQTLs found
+74.58% done, 127582 eQTLs found
+74.61% done, 127639 eQTLs found
+74.64% done, 127683 eQTLs found
+74.66% done, 127724 eQTLs found
+74.69% done, 127780 eQTLs found
+74.72% done, 127822 eQTLs found
+74.75% done, 127874 eQTLs found
+74.78% done, 127928 eQTLs found
+74.80% done, 127988 eQTLs found
+74.83% done, 128054 eQTLs found
+74.86% done, 128077 eQTLs found
+74.89% done, 128126 eQTLs found
+74.92% done, 128175 eQTLs found
+74.94% done, 128212 eQTLs found
+74.97% done, 128268 eQTLs found
+75.00% done, 128322 eQTLs found
+75.03% done, 128376 eQTLs found
+75.06% done, 128430 eQTLs found
+75.08% done, 128483 eQTLs found
+75.11% done, 128546 eQTLs found
+75.14% done, 128565 eQTLs found
+75.17% done, 128599 eQTLs found
+75.20% done, 128649 eQTLs found
+75.22% done, 128705 eQTLs found
+75.25% done, 128753 eQTLs found
+75.28% done, 128802 eQTLs found
+75.31% done, 128847 eQTLs found
+75.34% done, 128898 eQTLs found
+75.36% done, 128960 eQTLs found
+75.39% done, 129016 eQTLs found
+75.42% done, 129042 eQTLs found
+75.45% done, 129093 eQTLs found
+75.47% done, 129146 eQTLs found
+75.50% done, 129204 eQTLs found
+75.53% done, 129252 eQTLs found
+75.56% done, 129310 eQTLs found
+75.59% done, 129358 eQTLs found
+75.61% done, 129396 eQTLs found
+75.64% done, 129448 eQTLs found
+75.67% done, 129504 eQTLs found
+75.70% done, 129528 eQTLs found
+75.73% done, 129579 eQTLs found
+75.75% done, 129628 eQTLs found
+75.78% done, 129680 eQTLs found
+75.81% done, 129743 eQTLs found
+75.84% done, 129790 eQTLs found
+75.87% done, 129824 eQTLs found
+75.89% done, 129884 eQTLs found
+75.92% done, 129926 eQTLs found
+75.95% done, 129987 eQTLs found
+75.98% done, 130013 eQTLs found
+76.01% done, 130082 eQTLs found
+76.03% done, 130136 eQTLs found
+76.06% done, 130203 eQTLs found
+76.09% done, 130257 eQTLs found
+76.12% done, 130318 eQTLs found
+76.15% done, 130396 eQTLs found
+76.17% done, 130468 eQTLs found
+76.20% done, 130533 eQTLs found
+76.23% done, 130606 eQTLs found
+76.26% done, 130641 eQTLs found
+76.28% done, 130693 eQTLs found
+76.31% done, 130737 eQTLs found
+76.34% done, 130772 eQTLs found
+76.37% done, 130813 eQTLs found
+76.40% done, 130851 eQTLs found
+76.42% done, 130896 eQTLs found
+76.45% done, 130941 eQTLs found
+76.48% done, 130995 eQTLs found
+76.51% done, 131037 eQTLs found
+76.54% done, 131053 eQTLs found
+76.56% done, 131099 eQTLs found
+76.59% done, 131130 eQTLs found
+76.62% done, 131171 eQTLs found
+76.65% done, 131210 eQTLs found
+76.68% done, 131263 eQTLs found
+76.70% done, 131315 eQTLs found
+76.73% done, 131361 eQTLs found
+76.76% done, 131409 eQTLs found
+76.79% done, 131461 eQTLs found
+76.82% done, 131486 eQTLs found
+76.84% done, 131520 eQTLs found
+76.87% done, 131566 eQTLs found
+76.90% done, 131618 eQTLs found
+76.93% done, 131669 eQTLs found
+76.96% done, 131707 eQTLs found
+76.98% done, 131757 eQTLs found
+77.01% done, 131817 eQTLs found
+77.04% done, 131886 eQTLs found
+77.07% done, 131935 eQTLs found
+77.09% done, 131959 eQTLs found
+77.12% done, 131994 eQTLs found
+77.15% done, 132018 eQTLs found
+77.18% done, 132053 eQTLs found
+77.21% done, 132094 eQTLs found
+77.23% done, 132145 eQTLs found
+77.26% done, 132198 eQTLs found
+77.29% done, 132241 eQTLs found
+77.32% done, 132300 eQTLs found
+77.35% done, 132357 eQTLs found
+77.37% done, 132381 eQTLs found
+77.40% done, 132421 eQTLs found
+77.43% done, 132461 eQTLs found
+77.46% done, 132510 eQTLs found
+77.49% done, 132547 eQTLs found
+77.51% done, 132596 eQTLs found
+77.54% done, 132643 eQTLs found
+77.57% done, 132685 eQTLs found
+77.60% done, 132736 eQTLs found
+77.63% done, 132779 eQTLs found
+77.65% done, 132799 eQTLs found
+77.68% done, 132841 eQTLs found
+77.71% done, 132882 eQTLs found
+77.74% done, 132935 eQTLs found
+77.77% done, 132980 eQTLs found
+77.79% done, 133037 eQTLs found
+77.82% done, 133089 eQTLs found
+77.85% done, 133132 eQTLs found
+77.88% done, 133184 eQTLs found
+77.91% done, 133232 eQTLs found
+77.93% done, 133254 eQTLs found
+77.96% done, 133286 eQTLs found
+77.99% done, 133335 eQTLs found
+78.02% done, 133384 eQTLs found
+78.04% done, 133434 eQTLs found
+78.07% done, 133479 eQTLs found
+78.10% done, 133518 eQTLs found
+78.13% done, 133571 eQTLs found
+78.16% done, 133622 eQTLs found
+78.18% done, 133695 eQTLs found
+78.21% done, 133714 eQTLs found
+78.24% done, 133766 eQTLs found
+78.27% done, 133809 eQTLs found
+78.30% done, 133873 eQTLs found
+78.32% done, 133915 eQTLs found
+78.35% done, 133955 eQTLs found
+78.38% done, 134008 eQTLs found
+78.41% done, 134072 eQTLs found
+78.44% done, 134121 eQTLs found
+78.46% done, 134193 eQTLs found
+78.49% done, 134212 eQTLs found
+78.52% done, 134271 eQTLs found
+78.55% done, 134323 eQTLs found
+78.58% done, 134377 eQTLs found
+78.60% done, 134431 eQTLs found
+78.63% done, 134482 eQTLs found
+78.66% done, 134533 eQTLs found
+78.69% done, 134577 eQTLs found
+78.72% done, 134653 eQTLs found
+78.74% done, 134725 eQTLs found
+78.77% done, 134742 eQTLs found
+78.80% done, 134787 eQTLs found
+78.83% done, 134838 eQTLs found
+78.85% done, 134889 eQTLs found
+78.88% done, 134936 eQTLs found
+78.91% done, 134979 eQTLs found
+78.94% done, 135042 eQTLs found
+78.97% done, 135097 eQTLs found
+78.99% done, 135147 eQTLs found
+79.02% done, 135209 eQTLs found
+79.05% done, 135234 eQTLs found
+79.08% done, 135278 eQTLs found
+79.11% done, 135328 eQTLs found
+79.13% done, 135375 eQTLs found
+79.16% done, 135430 eQTLs found
+79.19% done, 135487 eQTLs found
+79.22% done, 135546 eQTLs found
+79.25% done, 135613 eQTLs found
+79.27% done, 135668 eQTLs found
+79.30% done, 135713 eQTLs found
+79.33% done, 135727 eQTLs found
+79.36% done, 135771 eQTLs found
+79.39% done, 135815 eQTLs found
+79.41% done, 135860 eQTLs found
+79.44% done, 135920 eQTLs found
+79.47% done, 135960 eQTLs found
+79.50% done, 136003 eQTLs found
+79.53% done, 136042 eQTLs found
+79.55% done, 136093 eQTLs found
+79.58% done, 136144 eQTLs found
+79.61% done, 136166 eQTLs found
+79.64% done, 136208 eQTLs found
+79.66% done, 136261 eQTLs found
+79.69% done, 136312 eQTLs found
+79.72% done, 136364 eQTLs found
+79.75% done, 136410 eQTLs found
+79.78% done, 136451 eQTLs found
+79.80% done, 136488 eQTLs found
+79.83% done, 136539 eQTLs found
+79.86% done, 136598 eQTLs found
+79.89% done, 136617 eQTLs found
+79.92% done, 136674 eQTLs found
+79.94% done, 136725 eQTLs found
+79.97% done, 136770 eQTLs found
+80.00% done, 136827 eQTLs found
+80.03% done, 136870 eQTLs found
+80.06% done, 136943 eQTLs found
+80.08% done, 136996 eQTLs found
+80.11% done, 137038 eQTLs found
+80.14% done, 137095 eQTLs found
+80.17% done, 137114 eQTLs found
+80.20% done, 137170 eQTLs found
+80.22% done, 137212 eQTLs found
+80.25% done, 137263 eQTLs found
+80.28% done, 137303 eQTLs found
+80.31% done, 137342 eQTLs found
+80.34% done, 137400 eQTLs found
+80.36% done, 137460 eQTLs found
+80.39% done, 137515 eQTLs found
+80.42% done, 137570 eQTLs found
+80.45% done, 137596 eQTLs found
+80.47% done, 137639 eQTLs found
+80.50% done, 137680 eQTLs found
+80.53% done, 137743 eQTLs found
+80.56% done, 137784 eQTLs found
+80.59% done, 137816 eQTLs found
+80.61% done, 137864 eQTLs found
+80.64% done, 137917 eQTLs found
+80.67% done, 137970 eQTLs found
+80.70% done, 138030 eQTLs found
+80.73% done, 138053 eQTLs found
+80.75% done, 138100 eQTLs found
+80.78% done, 138151 eQTLs found
+80.81% done, 138193 eQTLs found
+80.84% done, 138245 eQTLs found
+80.87% done, 138292 eQTLs found
+80.89% done, 138345 eQTLs found
+80.92% done, 138393 eQTLs found
+80.95% done, 138455 eQTLs found
+80.98% done, 138514 eQTLs found
+81.01% done, 138532 eQTLs found
+81.03% done, 138588 eQTLs found
+81.06% done, 138636 eQTLs found
+81.09% done, 138674 eQTLs found
+81.12% done, 138708 eQTLs found
+81.15% done, 138760 eQTLs found
+81.17% done, 138806 eQTLs found
+81.20% done, 138866 eQTLs found
+81.23% done, 138915 eQTLs found
+81.26% done, 138974 eQTLs found
+81.28% done, 139002 eQTLs found
+81.31% done, 139048 eQTLs found
+81.34% done, 139097 eQTLs found
+81.37% done, 139144 eQTLs found
+81.40% done, 139191 eQTLs found
+81.42% done, 139237 eQTLs found
+81.45% done, 139285 eQTLs found
+81.48% done, 139338 eQTLs found
+81.51% done, 139404 eQTLs found
+81.54% done, 139466 eQTLs found
+81.56% done, 139486 eQTLs found
+81.59% done, 139528 eQTLs found
+81.62% done, 139583 eQTLs found
+81.65% done, 139628 eQTLs found
+81.68% done, 139667 eQTLs found
+81.70% done, 139709 eQTLs found
+81.73% done, 139751 eQTLs found
+81.76% done, 139795 eQTLs found
+81.79% done, 139856 eQTLs found
+81.82% done, 139913 eQTLs found
+81.84% done, 139938 eQTLs found
+81.87% done, 139982 eQTLs found
+81.90% done, 140028 eQTLs found
+81.93% done, 140081 eQTLs found
+81.96% done, 140129 eQTLs found
+81.98% done, 140181 eQTLs found
+82.01% done, 140222 eQTLs found
+82.04% done, 140268 eQTLs found
+82.07% done, 140324 eQTLs found
+82.09% done, 140385 eQTLs found
+82.12% done, 140408 eQTLs found
+82.15% done, 140440 eQTLs found
+82.18% done, 140485 eQTLs found
+82.21% done, 140535 eQTLs found
+82.23% done, 140579 eQTLs found
+82.26% done, 140621 eQTLs found
+82.29% done, 140658 eQTLs found
+82.32% done, 140710 eQTLs found
+82.35% done, 140758 eQTLs found
+82.37% done, 140812 eQTLs found
+82.40% done, 140831 eQTLs found
+82.43% done, 140859 eQTLs found
+82.46% done, 140912 eQTLs found
+82.49% done, 140956 eQTLs found
+82.51% done, 140998 eQTLs found
+82.54% done, 141047 eQTLs found
+82.57% done, 141086 eQTLs found
+82.60% done, 141136 eQTLs found
+82.63% done, 141193 eQTLs found
+82.65% done, 141241 eQTLs found
+82.68% done, 141267 eQTLs found
+82.71% done, 141313 eQTLs found
+82.74% done, 141355 eQTLs found
+82.77% done, 141397 eQTLs found
+82.79% done, 141446 eQTLs found
+82.82% done, 141480 eQTLs found
+82.85% done, 141514 eQTLs found
+82.88% done, 141556 eQTLs found
+82.91% done, 141610 eQTLs found
+82.93% done, 141662 eQTLs found
+82.96% done, 141680 eQTLs found
+82.99% done, 141719 eQTLs found
+83.02% done, 141763 eQTLs found
+83.04% done, 141806 eQTLs found
+83.07% done, 141858 eQTLs found
+83.10% done, 141904 eQTLs found
+83.13% done, 141949 eQTLs found
+83.16% done, 141996 eQTLs found
+83.18% done, 142051 eQTLs found
+83.21% done, 142100 eQTLs found
+83.24% done, 142128 eQTLs found
+83.27% done, 142176 eQTLs found
+83.30% done, 142226 eQTLs found
+83.32% done, 142268 eQTLs found
+83.35% done, 142319 eQTLs found
+83.38% done, 142355 eQTLs found
+83.41% done, 142405 eQTLs found
+83.44% done, 142471 eQTLs found
+83.46% done, 142520 eQTLs found
+83.49% done, 142568 eQTLs found
+83.52% done, 142582 eQTLs found
+83.55% done, 142625 eQTLs found
+83.58% done, 142676 eQTLs found
+83.60% done, 142724 eQTLs found
+83.63% done, 142761 eQTLs found
+83.66% done, 142795 eQTLs found
+83.69% done, 142843 eQTLs found
+83.72% done, 142893 eQTLs found
+83.74% done, 142938 eQTLs found
+83.77% done, 142990 eQTLs found
+83.80% done, 143010 eQTLs found
+83.83% done, 143063 eQTLs found
+83.85% done, 143111 eQTLs found
+83.88% done, 143171 eQTLs found
+83.91% done, 143223 eQTLs found
+83.94% done, 143278 eQTLs found
+83.97% done, 143327 eQTLs found
+83.99% done, 143368 eQTLs found
+84.02% done, 143425 eQTLs found
+84.05% done, 143471 eQTLs found
+84.08% done, 143492 eQTLs found
+84.11% done, 143541 eQTLs found
+84.13% done, 143587 eQTLs found
+84.16% done, 143621 eQTLs found
+84.19% done, 143662 eQTLs found
+84.22% done, 143701 eQTLs found
+84.25% done, 143745 eQTLs found
+84.27% done, 143802 eQTLs found
+84.30% done, 143849 eQTLs found
+84.33% done, 143903 eQTLs found
+84.36% done, 143926 eQTLs found
+84.39% done, 143970 eQTLs found
+84.41% done, 144011 eQTLs found
+84.44% done, 144071 eQTLs found
+84.47% done, 144104 eQTLs found
+84.50% done, 144143 eQTLs found
+84.53% done, 144192 eQTLs found
+84.55% done, 144243 eQTLs found
+84.58% done, 144291 eQTLs found
+84.61% done, 144344 eQTLs found
+84.64% done, 144362 eQTLs found
+84.66% done, 144407 eQTLs found
+84.69% done, 144442 eQTLs found
+84.72% done, 144477 eQTLs found
+84.75% done, 144527 eQTLs found
+84.78% done, 144565 eQTLs found
+84.80% done, 144610 eQTLs found
+84.83% done, 144665 eQTLs found
+84.86% done, 144711 eQTLs found
+84.89% done, 144760 eQTLs found
+84.92% done, 144779 eQTLs found
+84.94% done, 144822 eQTLs found
+84.97% done, 144870 eQTLs found
+85.00% done, 144929 eQTLs found
+85.03% done, 144982 eQTLs found
+85.06% done, 145019 eQTLs found
+85.08% done, 145069 eQTLs found
+85.11% done, 145137 eQTLs found
+85.14% done, 145195 eQTLs found
+85.17% done, 145256 eQTLs found
+85.20% done, 145282 eQTLs found
+85.22% done, 145340 eQTLs found
+85.25% done, 145389 eQTLs found
+85.28% done, 145445 eQTLs found
+85.31% done, 145486 eQTLs found
+85.34% done, 145534 eQTLs found
+85.36% done, 145584 eQTLs found
+85.39% done, 145633 eQTLs found
+85.42% done, 145681 eQTLs found
+85.45% done, 145719 eQTLs found
+85.47% done, 145734 eQTLs found
+85.50% done, 145767 eQTLs found
+85.53% done, 145815 eQTLs found
+85.56% done, 145850 eQTLs found
+85.59% done, 145903 eQTLs found
+85.61% done, 145946 eQTLs found
+85.64% done, 145991 eQTLs found
+85.67% done, 146050 eQTLs found
+85.70% done, 146106 eQTLs found
+85.73% done, 146162 eQTLs found
+85.75% done, 146175 eQTLs found
+85.78% done, 146220 eQTLs found
+85.81% done, 146272 eQTLs found
+85.84% done, 146330 eQTLs found
+85.87% done, 146379 eQTLs found
+85.89% done, 146429 eQTLs found
+85.92% done, 146475 eQTLs found
+85.95% done, 146540 eQTLs found
+85.98% done, 146582 eQTLs found
+86.01% done, 146639 eQTLs found
+86.03% done, 146663 eQTLs found
+86.06% done, 146708 eQTLs found
+86.09% done, 146758 eQTLs found
+86.12% done, 146797 eQTLs found
+86.15% done, 146841 eQTLs found
+86.17% done, 146886 eQTLs found
+86.20% done, 146925 eQTLs found
+86.23% done, 146972 eQTLs found
+86.26% done, 147028 eQTLs found
+86.28% done, 147067 eQTLs found
+86.31% done, 147083 eQTLs found
+86.34% done, 147120 eQTLs found
+86.37% done, 147173 eQTLs found
+86.40% done, 147225 eQTLs found
+86.42% done, 147287 eQTLs found
+86.45% done, 147326 eQTLs found
+86.48% done, 147372 eQTLs found
+86.51% done, 147437 eQTLs found
+86.54% done, 147486 eQTLs found
+86.56% done, 147551 eQTLs found
+86.59% done, 147575 eQTLs found
+86.62% done, 147625 eQTLs found
+86.65% done, 147682 eQTLs found
+86.68% done, 147733 eQTLs found
+86.70% done, 147793 eQTLs found
+86.73% done, 147852 eQTLs found
+86.76% done, 147902 eQTLs found
+86.79% done, 147949 eQTLs found
+86.82% done, 148015 eQTLs found
+86.84% done, 148061 eQTLs found
+86.87% done, 148075 eQTLs found
+86.90% done, 148121 eQTLs found
+86.93% done, 148168 eQTLs found
+86.96% done, 148219 eQTLs found
+86.98% done, 148274 eQTLs found
+87.01% done, 148309 eQTLs found
+87.04% done, 148363 eQTLs found
+87.07% done, 148419 eQTLs found
+87.09% done, 148482 eQTLs found
+87.12% done, 148549 eQTLs found
+87.15% done, 148569 eQTLs found
+87.18% done, 148627 eQTLs found
+87.21% done, 148676 eQTLs found
+87.23% done, 148735 eQTLs found
+87.26% done, 148791 eQTLs found
+87.29% done, 148845 eQTLs found
+87.32% done, 148892 eQTLs found
+87.35% done, 148950 eQTLs found
+87.37% done, 149023 eQTLs found
+87.40% done, 149090 eQTLs found
+87.43% done, 149110 eQTLs found
+87.46% done, 149154 eQTLs found
+87.49% done, 149207 eQTLs found
+87.51% done, 149254 eQTLs found
+87.54% done, 149301 eQTLs found
+87.57% done, 149353 eQTLs found
+87.60% done, 149401 eQTLs found
+87.63% done, 149451 eQTLs found
+87.65% done, 149504 eQTLs found
+87.68% done, 149559 eQTLs found
+87.71% done, 149580 eQTLs found
+87.74% done, 149631 eQTLs found
+87.77% done, 149685 eQTLs found
+87.79% done, 149731 eQTLs found
+87.82% done, 149783 eQTLs found
+87.85% done, 149846 eQTLs found
+87.88% done, 149905 eQTLs found
+87.91% done, 149944 eQTLs found
+87.93% done, 149992 eQTLs found
+87.96% done, 150049 eQTLs found
+87.99% done, 150070 eQTLs found
+88.02% done, 150125 eQTLs found
+88.04% done, 150177 eQTLs found
+88.07% done, 150221 eQTLs found
+88.10% done, 150269 eQTLs found
+88.13% done, 150325 eQTLs found
+88.16% done, 150380 eQTLs found
+88.18% done, 150430 eQTLs found
+88.21% done, 150483 eQTLs found
+88.24% done, 150532 eQTLs found
+88.27% done, 150559 eQTLs found
+88.30% done, 150614 eQTLs found
+88.32% done, 150660 eQTLs found
+88.35% done, 150720 eQTLs found
+88.38% done, 150782 eQTLs found
+88.41% done, 150834 eQTLs found
+88.44% done, 150890 eQTLs found
+88.46% done, 150932 eQTLs found
+88.49% done, 150997 eQTLs found
+88.52% done, 151059 eQTLs found
+88.55% done, 151089 eQTLs found
+88.58% done, 151128 eQTLs found
+88.60% done, 151191 eQTLs found
+88.63% done, 151238 eQTLs found
+88.66% done, 151282 eQTLs found
+88.69% done, 151321 eQTLs found
+88.72% done, 151364 eQTLs found
+88.74% done, 151413 eQTLs found
+88.77% done, 151462 eQTLs found
+88.80% done, 151514 eQTLs found
+88.83% done, 151537 eQTLs found
+88.85% done, 151581 eQTLs found
+88.88% done, 151625 eQTLs found
+88.91% done, 151686 eQTLs found
+88.94% done, 151730 eQTLs found
+88.97% done, 151782 eQTLs found
+88.99% done, 151830 eQTLs found
+89.02% done, 151881 eQTLs found
+89.05% done, 151926 eQTLs found
+89.08% done, 151968 eQTLs found
+89.11% done, 151987 eQTLs found
+89.13% done, 152033 eQTLs found
+89.16% done, 152082 eQTLs found
+89.19% done, 152138 eQTLs found
+89.22% done, 152187 eQTLs found
+89.25% done, 152240 eQTLs found
+89.27% done, 152280 eQTLs found
+89.30% done, 152328 eQTLs found
+89.33% done, 152380 eQTLs found
+89.36% done, 152441 eQTLs found
+89.39% done, 152459 eQTLs found
+89.41% done, 152493 eQTLs found
+89.44% done, 152538 eQTLs found
+89.47% done, 152578 eQTLs found
+89.50% done, 152631 eQTLs found
+89.53% done, 152671 eQTLs found
+89.55% done, 152708 eQTLs found
+89.58% done, 152741 eQTLs found
+89.61% done, 152794 eQTLs found
+89.64% done, 152838 eQTLs found
+89.66% done, 152866 eQTLs found
+89.69% done, 152901 eQTLs found
+89.72% done, 152950 eQTLs found
+89.75% done, 152999 eQTLs found
+89.78% done, 153057 eQTLs found
+89.80% done, 153102 eQTLs found
+89.83% done, 153159 eQTLs found
+89.86% done, 153205 eQTLs found
+89.89% done, 153254 eQTLs found
+89.92% done, 153309 eQTLs found
+89.94% done, 153337 eQTLs found
+89.97% done, 153380 eQTLs found
+90.00% done, 153432 eQTLs found
+90.03% done, 153473 eQTLs found
+90.06% done, 153525 eQTLs found
+90.08% done, 153562 eQTLs found
+90.11% done, 153606 eQTLs found
+90.14% done, 153653 eQTLs found
+90.17% done, 153708 eQTLs found
+90.20% done, 153751 eQTLs found
+90.22% done, 153777 eQTLs found
+90.25% done, 153819 eQTLs found
+90.28% done, 153873 eQTLs found
+90.31% done, 153920 eQTLs found
+90.34% done, 153964 eQTLs found
+90.36% done, 154021 eQTLs found
+90.39% done, 154078 eQTLs found
+90.42% done, 154130 eQTLs found
+90.45% done, 154183 eQTLs found
+90.47% done, 154217 eQTLs found
+90.50% done, 154237 eQTLs found
+90.53% done, 154278 eQTLs found
+90.56% done, 154317 eQTLs found
+90.59% done, 154364 eQTLs found
+90.61% done, 154431 eQTLs found
+90.64% done, 154480 eQTLs found
+90.67% done, 154535 eQTLs found
+90.70% done, 154589 eQTLs found
+90.73% done, 154636 eQTLs found
+90.75% done, 154685 eQTLs found
+90.78% done, 154709 eQTLs found
+90.81% done, 154758 eQTLs found
+90.84% done, 154808 eQTLs found
+90.87% done, 154867 eQTLs found
+90.89% done, 154920 eQTLs found
+90.92% done, 154975 eQTLs found
+90.95% done, 155019 eQTLs found
+90.98% done, 155091 eQTLs found
+91.01% done, 155160 eQTLs found
+91.03% done, 155227 eQTLs found
+91.06% done, 155251 eQTLs found
+91.09% done, 155290 eQTLs found
+91.12% done, 155335 eQTLs found
+91.15% done, 155383 eQTLs found
+91.17% done, 155423 eQTLs found
+91.20% done, 155460 eQTLs found
+91.23% done, 155505 eQTLs found
+91.26% done, 155537 eQTLs found
+91.28% done, 155591 eQTLs found
+91.31% done, 155640 eQTLs found
+91.34% done, 155658 eQTLs found
+91.37% done, 155705 eQTLs found
+91.40% done, 155750 eQTLs found
+91.42% done, 155788 eQTLs found
+91.45% done, 155818 eQTLs found
+91.48% done, 155851 eQTLs found
+91.51% done, 155888 eQTLs found
+91.54% done, 155931 eQTLs found
+91.56% done, 155990 eQTLs found
+91.59% done, 156042 eQTLs found
+91.62% done, 156070 eQTLs found
+91.65% done, 156121 eQTLs found
+91.68% done, 156173 eQTLs found
+91.70% done, 156220 eQTLs found
+91.73% done, 156271 eQTLs found
+91.76% done, 156308 eQTLs found
+91.79% done, 156354 eQTLs found
+91.82% done, 156405 eQTLs found
+91.84% done, 156464 eQTLs found
+91.87% done, 156512 eQTLs found
+91.90% done, 156545 eQTLs found
+91.93% done, 156589 eQTLs found
+91.96% done, 156638 eQTLs found
+91.98% done, 156679 eQTLs found
+92.01% done, 156733 eQTLs found
+92.04% done, 156767 eQTLs found
+92.07% done, 156803 eQTLs found
+92.09% done, 156848 eQTLs found
+92.12% done, 156891 eQTLs found
+92.15% done, 156948 eQTLs found
+92.18% done, 156975 eQTLs found
+92.21% done, 157029 eQTLs found
+92.23% done, 157070 eQTLs found
+92.26% done, 157108 eQTLs found
+92.29% done, 157154 eQTLs found
+92.32% done, 157202 eQTLs found
+92.35% done, 157240 eQTLs found
+92.37% done, 157291 eQTLs found
+92.40% done, 157357 eQTLs found
+92.43% done, 157411 eQTLs found
+92.46% done, 157431 eQTLs found
+92.49% done, 157479 eQTLs found
+92.51% done, 157519 eQTLs found
+92.54% done, 157553 eQTLs found
+92.57% done, 157599 eQTLs found
+92.60% done, 157639 eQTLs found
+92.63% done, 157694 eQTLs found
+92.65% done, 157758 eQTLs found
+92.68% done, 157809 eQTLs found
+92.71% done, 157879 eQTLs found
+92.74% done, 157907 eQTLs found
+92.77% done, 157966 eQTLs found
+92.79% done, 158026 eQTLs found
+92.82% done, 158080 eQTLs found
+92.85% done, 158144 eQTLs found
+92.88% done, 158205 eQTLs found
+92.91% done, 158263 eQTLs found
+92.93% done, 158318 eQTLs found
+92.96% done, 158379 eQTLs found
+92.99% done, 158442 eQTLs found
+93.02% done, 158464 eQTLs found
+93.04% done, 158500 eQTLs found
+93.07% done, 158540 eQTLs found
+93.10% done, 158584 eQTLs found
+93.13% done, 158635 eQTLs found
+93.16% done, 158673 eQTLs found
+93.18% done, 158710 eQTLs found
+93.21% done, 158751 eQTLs found
+93.24% done, 158811 eQTLs found
+93.27% done, 158866 eQTLs found
+93.30% done, 158883 eQTLs found
+93.32% done, 158924 eQTLs found
+93.35% done, 158973 eQTLs found
+93.38% done, 159015 eQTLs found
+93.41% done, 159062 eQTLs found
+93.44% done, 159107 eQTLs found
+93.46% done, 159153 eQTLs found
+93.49% done, 159210 eQTLs found
+93.52% done, 159271 eQTLs found
+93.55% done, 159321 eQTLs found
+93.58% done, 159344 eQTLs found
+93.60% done, 159396 eQTLs found
+93.63% done, 159452 eQTLs found
+93.66% done, 159492 eQTLs found
+93.69% done, 159555 eQTLs found
+93.72% done, 159620 eQTLs found
+93.74% done, 159668 eQTLs found
+93.77% done, 159726 eQTLs found
+93.80% done, 159783 eQTLs found
+93.83% done, 159855 eQTLs found
+93.85% done, 159880 eQTLs found
+93.88% done, 159917 eQTLs found
+93.91% done, 159971 eQTLs found
+93.94% done, 160015 eQTLs found
+93.97% done, 160057 eQTLs found
+93.99% done, 160095 eQTLs found
+94.02% done, 160126 eQTLs found
+94.05% done, 160173 eQTLs found
+94.08% done, 160240 eQTLs found
+94.11% done, 160292 eQTLs found
+94.13% done, 160320 eQTLs found
+94.16% done, 160361 eQTLs found
+94.19% done, 160402 eQTLs found
+94.22% done, 160442 eQTLs found
+94.25% done, 160471 eQTLs found
+94.27% done, 160505 eQTLs found
+94.30% done, 160546 eQTLs found
+94.33% done, 160591 eQTLs found
+94.36% done, 160636 eQTLs found
+94.39% done, 160690 eQTLs found
+94.41% done, 160708 eQTLs found
+94.44% done, 160755 eQTLs found
+94.47% done, 160795 eQTLs found
+94.50% done, 160851 eQTLs found
+94.53% done, 160890 eQTLs found
+94.55% done, 160927 eQTLs found
+94.58% done, 160969 eQTLs found
+94.61% done, 161025 eQTLs found
+94.64% done, 161085 eQTLs found
+94.66% done, 161132 eQTLs found
+94.69% done, 161149 eQTLs found
+94.72% done, 161195 eQTLs found
+94.75% done, 161248 eQTLs found
+94.78% done, 161300 eQTLs found
+94.80% done, 161353 eQTLs found
+94.83% done, 161407 eQTLs found
+94.86% done, 161458 eQTLs found
+94.89% done, 161488 eQTLs found
+94.92% done, 161532 eQTLs found
+94.94% done, 161592 eQTLs found
+94.97% done, 161608 eQTLs found
+95.00% done, 161644 eQTLs found
+95.03% done, 161689 eQTLs found
+95.06% done, 161742 eQTLs found
+95.08% done, 161791 eQTLs found
+95.11% done, 161845 eQTLs found
+95.14% done, 161900 eQTLs found
+95.17% done, 161960 eQTLs found
+95.20% done, 162000 eQTLs found
+95.22% done, 162050 eQTLs found
+95.25% done, 162075 eQTLs found
+95.28% done, 162116 eQTLs found
+95.31% done, 162159 eQTLs found
+95.34% done, 162202 eQTLs found
+95.36% done, 162241 eQTLs found
+95.39% done, 162274 eQTLs found
+95.42% done, 162311 eQTLs found
+95.45% done, 162359 eQTLs found
+95.47% done, 162409 eQTLs found
+95.50% done, 162456 eQTLs found
+95.53% done, 162475 eQTLs found
+95.56% done, 162525 eQTLs found
+95.59% done, 162573 eQTLs found
+95.61% done, 162623 eQTLs found
+95.64% done, 162675 eQTLs found
+95.67% done, 162724 eQTLs found
+95.70% done, 162761 eQTLs found
+95.73% done, 162813 eQTLs found
+95.75% done, 162872 eQTLs found
+95.78% done, 162928 eQTLs found
+95.81% done, 162959 eQTLs found
+95.84% done, 163005 eQTLs found
+95.87% done, 163057 eQTLs found
+95.89% done, 163112 eQTLs found
+95.92% done, 163150 eQTLs found
+95.95% done, 163193 eQTLs found
+95.98% done, 163240 eQTLs found
+96.01% done, 163305 eQTLs found
+96.03% done, 163350 eQTLs found
+96.06% done, 163396 eQTLs found
+96.09% done, 163418 eQTLs found
+96.12% done, 163466 eQTLs found
+96.15% done, 163510 eQTLs found
+96.17% done, 163566 eQTLs found
+96.20% done, 163611 eQTLs found
+96.23% done, 163660 eQTLs found
+96.26% done, 163705 eQTLs found
+96.28% done, 163761 eQTLs found
+96.31% done, 163806 eQTLs found
+96.34% done, 163866 eQTLs found
+96.37% done, 163901 eQTLs found
+96.40% done, 163935 eQTLs found
+96.42% done, 163968 eQTLs found
+96.45% done, 163998 eQTLs found
+96.48% done, 164048 eQTLs found
+96.51% done, 164090 eQTLs found
+96.54% done, 164138 eQTLs found
+96.56% done, 164182 eQTLs found
+96.59% done, 164213 eQTLs found
+96.62% done, 164264 eQTLs found
+96.65% done, 164280 eQTLs found
+96.68% done, 164321 eQTLs found
+96.70% done, 164374 eQTLs found
+96.73% done, 164405 eQTLs found
+96.76% done, 164459 eQTLs found
+96.79% done, 164506 eQTLs found
+96.82% done, 164563 eQTLs found
+96.84% done, 164611 eQTLs found
+96.87% done, 164652 eQTLs found
+96.90% done, 164709 eQTLs found
+96.93% done, 164735 eQTLs found
+96.96% done, 164790 eQTLs found
+96.98% done, 164833 eQTLs found
+97.01% done, 164880 eQTLs found
+97.04% done, 164940 eQTLs found
+97.07% done, 165003 eQTLs found
+97.09% done, 165067 eQTLs found
+97.12% done, 165119 eQTLs found
+97.15% done, 165201 eQTLs found
+97.18% done, 165253 eQTLs found
+97.21% done, 165276 eQTLs found
+97.23% done, 165332 eQTLs found
+97.26% done, 165367 eQTLs found
+97.29% done, 165409 eQTLs found
+97.32% done, 165452 eQTLs found
+97.35% done, 165505 eQTLs found
+97.37% done, 165542 eQTLs found
+97.40% done, 165580 eQTLs found
+97.43% done, 165641 eQTLs found
+97.46% done, 165688 eQTLs found
+97.49% done, 165709 eQTLs found
+97.51% done, 165761 eQTLs found
+97.54% done, 165787 eQTLs found
+97.57% done, 165818 eQTLs found
+97.60% done, 165854 eQTLs found
+97.63% done, 165904 eQTLs found
+97.65% done, 165937 eQTLs found
+97.68% done, 165979 eQTLs found
+97.71% done, 166025 eQTLs found
+97.74% done, 166078 eQTLs found
+97.77% done, 166094 eQTLs found
+97.79% done, 166128 eQTLs found
+97.82% done, 166177 eQTLs found
+97.85% done, 166219 eQTLs found
+97.88% done, 166247 eQTLs found
+97.91% done, 166283 eQTLs found
+97.93% done, 166311 eQTLs found
+97.96% done, 166339 eQTLs found
+97.99% done, 166382 eQTLs found
+98.02% done, 166424 eQTLs found
+98.04% done, 166440 eQTLs found
+98.07% done, 166511 eQTLs found
+98.10% done, 166573 eQTLs found
+98.13% done, 166628 eQTLs found
+98.16% done, 166689 eQTLs found
+98.18% done, 166757 eQTLs found
+98.21% done, 166821 eQTLs found
+98.24% done, 166877 eQTLs found
+98.27% done, 166945 eQTLs found
+98.30% done, 167014 eQTLs found
+98.32% done, 167036 eQTLs found
+98.35% done, 167068 eQTLs found
+98.38% done, 167114 eQTLs found
+98.41% done, 167163 eQTLs found
+98.44% done, 167209 eQTLs found
+98.46% done, 167248 eQTLs found
+98.49% done, 167297 eQTLs found
+98.52% done, 167347 eQTLs found
+98.55% done, 167401 eQTLs found
+98.58% done, 167453 eQTLs found
+98.60% done, 167475 eQTLs found
+98.63% done, 167533 eQTLs found
+98.66% done, 167573 eQTLs found
+98.69% done, 167637 eQTLs found
+98.72% done, 167684 eQTLs found
+98.74% done, 167744 eQTLs found
+98.77% done, 167781 eQTLs found
+98.80% done, 167845 eQTLs found
+98.83% done, 167890 eQTLs found
+98.85% done, 167950 eQTLs found
+98.88% done, 167972 eQTLs found
+98.91% done, 168019 eQTLs found
+98.94% done, 168070 eQTLs found
+98.97% done, 168139 eQTLs found
+98.99% done, 168196 eQTLs found
+99.02% done, 168244 eQTLs found
+99.05% done, 168294 eQTLs found
+99.08% done, 168339 eQTLs found
+99.11% done, 168385 eQTLs found
+99.13% done, 168457 eQTLs found
+99.16% done, 168478 eQTLs found
+99.19% done, 168517 eQTLs found
+99.22% done, 168561 eQTLs found
+99.25% done, 168605 eQTLs found
+99.27% done, 168659 eQTLs found
+99.30% done, 168705 eQTLs found
+99.33% done, 168749 eQTLs found
+99.36% done, 168806 eQTLs found
+99.39% done, 168874 eQTLs found
+99.41% done, 168936 eQTLs found
+99.44% done, 168974 eQTLs found
+99.47% done, 169028 eQTLs found
+99.50% done, 169078 eQTLs found
+99.53% done, 169136 eQTLs found
+99.55% done, 169188 eQTLs found
+99.58% done, 169228 eQTLs found
+99.61% done, 169276 eQTLs found
+99.64% done, 169317 eQTLs found
+99.66% done, 169370 eQTLs found
+99.69% done, 169433 eQTLs found
+99.72% done, 169465 eQTLs found
+99.75% done, 169487 eQTLs found
+99.78% done, 169508 eQTLs found
+99.80% done, 169530 eQTLs found
+99.83% done, 169554 eQTLs found
+99.86% done, 169577 eQTLs found
+99.89% done, 169600 eQTLs found
+99.92% done, 169641 eQTLs found
+99.94% done, 169679 eQTLs found
+99.97% done, 169725 eQTLs found
+100.00% done, 169743 eQTLs found
+Task finished in  13483.22  seconds
+ 
+> 
+> 
+> 
+> proc.time()
+     user    system   elapsed 
+13480.698   325.357 13806.753 

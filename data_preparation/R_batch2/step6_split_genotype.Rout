@@ -1,0 +1,307 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/genotype_normal/")
+> 
+> # ------------------------------------------------------------
+> # read data
+> # ------------------------------------------------------------
+> 
+> date()
+[1] "Fri Nov  2 12:57:21 2012"
+> dat = read.table("birdseed-v2.calls.txt", header=TRUE, na.strings="-1")
+> date()
+[1] "Fri Nov  2 13:03:24 2012"
+> 
+> dim(dat)
+[1] 909622    686
+> dat[1:2,1:5]
+    probeset_id BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+1 SNP_A-2131660                                                    2
+2 SNP_A-1967418                                                    2
+  CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL
+1                                                     2
+2                                                     2
+  RANDS_p_TCGA_b109_SNP_1N_GenomeWideSNP_6_A11_771896.CEL
+1                                                       2
+2                                                       2
+  JOUAL_p_TCGA_b96_SNP_N_GenomeWideSNP_6_A12_747988.CEL
+1                                                     2
+2                                                     2
+> 
+> table(dat[,2])
+
+     0      1      2 
+333099 243076 326357 
+> table(is.na(dat[,2]))
+
+ FALSE   TRUE 
+902532   7090 
+> 
+> # ------------------------------------------------------------
+> # read in the samples to be used
+> # ------------------------------------------------------------
+> 
+> sam = read.table("../info/brca_samples2use_after_qc_female_caucasian.txt", 
++ header=TRUE, sep="\t", as.is=TRUE)
+> dim(sam)
+[1] 551  23
+> sam[1,]
+  DNAtumor_institution DNAtumor_patientID DNAtumor_type DNAtumor_portion
+1                   A7               A0D9           01A              31D
+  DNAtumor_plate                                   DNAtumor_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_H07_697072.CEL
+  DNAnorml_institution DNAnorml_patientID DNAnorml_type DNAnorml_portion
+1                   A7               A0D9           10A              01D
+  DNAnorml_plate                                   DNAnorml_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+                     RNA_Exome             RNA_RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+             RNA_RNAseq.Normal              RNA_rnaseqID.Tumor
+1 TCGA-A7-A0D9-11A-53R-A089-07 110318_SN749_0046_AB039FABXX_4_
+                   RNA_rnaseqID.Normal RNA_institution RNA_patientID RNA_type
+1 110909_UNC9-SN296_0240_BD0DDBABXX_1_              A7          A0D9      01A
+  RNA_portion RNA_plate gender
+1         31R      A056 female
+> 
+> mat1 = match(sam$DNAnorml_arrayFile, names(dat))
+> 
+> if(any(is.na(mat1))){
++   stop("some sampls in the sample file are not in the data\n")
++ }
+> 
+> datEA = dat[,c(1,mat1)]
+> dim(datEA)
+[1] 909622    552
+> datEA[1:2,1:5]
+    probeset_id BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+1 SNP_A-2131660                                                    2
+2 SNP_A-1967418                                                    2
+  CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL
+1                                                     2
+2                                                     2
+  RANDS_p_TCGA_b109_SNP_1N_GenomeWideSNP_6_A11_771896.CEL
+1                                                       2
+2                                                       2
+  JOUAL_p_TCGA_b96_SNP_N_GenomeWideSNP_6_A12_747988.CEL
+1                                                     2
+2                                                     2
+> 
+> if(any(sam$DNAnorml_arrayFile != names(datEA)[-1])){
++   stop("sample name mismatch\n")
++ }
+> names(datEA)[-1] = sam$DNAnorml_patientID
+> names(datEA)[1]  = "id"
+> 
+> 
+> dim(datEA)
+[1] 909622    552
+> datEA[1:2,1:5]
+             id A0D9 A0DB A13G A0AU
+1 SNP_A-2131660    2    2    2    2
+2 SNP_A-1967418    2    2    2    2
+> 
+> # ------------------------------------------------------------
+> # remove the SNPs that have more than 5% missing values 
+> # ------------------------------------------------------------
+> 
+> pdata = data.matrix(datEA[,-1])
+> dim(pdata)
+[1] 909622    551
+> 
+> nNA = rowSums(is.na(pdata))
+> summary(nNA)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+   0.00    0.00    2.00    9.04    7.00  551.00 
+> 
+> w2rm = which(nNA > 0.05*ncol(pdata))
+> length(w2rm)
+[1] 72645
+> 
+> if(length(w2rm) > 0){
++   datEA = datEA[-w2rm,]
++   pdata = pdata[-w2rm,]
++ }
+> 
+> dim(datEA)
+[1] 836977    552
+> dim(pdata)
+[1] 836977    551
+> 
+> # ------------------------------------------------------------
+> # remove the SNPs with MAF smaller than 1% 
+> # ------------------------------------------------------------
+> 
+> MAF = 0.5*rowSums(pdata, na.rm=TRUE)/rowSums((!is.na(pdata)), na.rm=TRUE)
+> MAF = pmin(MAF, 1 - MAF)
+> summary(MAF)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.00000 0.05717 0.18420 0.20200 0.33490 0.50000 
+> 
+> w2rm = which(MAF <0.01)
+> length(w2rm)
+[1] 121799
+> 
+> if(length(w2rm) > 0){
++   datEA = datEA[-w2rm,]
++   pdata = pdata[-w2rm,]
++ }
+> 
+> dim(datEA)
+[1] 715178    552
+> dim(pdata)
+[1] 715178    551
+> datEA[1:2,1:8]
+             id A0D9 A0DB A13G A0AU A0AY A0AZ A0B5
+1 SNP_A-2131660    2    2    2    2    2    2    2
+2 SNP_A-1967418    2    2    2    2    2    2    1
+> 
+> write.table(datEA, file = "datEA.txt", append = FALSE, quote = FALSE, 
++   sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> 
+> # ------------------------------------------------------------
+> # read in the samples to be used
+> # ------------------------------------------------------------
+> 
+> sam = read.table("../info/brca_samples2use_after_qc_female_aa.txt", 
++ header=TRUE, sep="\t", as.is=TRUE)
+> dim(sam)
+[1] 50 23
+> sam[1,]
+  DNAtumor_institution DNAtumor_patientID DNAtumor_type DNAtumor_portion
+1                   BH               A0BW           01A              11D
+  DNAtumor_plate                                   DNAtumor_arrayFile
+1           A111 URAEI_p_TCGASNP_b85_N_GenomeWideSNP_6_G04_735070.CEL
+  DNAnorml_institution DNAnorml_patientID DNAnorml_type DNAnorml_portion
+1                   BH               A0BW           10A              01D
+  DNAnorml_plate                                   DNAnorml_arrayFile
+1           A113 URAEI_p_TCGASNP_b85_N_GenomeWideSNP_6_A02_735170.CEL
+                     RNA_Exome             RNA_RNAseq.Tumor
+1 TCGA-BH-A0BW-01A-11D-A10Y-09 TCGA-BH-A0BW-01A-11R-A115-07
+             RNA_RNAseq.Normal                    RNA_rnaseqID.Tumor
+1 TCGA-BH-A0BW-11A-12R-A115-07 110527_UNC10-SN254_0224_AD0CPKABXX_2_
+                    RNA_rnaseqID.Normal RNA_institution RNA_patientID RNA_type
+1 110527_UNC10-SN254_0224_AD0CPKABXX_3_              BH          A0BW      01A
+  RNA_portion RNA_plate gender
+1         11R      A115 female
+> 
+> mat1 = match(sam$DNAnorml_arrayFile, names(dat))
+> 
+> if(any(is.na(mat1))){
++   stop("some sampls in the sample file are not in the data\n")
++ }
+> 
+> datAA = dat[,c(1,mat1)]
+> dim(datAA)
+[1] 909622     51
+> datAA[1:2,1:5]
+    probeset_id URAEI_p_TCGASNP_b85_N_GenomeWideSNP_6_A02_735170.CEL
+1 SNP_A-2131660                                                    1
+2 SNP_A-1967418                                                    2
+  JOUAL_p_TCGA_b96_SNP_N_GenomeWideSNP_6_B04_748050.CEL
+1                                                     1
+2                                                     2
+  RANDS_p_TCGA_b109_SNP_1N_GenomeWideSNP_6_E06_771948.CEL
+1                                                       2
+2                                                       2
+  USAGE_p_TCGA_132_133_136_SNP_N_GenomeWideSNP_6_G04_787528.CEL
+1                                                             0
+2                                                             2
+> 
+> if(any(sam$DNAnorml_arrayFile != names(datAA)[-1])){
++   stop("sample name mismatch\n")
++ }
+> names(datAA)[-1] = sam$DNAnorml_patientID
+> names(datAA)[1]  = "id"
+> 
+> 
+> dim(datAA)
+[1] 909622     51
+> datAA[1:2,1:5]
+             id A0BW A0DG A1FC A209
+1 SNP_A-2131660    1    1    2    0
+2 SNP_A-1967418    2    2    2    2
+> 
+> # ------------------------------------------------------------
+> # remove the SNPs that have more than 5% missing values 
+> # ------------------------------------------------------------
+> 
+> pdata = data.matrix(datAA[,-1])
+> dim(pdata)
+[1] 909622     50
+> 
+> nNA = rowSums(is.na(pdata))
+> summary(nNA)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.000   0.000   0.000   1.107   1.000  50.000 
+> 
+> w2rm = which(nNA > 0.05*ncol(pdata))
+> length(w2rm)
+[1] 112927
+> 
+> if(length(w2rm) > 0){
++   datAA = datAA[-w2rm,]
++   pdata = pdata[-w2rm,]
++ }
+> 
+> dim(datAA)
+[1] 796695     51
+> dim(pdata)
+[1] 796695     50
+> 
+> # ------------------------------------------------------------
+> # remove the SNPs with MAF smaller than 5% 
+> # ------------------------------------------------------------
+> 
+> MAF = 0.5*rowSums(pdata, na.rm=TRUE)/rowSums((!is.na(pdata)), na.rm=TRUE)
+> MAF = pmin(MAF, 1 - MAF)
+> summary(MAF)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.00000 0.09184 0.20000 0.21740 0.33000 0.50000 
+> 
+> w2rm = which(MAF <0.05)
+> length(w2rm)
+[1] 90727
+> 
+> if(length(w2rm) > 0){
++   datAA = datAA[-w2rm,]
++   pdata = pdata[-w2rm,]
++ }
+> 
+> dim(datAA)
+[1] 705968     51
+> dim(pdata)
+[1] 705968     50
+> datAA[1:2,1:8]
+             id A0BW A0DG A1FC A209 A1LB A04P A0CM
+1 SNP_A-2131660    1    1    2    0    1    1    2
+2 SNP_A-1967418    2    2    2    2    2    1    2
+> 
+> write.table(datAA, file = "datAA.txt", append = FALSE, quote = FALSE, 
++ sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> 
+> 
+> 
+> proc.time()
+   user  system elapsed 
+692.877  88.578 785.240 

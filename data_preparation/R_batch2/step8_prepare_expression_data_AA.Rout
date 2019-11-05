@@ -1,0 +1,117 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> datAA = read.table(file = "gene_counts_AA.txt", sep = "\t", header=TRUE, as.is=TRUE)
+> dim(datAA)
+[1] 18827    50
+> datAA[1:2,1:5]
+                A0BW A0DG A1FC A209 A1LB
+ENSG00000000003 2990 2567 4469 1964 1388
+ENSG00000000005    1   49    1   24    2
+> 
+> datAA = data.matrix(datAA)
+> tot   = colSums(datAA)
+> s75   = apply(datAA, 2, quantile, prob=0.75)
+> 
+> cor(tot, s75)
+[1] 0.9573287
+> 
+> pdf("../figures/AA_total_vs_75_percentile.pdf", width=4, height=4)
+> par(mar=c(5,4,1,1), bty="n")
+> plot(tot/1e6, s75/1000, xlab="total reads (million)", 
++   ylab="75 percentile (thousand)", cex=0.5)
+> dev.off()
+null device 
+          1 
+> 
+> nDat = t(log10(t((datAA + 1))/s75))
+> 
+> dim(nDat)
+[1] 18827    50
+> 
+> pDat = data.frame(id=rownames(nDat), nDat)
+> dim(pDat)
+[1] 18827    51
+> pDat[1:2,1:5]
+                             id        A0BW        A0DG       A1FC       A209
+ENSG00000000003 ENSG00000000003  0.03933572  0.02884125  0.1251979 -0.2474673
+ENSG00000000005 ENSG00000000005 -3.13545070 -1.68178377 -3.2240796 -2.1428898
+> 
+> write.table(pDat, file = "../data/log_TReC_AA.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> # ------------------------------------------------------------
+> # Run PCA only use the AA TCGA samples 
+> # ------------------------------------------------------------
+> 
+> datR14Pr = nDat - rowMeans(nDat, na.rm=TRUE)
+> 
+> datR14Pr[is.na(datR14Pr)] = 0 
+> covdatR1 = t(datR14Pr) %*% datR14Pr / nrow(datR14Pr)
+> dim(covdatR1)
+[1] 50 50
+> prdatR1  = eigen(covdatR1)
+> 
+> prdatR1$values[1:20]
+ [1] 1.5593519 0.7087285 0.4249343 0.3734637 0.2860943 0.2482202 0.2280284
+ [8] 0.2139894 0.1858957 0.1791089 0.1729014 0.1522902 0.1501142 0.1405910
+[15] 0.1354265 0.1295150 0.1242274 0.1189702 0.1150709 0.1061880
+> 
+> PC1 =  prdatR1$vectors[,1]
+> PC2 =  prdatR1$vectors[,2]
+> PC3 =  prdatR1$vectors[,3]
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/figures/")
+> 
+> pdf("PCs_log_TReC_AA.pdf", width=6, height=6)
+> par(mar=c(5,4,1,1), mfrow=c(2,2))
+> barplot(prdatR1$values[1:20], main="", 
++ xlab="Index", ylab="Eigen-value")
+> 
+> par(mar=c(5,4,1,1))
+> plot(PC1, PC2,  bty="n")
+> plot(PC1, PC3,  bty="n")
+> plot(PC2, PC3,  bty="n")
+> 
+> dev.off()
+null device 
+          1 
+> 
+> PCs = t(prdatR1$vectors)
+> PCs = data.frame(id=paste("PC", 1:nrow(PCs), sep=""), PCs)
+> names(PCs) = names(pDat)
+> 
+> dim(PCs)
+[1] 50 51
+> PCs[1:2,1:5]
+   id        A0BW        A0DG       A1FC        A209
+1 PC1  0.17640744 -0.01629809 0.21260793  0.05402244
+2 PC2 -0.02908032 -0.22111225 0.09741975 -0.12078732
+> 
+> write.table(PCs, file = "../data/PCs_log_TReC_AA.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  4.281   0.248   4.957 

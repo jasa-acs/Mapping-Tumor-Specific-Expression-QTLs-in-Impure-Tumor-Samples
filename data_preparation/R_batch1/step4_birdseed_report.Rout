@@ -1,0 +1,247 @@
+
+R version 2.11.0 (2010-04-22)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("~/research/TCGA/BRCA/genotype_normal")
+> 
+> dat1 = read.table("birdseed-v2.report.txt", sep="\t", 
++   header=TRUE, as.is=TRUE)
+> dim(dat1)
+[1] 685  22
+> names(dat1)
+ [1] "cel_files"                                        
+ [2] "computed_gender"                                  
+ [3] "call_rate"                                        
+ [4] "het_rate"                                         
+ [5] "hom_rate"                                         
+ [6] "cluster_distance_mean"                            
+ [7] "cluster_distance_stdev"                           
+ [8] "raw_intensity_mean"                               
+ [9] "raw_intensity_stdev"                              
+[10] "allele_summarization_mean"                        
+[11] "allele_summarization_stdev"                       
+[12] "allele_deviation_mean"                            
+[13] "allele_deviation_stdev"                           
+[14] "allele_mad_residuals_mean"                        
+[15] "allele_mad_residuals_stdev"                       
+[16] "em.cluster.chrX.het.contrast_gender"              
+[17] "em.cluster.chrX.het.contrast_gender_chrX_het_rate"
+[18] "cn.probe.chrXY.ratio_gender_meanX"                
+[19] "cn.probe.chrXY.ratio_gender_meanY"                
+[20] "cn.probe.chrXY.ratio_gender_ratio"                
+[21] "cn.probe.chrXY.ratio_gender"                      
+[22] "pm_mean"                                          
+> dat1[1:2,]
+                                              cel_files computed_gender
+1  BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL          female
+2 CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL          female
+  call_rate het_rate hom_rate cluster_distance_mean cluster_distance_stdev
+1  99.22056 26.72275 72.49781               0.99993                0.00819
+2  98.75157 26.15988 72.59169               0.99994                0.00792
+  raw_intensity_mean raw_intensity_stdev allele_summarization_mean
+1           10.21149             1.06031                   9.76611
+2            9.56482             1.07238                   9.78502
+  allele_summarization_stdev allele_deviation_mean allele_deviation_stdev
+1                    1.06227               0.38925                0.43486
+2                    1.06388               0.45177                0.46037
+  allele_mad_residuals_mean allele_mad_residuals_stdev
+1                   0.04816                    0.04119
+2                   0.06686                    0.06452
+  em.cluster.chrX.het.contrast_gender
+1                              female
+2                              female
+  em.cluster.chrX.het.contrast_gender_chrX_het_rate
+1                                           0.24685
+2                                           0.22400
+  cn.probe.chrXY.ratio_gender_meanX cn.probe.chrXY.ratio_gender_meanY
+1                          2464.480                          761.5007
+2                          1574.359                          445.4379
+  cn.probe.chrXY.ratio_gender_ratio cn.probe.chrXY.ratio_gender  pm_mean
+1                           0.30899                      female 1526.833
+2                           0.28293                      female 1001.553
+> 
+> table(dat1$computed_gender, dat1$cn.probe.chrXY.ratio_gender)
+         
+          female male unknown
+  female     663    0       0
+  male         0    7       0
+  unknown      0    0      15
+> table(dat1$computed_gender, dat1$em.cluster.chrX.het.contrast_gender)
+         
+          female male
+  female     663    0
+  male         1    6
+  unknown     15    0
+> 
+> summary(dat1[,3:5])
+   call_rate        het_rate        hom_rate    
+ Min.   :91.82   Min.   :23.42   Min.   :60.51  
+ 1st Qu.:97.87   1st Qu.:26.42   1st Qu.:70.76  
+ Median :98.65   Median :26.66   Median :72.04  
+ Mean   :98.21   Mean   :26.88   Mean   :71.33  
+ 3rd Qu.:99.05   3rd Qu.:26.99   3rd Qu.:72.61  
+ Max.   :99.53   Max.   :31.82   Max.   :75.16  
+> summary(dat1[,4] + dat1[,5])
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  91.82   97.87   98.65   98.21   99.05   99.53 
+> 
+> # --------------------------------------------------------------
+> # read in sample information
+> # --------------------------------------------------------------
+> 
+> sam1 = read.table("../info/brca_samples2use_after_qc.txt", 
++   sep="\t", header=TRUE, as.is=TRUE)
+> dim(sam1)
+[1] 685  22
+> sam1[1:2,]
+  DNAtumor_institution DNAtumor_patientID DNAtumor_type DNAtumor_portion
+1                   A7               A0D9           01A              31D
+2                   A7               A0DB           01A              11D
+  DNAtumor_plate                                    DNAtumor_arrayFile
+1           A059  BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_H07_697072.CEL
+2           A011 CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_B02_628292.CEL
+  DNAnorml_institution DNAnorml_patientID DNAnorml_type DNAnorml_portion
+1                   A7               A0D9           10A              01D
+2                   A7               A0DB           10A              01D
+  DNAnorml_plate                                    DNAnorml_arrayFile
+1           A059  BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+2           A012 CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL
+                     RNA_Exome             RNA_RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+2 TCGA-A7-A0DB-01A-11W-A019-09 TCGA-A7-A0DB-01A-11R-A00Z-07
+             RNA_RNAseq.Normal                    RNA_rnaseqID.Tumor
+1 TCGA-A7-A0D9-11A-53R-A089-07       110318_SN749_0046_AB039FABXX_4_
+2 TCGA-A7-A0DB-11A-33R-A089-07 110228_UNC10-SN254_0198_BB041RABXX_3_
+                   RNA_rnaseqID.Normal RNA_institution RNA_patientID RNA_type
+1 110909_UNC9-SN296_0240_BD0DDBABXX_1_              A7          A0D9      01A
+2 110909_UNC9-SN296_0240_BD0DDBABXX_2_              A7          A0DB      01A
+  RNA_portion RNA_plate
+1         31R      A056
+2         11R      A00Z
+> 
+> if(any(sam1$DNAnorml_arrayFile != dat1$cel_files)){
++   stop("some samples do not have affy6 data!\n")
++ }
+> 
+> dat2 = read.table("../R_batch1/apt-geno-qc.txt", sep="\t", 
++   header=TRUE, as.is=TRUE)
+> dim(dat2)
+[1] 710  12
+> dat2[1:2,]
+                                              cel_files qc.call.rate.all
+1  BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL          0.97419
+2 CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL          0.96823
+  qc.call.rate.nsp qc.call.rate.sty qc.call.rate.nsp.sty.ovlp
+1          0.96530          0.96296                   0.98275
+2          0.96787          0.94364                   0.97782
+  em.cluster.chrX.het.contrast_gender
+1                              female
+2                              female
+  em.cluster.chrX.het.contrast_gender_chrX_het_rate contrast.qc
+1                                           0.24856     3.05139
+2                                           0.22404     2.45182
+  contrast.qc.rand contrast.qc.nsp contrast.qc.sty contrast.qc.nsp.sty.ovlp
+1          3.05139           3.720           3.305                     3.28
+2          2.45182           2.595           2.405                     3.06
+> 
+> mat2 = match(sam1$DNAnorml_arrayFile, dat2$cel_files)
+> sex2  = dat2$em.cluster.chrX.het.contrast_gender[mat2]
+> table(dat1$computed_gender, sex2)
+         sex2
+          female male
+  female     663    0
+  male         1    6
+  unknown     15    0
+> table(dat1$em.cluster.chrX.het.contrast_gender, sex2)
+        sex2
+         female male
+  female    679    0
+  male        0    6
+> 
+> # --------------------------------------------------------------
+> # plot1
+> # --------------------------------------------------------------
+> 
+> png("../figures/birdseed_report_all.png", width=5, height=5, units="in", res=200)
+> 
+> par(mfrow=c(1,1), mar=c(5,4,1,1), bty="n")
+> 
+> plot(dat1$call_rate, dat1$het_rate,  typ="n",
++ xlab="call rate", ylab="het rate", bty="n")
+> 
+> grp1 = which(dat1$computed_gender == "female")
+> grp2 = which(dat1$computed_gender == "male")
+> grp3 = which(dat1$computed_gender == "unknown")
+> 
+> points(dat1$call_rate[grp1], dat1$het_rate[grp1], 
++ cex=0.5, col="red", pch=19)
+> 
+> points(dat1$call_rate[grp2], dat1$het_rate[grp2], 
++ cex=0.5, col="darkgreen", pch=3)
+> 
+> points(dat1$call_rate[grp3], dat1$het_rate[grp3], 
++ cex=1.0, col="darkblue", pch=10)
+> 
+> ll = c("female", "male", "unknown")
+> legend("bottomleft", ll, bty="n", pch=c(19,3,10),  
++ col=c("red", "darkgreen", "darkblue"))
+> 
+> 
+> dev.off()
+null device 
+          1 
+> 
+> # --------------------------------------------------------------
+> # plot2
+> # --------------------------------------------------------------
+> 
+> w1   = which(dat1$computed_gender == "female")
+> dat1 = dat1[w1,]
+> sam1 = sam1[w1,]
+> 
+> png("../figures/birdseed_report_female.png", width=9, height=6, units="in", res=200)
+> 
+> par(mfrow=c(2,1), mar=c(5,4,1,1), bty="n", cex=1.08)
+> 
+> boxplot(dat1$call_rate ~ sam1$DNAnorml_plate, xlab="", 
++         ylab="Call rate", cex=0.7, las=3)
+> mtext("Plate", side=1, line=4) 
+> 
+> boxplot(dat1$het_rate  ~ sam1$DNAnorml_plate, xlab="", 
++         ylab="Het rate", cex=0.7, las=3)
+> mtext("Plate", side=1, line=4) 
+> 
+> dev.off()
+null device 
+          1 
+> 
+> sam1$gender = dat1$computed_gender
+> 
+> # --------------------------------------------------------------
+> # write out gender informaiton
+> # --------------------------------------------------------------
+> 
+> write.table(sam1, file = "../info/brca_samples2use_after_qc_female.txt", 
++   append = FALSE, quote = FALSE, sep = "\t",
++   row.names = FALSE, col.names = TRUE)
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  0.936   0.095   1.735 

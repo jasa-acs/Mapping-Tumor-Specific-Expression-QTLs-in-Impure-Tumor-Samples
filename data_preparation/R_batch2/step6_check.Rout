@@ -1,0 +1,99 @@
+
+R version 2.11.0 (2010-04-22)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("~/research/TCGA/BRCA/data/")
+> 
+> cts = read.table("gene_counts_all.txt", sep="\t")
+> dim(cts)
+[1] 53561   685
+> cts[1:2,1:5]
+                A03L A03N A03O A03P A03R
+ENSG00000000003  886 1337 3034  740 1038
+ENSG00000000005    0    0   17    0   29
+> 
+> total = colSums(cts)
+> 
+> ct0 = read.table("../info/samples_count.txt", header=TRUE, sep="\t")
+> dim(ct0)
+[1] 685   5
+> ct0[1:2,]
+  sample     TReC TReC_after_QC  ratio femaleCau
+1   A03L 164.5676      135.7907 0.8251     FALSE
+2   A03N 167.2361      123.0309 0.7357      TRUE
+> 
+> all(names(cts) == ct0$sample)
+[1] TRUE
+> 
+> w1 = which(ct0$TReC_after_QC/2 < total/1e6)
+> ct0[w1,]
+    sample     TReC TReC_after_QC  ratio femaleCau
+408   A15R 224.6103      143.1136 0.6372      TRUE
+> 
+> summary(ct0$ratio)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.3848  0.7932  0.8123  0.8044  0.8272  0.8707 
+> ct1 = ct0[ct0$ratio < 0.7,]
+> ct1[order(ct1$ratio),]
+    sample     TReC TReC_after_QC  ratio femaleCau
+160   A0DZ 146.7629      56.47479 0.3848      TRUE
+54    A08B 123.5912      53.65310 0.4341      TRUE
+83    A09T 116.2137      52.92884 0.4554      TRUE
+70    A094 148.3139      72.98152 0.4921      TRUE
+36    A07B 111.9536      61.22009 0.5468      TRUE
+368   A12X 186.3777     103.88773 0.5574     FALSE
+227   A0IK 133.7892      79.55981 0.5947      TRUE
+65    A08X 161.8008      98.75362 0.6103      TRUE
+408   A15R 224.6103     143.11363 0.6372      TRUE
+3     A03O 152.4875      98.95253 0.6489     FALSE
+56    A08F 153.3070     104.77276 0.6834      TRUE
+303   A0U1 194.2587     133.02589 0.6848      TRUE
+185   A0FJ 128.3411      88.34214 0.6883      TRUE
+112   A0BM 117.9778      81.98399 0.6949      TRUE
+61    A08P 157.1556     109.31531 0.6956      TRUE
+110   A0BG 216.4637     150.76288 0.6965      TRUE
+302   A0U0 162.3164     113.46227 0.6990      TRUE
+79    A09K 154.7230     108.29182 0.6999      TRUE
+> 
+> png("../figures/proportion_reads_passed_QC.png", width=5, height=4, units="in", res=300)
+> par(mar=c(5,4,1,1))
+> hist(ct0$ratio, breaks=20, main="", xlab="Proportion of peads passed QC")
+> dev.off()
+null device 
+          1 
+> 
+> png("../figures/nreads_genome_vs_exon.png", width=5, height=5, unit="in", res=300)
+> par(mar=c(5,4,1,1))
+> 
+> plot(ct0$TReC_after_QC, total/1e6, , bty="n", 
++   xlab="genome-wide # of reads (million)", cex=0.7, 
++   ylab="# of paired-end reads mapped to exons")
+> abline(0, 0.5,   lwd=2, col="red", lty=1)
+> abline(0, 0.45,  lwd=2, col="green", lty=2)
+> abline(0, 0.4,   lwd=2, col="orange", lty=3)
+> 
+> legend("topleft", c("y=0.5x", "y=0.45x", "y=0.4x"), bty="n", 
++   lty=c(1,2,3), col=c("red", "green", "orange"), lwd=c(2,2,2))
+> dev.off()
+null device 
+          1 
+> 
+> proc.time()
+   user  system elapsed 
+ 23.134   1.909  28.157 

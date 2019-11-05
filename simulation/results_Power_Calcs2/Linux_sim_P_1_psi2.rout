@@ -1,0 +1,1302 @@
+
+R version 3.3.1 (2016-06-21) -- "Bug in Your Hair"
+Copyright (C) 2016 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #----------------------------------------------#
+> # Read in Command Line Arguments               #
+> #----------------------------------------------#
+> args<-commandArgs(TRUE)
+> 
+> if(length(args)==0){
++   print("No arguments supplied.")
++   ##supply default values
++   foldT.val = 1.6
++   foldS.val = 1.0
++ }else{
++   for(i in 1:length(args)){
++     eval(parse(text=args[[i]]))
++   }
++ }
+> 
+> #-------------------------------------------#
+> # Load the Functions                        #
+> #-------------------------------------------#
+> setwd("/netscr/drwilson/2016-05-17 Paper 2/Programs/")
+> 
+> source("aseR.R")
+> source("aseR.TS.R")
+> source("power.R")
+Loading required package: mvtnorm
+Loading required package: survival
+Loading required package: TH.data
+Loading required package: MASS
+
+Attaching package: 'TH.data'
+
+The following object is masked from 'package:MASS':
+
+    geyser
+
+Loading required package: stats4
+Loading required package: splines
+Loading required package: Rcpp
+Loading required package: RcppEigen
+> source("trecaseR.R")
+> source("trecaseR.TS.R")
+> source("trecR.R")
+> source("trecR.TS.R")
+> 
+> #----------------------------------------------#
+> # Quick and Dirty Simulation                   #
+> #----------------------------------------------#
+> tmp.seed = as.integer(runif(1)*2e9)
+> set.seed(tmp.seed)
+> message("Used Seed: ",tmp.seed)
+Used Seed: 214844551
+> 
+> n      = 500
+> mu     = 100
+> rhoA   = 1.5
+> maf    = 0.2
+> 
+> phi    = 0.2
+> psi    = 0.2
+> theta  = 0.1
+> n.simu = 400
+> alpha  = 0.05
+> 
+> pis    = 1-runif(n, 0, .5)
+> foldT  = foldT.val
+> foldS  = foldS.val
+> 
+> pwr = rep(0,7)
+> 
+> cat(date(), "\n")
+Sat Feb 11 09:29:44 2017 
+> pwr = powerNB(n, mu, foldT, foldS, phi, psi_val, n.simu, alpha,
++                   maf, pis, rhoA)
+Simulation 1 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 1 Complete!
+Simulation 2 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 2 Complete!
+Simulation 3 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 3 Complete!
+Simulation 4 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 4 Complete!
+Simulation 5 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 5 Complete!
+Simulation 6 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 6 Complete!
+Simulation 7 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 7 Complete!
+Simulation 8 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 8 Complete!
+Simulation 9 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 9 Complete!
+Simulation 10 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 10 Complete!
+Simulation 11 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 11 Complete!
+Simulation 12 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 12 Complete!
+Simulation 13 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 13 Complete!
+Simulation 14 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 14 Complete!
+Simulation 15 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 15 Complete!
+Simulation 16 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 16 Complete!
+Simulation 17 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 17 Complete!
+Simulation 18 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 18 Complete!
+Simulation 19 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 19 Complete!
+Simulation 20 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 20 Complete!
+Simulation 21 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 21 Complete!
+Simulation 22 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 22 Complete!
+Simulation 23 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 23 Complete!
+Simulation 24 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 24 Complete!
+Simulation 25 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 25 Complete!
+Simulation 26 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 26 Complete!
+Simulation 27 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 27 Complete!
+Simulation 28 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 28 Complete!
+Simulation 29 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 29 Complete!
+Simulation 30 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 30 Complete!
+Simulation 31 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 31 Complete!
+Simulation 32 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 32 Complete!
+Simulation 33 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 33 Complete!
+Simulation 34 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 34 Complete!
+Simulation 35 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 35 Complete!
+Simulation 36 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 36 Complete!
+Simulation 37 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 37 Complete!
+Simulation 38 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 38 Complete!
+Simulation 39 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 39 Complete!
+Simulation 40 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 40 Complete!
+Simulation 41 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 41 Complete!
+Simulation 42 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 42 Complete!
+Simulation 43 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 43 Complete!
+Simulation 44 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 44 Complete!
+Simulation 45 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 45 Complete!
+Simulation 46 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 46 Complete!
+Simulation 47 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 47 Complete!
+Simulation 48 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 48 Complete!
+Simulation 49 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 49 Complete!
+Simulation 50 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 50 Complete!
+Simulation 51 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 51 Complete!
+Simulation 52 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 52 Complete!
+Simulation 53 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 53 Complete!
+Simulation 54 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 54 Complete!
+Simulation 55 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 55 Complete!
+Simulation 56 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 56 Complete!
+Simulation 57 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 57 Complete!
+Simulation 58 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 58 Complete!
+Simulation 59 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 59 Complete!
+Simulation 60 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 60 Complete!
+Simulation 61 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 61 Complete!
+Simulation 62 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 62 Complete!
+Simulation 63 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 63 Complete!
+Simulation 64 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 64 Complete!
+Simulation 65 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 65 Complete!
+Simulation 66 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 66 Complete!
+Simulation 67 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 67 Complete!
+Simulation 68 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 68 Complete!
+Simulation 69 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 69 Complete!
+Simulation 70 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 70 Complete!
+Simulation 71 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 71 Complete!
+Simulation 72 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 72 Complete!
+Simulation 73 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 73 Complete!
+Simulation 74 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 74 Complete!
+Simulation 75 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 75 Complete!
+Simulation 76 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 76 Complete!
+Simulation 77 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 77 Complete!
+Simulation 78 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 78 Complete!
+Simulation 79 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 79 Complete!
+Simulation 80 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 80 Complete!
+Simulation 81 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 81 Complete!
+Simulation 82 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 82 Complete!
+Simulation 83 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 83 Complete!
+Simulation 84 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 84 Complete!
+Simulation 85 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 85 Complete!
+Simulation 86 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 86 Complete!
+Simulation 87 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 87 Complete!
+Simulation 88 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 88 Complete!
+Simulation 89 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 89 Complete!
+Simulation 90 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 90 Complete!
+Simulation 91 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 91 Complete!
+Simulation 92 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 92 Complete!
+Simulation 93 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 93 Complete!
+Simulation 94 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 94 Complete!
+Simulation 95 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 95 Complete!
+Simulation 96 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 96 Complete!
+Simulation 97 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 97 Complete!
+Simulation 98 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 98 Complete!
+Simulation 99 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 99 Complete!
+Simulation 100 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 100 Complete!
+Simulation 101 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 101 Complete!
+Simulation 102 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 102 Complete!
+Simulation 103 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 103 Complete!
+Simulation 104 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 104 Complete!
+Simulation 105 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 105 Complete!
+Simulation 106 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 106 Complete!
+Simulation 107 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 107 Complete!
+Simulation 108 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 108 Complete!
+Simulation 109 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 109 Complete!
+Simulation 110 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 110 Complete!
+Simulation 111 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 111 Complete!
+Simulation 112 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 112 Complete!
+Simulation 113 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 113 Complete!
+Simulation 114 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 114 Complete!
+Simulation 115 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 115 Complete!
+Simulation 116 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 116 Complete!
+Simulation 117 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 117 Complete!
+Simulation 118 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 118 Complete!
+Simulation 119 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 119 Complete!
+Simulation 120 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 120 Complete!
+Simulation 121 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 121 Complete!
+Simulation 122 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 122 Complete!
+Simulation 123 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 123 Complete!
+Simulation 124 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 124 Complete!
+Simulation 125 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 125 Complete!
+Simulation 126 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 126 Complete!
+Simulation 127 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 127 Complete!
+Simulation 128 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 128 Complete!
+Simulation 129 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 129 Complete!
+Simulation 130 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 130 Complete!
+Simulation 131 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 131 Complete!
+Simulation 132 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 132 Complete!
+Simulation 133 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 133 Complete!
+Simulation 134 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 134 Complete!
+Simulation 135 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 135 Complete!
+Simulation 136 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 136 Complete!
+Simulation 137 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 137 Complete!
+Simulation 138 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 138 Complete!
+Simulation 139 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 139 Complete!
+Simulation 140 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 140 Complete!
+Simulation 141 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 141 Complete!
+Simulation 142 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 142 Complete!
+Simulation 143 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 143 Complete!
+Simulation 144 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 144 Complete!
+Simulation 145 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 145 Complete!
+Simulation 146 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 146 Complete!
+Simulation 147 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 147 Complete!
+Simulation 148 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 148 Complete!
+Simulation 149 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 149 Complete!
+Simulation 150 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 150 Complete!
+Simulation 151 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 151 Complete!
+Simulation 152 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 152 Complete!
+Simulation 153 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 153 Complete!
+Simulation 154 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 154 Complete!
+Simulation 155 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 155 Complete!
+Simulation 156 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 156 Complete!
+Simulation 157 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 157 Complete!
+Simulation 158 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 158 Complete!
+Simulation 159 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 159 Complete!
+Simulation 160 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 160 Complete!
+Simulation 161 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 161 Complete!
+Simulation 162 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 162 Complete!
+Simulation 163 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 163 Complete!
+Simulation 164 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 164 Complete!
+Simulation 165 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 165 Complete!
+Simulation 166 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 166 Complete!
+Simulation 167 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 167 Complete!
+Simulation 168 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 168 Complete!
+Simulation 169 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 169 Complete!
+Simulation 170 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 170 Complete!
+Simulation 171 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 171 Complete!
+Simulation 172 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 172 Complete!
+Simulation 173 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 173 Complete!
+Simulation 174 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 174 Complete!
+Simulation 175 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 175 Complete!
+Simulation 176 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 176 Complete!
+Simulation 177 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 177 Complete!
+Simulation 178 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 178 Complete!
+Simulation 179 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 179 Complete!
+Simulation 180 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 180 Complete!
+Simulation 181 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 181 Complete!
+Simulation 182 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 182 Complete!
+Simulation 183 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 183 Complete!
+Simulation 184 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 184 Complete!
+Simulation 185 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 185 Complete!
+Simulation 186 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 186 Complete!
+Simulation 187 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 187 Complete!
+Simulation 188 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 188 Complete!
+Simulation 189 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 189 Complete!
+Simulation 190 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 190 Complete!
+Simulation 191 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 191 Complete!
+Simulation 192 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 192 Complete!
+Simulation 193 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 193 Complete!
+Simulation 194 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 194 Complete!
+Simulation 195 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 195 Complete!
+Simulation 196 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 196 Complete!
+Simulation 197 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 197 Complete!
+Simulation 198 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 198 Complete!
+Simulation 199 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 199 Complete!
+Simulation 200 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 200 Complete!
+Simulation 201 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 201 Complete!
+Simulation 202 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 202 Complete!
+Simulation 203 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 203 Complete!
+Simulation 204 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 204 Complete!
+Simulation 205 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 205 Complete!
+Simulation 206 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 206 Complete!
+Simulation 207 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 207 Complete!
+Simulation 208 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 208 Complete!
+Simulation 209 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 209 Complete!
+Simulation 210 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 210 Complete!
+Simulation 211 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 211 Complete!
+Simulation 212 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 212 Complete!
+Simulation 213 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 213 Complete!
+Simulation 214 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 214 Complete!
+Simulation 215 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 215 Complete!
+Simulation 216 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 216 Complete!
+Simulation 217 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 217 Complete!
+Simulation 218 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 218 Complete!
+Simulation 219 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 219 Complete!
+Simulation 220 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 220 Complete!
+Simulation 221 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 221 Complete!
+Simulation 222 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 222 Complete!
+Simulation 223 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 223 Complete!
+Simulation 224 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 224 Complete!
+Simulation 225 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 225 Complete!
+Simulation 226 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 226 Complete!
+Simulation 227 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 227 Complete!
+Simulation 228 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 228 Complete!
+Simulation 229 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 229 Complete!
+Simulation 230 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 230 Complete!
+Simulation 231 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 231 Complete!
+Simulation 232 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 232 Complete!
+Simulation 233 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 233 Complete!
+Simulation 234 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 234 Complete!
+Simulation 235 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 235 Complete!
+Simulation 236 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 236 Complete!
+Simulation 237 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 237 Complete!
+Simulation 238 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 238 Complete!
+Simulation 239 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 239 Complete!
+Simulation 240 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 240 Complete!
+Simulation 241 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 241 Complete!
+Simulation 242 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 242 Complete!
+Simulation 243 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 243 Complete!
+Simulation 244 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 244 Complete!
+Simulation 245 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 245 Complete!
+Simulation 246 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 246 Complete!
+Simulation 247 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 247 Complete!
+Simulation 248 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 248 Complete!
+Simulation 249 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 249 Complete!
+Simulation 250 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 250 Complete!
+Simulation 251 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 251 Complete!
+Simulation 252 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 252 Complete!
+Simulation 253 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 253 Complete!
+Simulation 254 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 254 Complete!
+Simulation 255 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 255 Complete!
+Simulation 256 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 256 Complete!
+Simulation 257 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 257 Complete!
+Simulation 258 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 258 Complete!
+Simulation 259 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 259 Complete!
+Simulation 260 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 260 Complete!
+Simulation 261 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 261 Complete!
+Simulation 262 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 262 Complete!
+Simulation 263 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 263 Complete!
+Simulation 264 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 264 Complete!
+Simulation 265 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 265 Complete!
+Simulation 266 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 266 Complete!
+Simulation 267 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 267 Complete!
+Simulation 268 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 268 Complete!
+Simulation 269 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 269 Complete!
+Simulation 270 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 270 Complete!
+Simulation 271 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 271 Complete!
+Simulation 272 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 272 Complete!
+Simulation 273 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 273 Complete!
+Simulation 274 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 274 Complete!
+Simulation 275 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 275 Complete!
+Simulation 276 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 276 Complete!
+Simulation 277 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 277 Complete!
+Simulation 278 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 278 Complete!
+Simulation 279 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 279 Complete!
+Simulation 280 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 280 Complete!
+Simulation 281 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 281 Complete!
+Simulation 282 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 282 Complete!
+Simulation 283 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 283 Complete!
+Simulation 284 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 284 Complete!
+Simulation 285 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 285 Complete!
+Simulation 286 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 286 Complete!
+Simulation 287 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 287 Complete!
+Simulation 288 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 288 Complete!
+Simulation 289 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 289 Complete!
+Simulation 290 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 290 Complete!
+Simulation 291 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 291 Complete!
+Simulation 292 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 292 Complete!
+Simulation 293 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 293 Complete!
+Simulation 294 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 294 Complete!
+Simulation 295 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 295 Complete!
+Simulation 296 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 296 Complete!
+Simulation 297 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 297 Complete!
+Simulation 298 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 298 Complete!
+Simulation 299 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 299 Complete!
+Simulation 300 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 300 Complete!
+Simulation 301 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 301 Complete!
+Simulation 302 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 302 Complete!
+Simulation 303 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 303 Complete!
+Simulation 304 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 304 Complete!
+Simulation 305 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 305 Complete!
+Simulation 306 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 306 Complete!
+Simulation 307 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 307 Complete!
+Simulation 308 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 308 Complete!
+Simulation 309 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 309 Complete!
+Simulation 310 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 310 Complete!
+Simulation 311 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 311 Complete!
+Simulation 312 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 312 Complete!
+Simulation 313 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 313 Complete!
+Simulation 314 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 314 Complete!
+Simulation 315 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 315 Complete!
+Simulation 316 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 316 Complete!
+Simulation 317 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 317 Complete!
+Simulation 318 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 318 Complete!
+Simulation 319 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 319 Complete!
+Simulation 320 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 320 Complete!
+Simulation 321 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 321 Complete!
+Simulation 322 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 322 Complete!
+Simulation 323 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 323 Complete!
+Simulation 324 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 324 Complete!
+Simulation 325 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 325 Complete!
+Simulation 326 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 326 Complete!
+Simulation 327 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 327 Complete!
+Simulation 328 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 328 Complete!
+Simulation 329 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 329 Complete!
+Simulation 330 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 330 Complete!
+Simulation 331 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 331 Complete!
+Simulation 332 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 332 Complete!
+Simulation 333 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 333 Complete!
+Simulation 334 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 334 Complete!
+Simulation 335 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 335 Complete!
+Simulation 336 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 336 Complete!
+Simulation 337 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 337 Complete!
+Simulation 338 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 338 Complete!
+Simulation 339 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 339 Complete!
+Simulation 340 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 340 Complete!
+Simulation 341 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 341 Complete!
+Simulation 342 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 342 Complete!
+Simulation 343 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 343 Complete!
+Simulation 344 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 344 Complete!
+Simulation 345 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 345 Complete!
+Simulation 346 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 346 Complete!
+Simulation 347 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 347 Complete!
+Simulation 348 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 348 Complete!
+Simulation 349 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 349 Complete!
+Simulation 350 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 350 Complete!
+Simulation 351 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 351 Complete!
+Simulation 352 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 352 Complete!
+Simulation 353 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 353 Complete!
+Simulation 354 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 354 Complete!
+Simulation 355 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 355 Complete!
+Simulation 356 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 356 Complete!
+Simulation 357 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 357 Complete!
+Simulation 358 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 358 Complete!
+Simulation 359 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 359 Complete!
+Simulation 360 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 360 Complete!
+Simulation 361 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 361 Complete!
+Simulation 362 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 362 Complete!
+Simulation 363 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 363 Complete!
+Simulation 364 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 364 Complete!
+Simulation 365 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 365 Complete!
+Simulation 366 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 366 Complete!
+Simulation 367 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 367 Complete!
+Simulation 368 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 368 Complete!
+Simulation 369 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 369 Complete!
+Simulation 370 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 370 Complete!
+Simulation 371 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 371 Complete!
+Simulation 372 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 372 Complete!
+Simulation 373 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 373 Complete!
+Simulation 374 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 374 Complete!
+Simulation 375 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 375 Complete!
+Simulation 376 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 376 Complete!
+Simulation 377 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 377 Complete!
+Simulation 378 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 378 Complete!
+Simulation 379 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 379 Complete!
+Simulation 380 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 380 Complete!
+Simulation 381 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 381 Complete!
+Simulation 382 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 382 Complete!
+Simulation 383 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 383 Complete!
+Simulation 384 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 384 Complete!
+Simulation 385 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 385 Complete!
+Simulation 386 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 386 Complete!
+Simulation 387 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 387 Complete!
+Simulation 388 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 388 Complete!
+Simulation 389 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 389 Complete!
+Simulation 390 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 390 Complete!
+Simulation 391 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 391 Complete!
+Simulation 392 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 392 Complete!
+Simulation 393 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 393 Complete!
+Simulation 394 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 394 Complete!
+Simulation 395 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 395 Complete!
+Simulation 396 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 396 Complete!
+Simulation 397 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 397 Complete!
+Simulation 398 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 398 Complete!
+Simulation 399 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 399 Complete!
+Simulation 400 Started
+SNP  1 Start! --- 0 Tests Completed ---
+Simulation 400 Complete!
+Fail Ct: 0
+> 
+> # Save Results #
+> setwd("/netscr/drwilson/2016-05-17 Paper 2/2016-05-17 Simulation Results/")
+> file_name = sprintf("pwr_foldT_%s_foldS_%s_psi%s.RData",foldT.val,foldS.val,psi_val)
+> save(pwr,file = file_name)
+> 
+> proc.time()
+     user    system   elapsed 
+21690.839     5.364 21721.253 

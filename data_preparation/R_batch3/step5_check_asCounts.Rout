@@ -1,0 +1,160 @@
+
+R version 2.11.0 (2010-04-22)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("~/research/TCGA/BRCA/data")
+> 
+> # ------------------------------------------------------------
+> # read data
+> # ------------------------------------------------------------
+> 
+> dat = read.table("gene_counts_EA.txt", header=TRUE, sep="\t")
+> dim(dat)
+[1] 18827   551
+> dat[1:2,1:5]
+                A0D9 A0DB A13G A0AU A0AY
+ENSG00000000003 2444 4707 3729 1249 2186
+ENSG00000000005   63   65    3   36   34
+> 
+> datAs1 = read.table("gene_asCounts_EA_hap1.txt", header=TRUE, sep="\t")
+> dim(datAs1)
+[1] 53561   551
+> datAs1[1:2,1:5]
+                A03N A03R A03T A03U A03V
+ENSG00000000003    0    0    0    0    0
+ENSG00000000005    0    0    0    0    0
+> 
+> datAs2 = read.table("gene_asCounts_EA_hap2.txt", header=TRUE, sep="\t")
+> dim(datAs2)
+[1] 53561   551
+> datAs2[1:2,1:5]
+                A03N A03R A03T A03U A03V
+ENSG00000000003    0    0    0    0    0
+ENSG00000000005    0    0    0    0    0
+> 
+> all(rownames(dat) %in% rownames(datAs1))
+[1] TRUE
+> all(rownames(dat) %in% rownames(datAs2))
+[1] TRUE
+> 
+> mat1 = match(rownames(dat), rownames(datAs1))
+> mat2 = match(rownames(dat), rownames(datAs2))
+> all(mat1 == mat2)
+[1] TRUE
+> 
+> # ------------------------------------------------------------
+> # find a cutoff to filter out low expressed genes
+> # ------------------------------------------------------------
+> 
+> q1s  = apply(datAs1, 1, quantile, probs=c(0.75,0.90))
+> q2s  = apply(datAs2, 1, quantile, probs=c(0.75,0.90))
+> 
+> qs = t(rbind(q1s, q2s))
+> colnames(qs) = c("hap1_75", "hap_90", "hap2_75", "hap2_90")
+> round(cor(qs),2)
+        hap1_75 hap_90 hap2_75 hap2_90
+hap1_75    1.00   0.96    0.99    0.95
+hap_90     0.96   1.00    0.95    0.99
+hap2_75    0.99   0.95    1.00    0.95
+hap2_90    0.95   0.99    0.95    1.00
+> 
+> pdf("../figures/asCts_summary.pdf", width=6, height=6)
+> par(mfrow=c(2,2), mar=c(5,4,1,1), bty="n")
+> hist(log10(1+qs[,1]),  xlab="log10(hap1 75 percentile + 1)", main="")
+> hist(log10(1+qs[,2]),  xlab="log10(hap1 90 percentile + 1)", main="")
+> 
+> hist(log10(1+qs[,3]),  xlab="log10(hap2 75 percentile + 1)", main="")
+> hist(log10(1+qs[,4]),  xlab="log10(hap2 90 percentile + 1)", main="")
+> dev.off()
+null device 
+          1 
+> 
+> # ------------------------------------------------------------
+> # match gene IDs
+> # ------------------------------------------------------------
+> 
+> datAs1 = datAs1[mat1,]
+> datAs2 = datAs2[mat2,]
+> 
+> dim(datAs1)
+[1] 18827   551
+> dim(datAs2)
+[1] 18827   551
+> 
+> mat3 = match(names(dat), names(datAs1))
+> mat4 = match(names(dat), names(datAs2))
+> all(mat3==mat4)
+[1] TRUE
+> all(names(datAs1)[mat3] == names(dat))
+[1] TRUE
+> 
+> datAs1 = datAs1[,mat3]
+> datAs2 = datAs2[,mat4]
+> 
+> # ------------------------------------------------------------
+> # plot it
+> # ------------------------------------------------------------
+> 
+> TReC = colSums(dat)/1e6
+> ASE  = (colSums(datAs1) + colSums(datAs2))/1e6
+> 
+> l1 = lm(ASE ~ -1 + TReC)
+> w1 = which(ASE/TReC < 0.025)
+> w1
+A15R 
+ 521 
+> 
+> l2 = lm(ASE[-w1] ~ -1 + TReC[-w1])
+> 
+> pdf("../figures/total_counts_vs_as_counts.pdf", width=6, height=3)
+> par(mfrow=c(1,2), mar=c(5,4,1,1), bty="n")
+> 
+> plot(TReC, ASE, xlab="Total # of reads per sample", 
++ ylab="Total # of AS reads", cex=0.6)
+> mtext(side=1, line=4, "(million)")
+> abline(l1, lwd=2, col="orange")
+> legend("topleft", legend=sprintf("y = %.3f x", l1$coef), bty="n")
+> points(TReC[w1], ASE[w1], pch=19, col="red", cex=0.8)
+> 
+> plot(TReC[-w1], ASE[-w1], xlab="Total # of reads per sample", 
++ ylab="Total # of AS reads", cex=0.6)
+> mtext(side=1, line=4, "(million)")
+> abline(l2, lwd=2, col="orange")
+> legend("topleft", legend=sprintf("y = %.3f x", l2$coef), bty="n")
+> 
+> dev.off()
+null device 
+          1 
+> 
+> # ------------------------------------------------------------
+> # output gene counts for EA or AA population
+> # ------------------------------------------------------------
+> 
+> write.table(dat[,-w1], file = "gene_counts_EA_filtered.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = TRUE, col.names = TRUE)
+> 
+> write.table(datAs1[,-w1], file = "gene_asCounts_EA_hap1_filtered.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = TRUE, col.names = TRUE)
+> 
+> write.table(datAs2[,-w1], file = "gene_asCounts_EA_hap2_filtered.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = TRUE, col.names = TRUE)
+> 
+> proc.time()
+   user  system elapsed 
+192.967  11.053 379.403 

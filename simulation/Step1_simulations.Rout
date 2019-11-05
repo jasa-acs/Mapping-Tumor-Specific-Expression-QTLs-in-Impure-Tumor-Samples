@@ -1,0 +1,165 @@
+
+R version 3.5.0 (2018-04-23) -- "Joy in Playing"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library(multcomp)
+Loading required package: mvtnorm
+Loading required package: survival
+Loading required package: TH.data
+Loading required package: MASS
+
+Attaching package: ‘TH.data’
+
+The following object is masked from ‘package:MASS’:
+
+    geyser
+
+Warning messages:
+1: package ‘multcomp’ was built under R version 3.5.2 
+2: package ‘mvtnorm’ was built under R version 3.5.2 
+3: package ‘TH.data’ was built under R version 3.5.2 
+> library(MASS)
+> library(VGAM)
+Loading required package: stats4
+Loading required package: splines
+> library(pTReCASE)
+Loading required package: Rcpp
+Loading required package: RcppEigen
+> 
+> 
+> source("_asSeq/aseR.R")
+> source("_asSeq/aseR.TS.R")
+> source("_asSeq/trecaseR.R")
+> source("_asSeq/trecaseR.TS.R")
+> source("_asSeq/trecR.R")
+> source("_asSeq/trecR.TS.R")
+> 
+> #----------------------------------------------#
+> # Read in Command Line Arguments               #
+> #----------------------------------------------#
+> args<-commandArgs(TRUE)
+> 
+> if(length(args)==0){
++   print("No arguments supplied.")
++   ##supply default values
++   foldT.val = 1.6
++   foldS.val = 1.0
++   psi_val   = 0.1
++ }else{
++   for(i in 1:length(args)){
++     eval(parse(text=args[[i]]))
++   }
++ }
+[1] "No arguments supplied."
+> 
+> #-------------------------------------------#
+> # Load the Functions                        #
+> #-------------------------------------------#
+> 
+> source("power.R")
+> 
+> #----------------------------------------------#
+> # Quick and Dirty Simulation                   #
+> #----------------------------------------------#
+> 
+> tmp.seed = as.integer(runif(1)*2e9)
+> set.seed(tmp.seed)
+> message("Used Seed: ",tmp.seed)
+Used Seed: 779474870
+> 
+> n      = 500
+> mu     = 100
+> rhoA   = 1.5
+> maf    = 0.2
+> 
+> phi    = 0.2
+> psi    = 0.2
+> theta  = 0.1
+> # use 10 simulation to demonstrate the code
+> # actual simulation results were based on 400 replicates
+> n.simu = 10
+> # n.simu = 400
+> alpha  = 0.05
+> 
+> pis    = 1-runif(n, 0, .5)
+> foldT  = foldT.val
+> foldS  = foldS.val
+> 
+> pwr = rep(0,7)
+> 
+> cat(date(), "\n")
+Tue Mar 12 22:37:06 2019 
+> pwr = powerNB(n, mu, foldT, foldS, phi, psi_val, n.simu, alpha, 
++               maf, pis, rhoA)
+Simulation 1 Started
+Simulation 1 Complete!
+Simulation 2 Started
+Simulation 2 Complete!
+Simulation 3 Started
+Simulation 3 Complete!
+Simulation 4 Started
+Simulation 4 Complete!
+Simulation 5 Started
+Simulation 5 Complete!
+Simulation 6 Started
+Simulation 6 Complete!
+Simulation 7 Started
+Simulation 7 Complete!
+Simulation 8 Started
+Simulation 8 Complete!
+Simulation 9 Started
+Simulation 9 Complete!
+Simulation 10 Started
+Simulation 10 Complete!
+Fail Ct: 0
+> 
+> file_name = sprintf("pwr_foldT_%s_foldS_%s_psi%s.RData", foldT.val, 
++                     foldS.val, psi_val)
+> 
+> save(pwr, file = file_name)
+> 
+> sessionInfo()
+R version 3.5.0 (2018-04-23)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS  10.14.3
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] splines   stats4    stats     graphics  grDevices utils     datasets 
+[8] methods   base     
+
+other attached packages:
+[1] pTReCASE_0.99.0     RcppEigen_0.3.3.4.0 Rcpp_0.12.18       
+[4] VGAM_1.0-5          multcomp_1.4-10     TH.data_1.0-10     
+[7] MASS_7.3-50         survival_2.42-6     mvtnorm_1.0-10     
+
+loaded via a namespace (and not attached):
+[1] lattice_0.20-35  codetools_0.2-15 zoo_1.8-3        grid_3.5.0      
+[5] Matrix_1.2-14    sandwich_2.5-0   compiler_3.5.0  
+> 
+> q(save="no")
+> proc.time()
+   user  system elapsed 
+223.909   3.536 227.758 

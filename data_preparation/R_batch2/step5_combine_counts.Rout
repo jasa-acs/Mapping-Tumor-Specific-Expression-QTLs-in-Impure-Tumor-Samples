@@ -1,0 +1,181 @@
+
+R version 2.10.1 Patched (2010-04-07 r51635)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("/lustre/scr/w/e/weisun/TCGA/bam/")
+> 
+> # ------------------------------------------------------------
+> # read data
+> # ------------------------------------------------------------
+> 
+> idx1 = seq(1,601, by=50)
+> idx2 = c(seq(50,600, by=50), 685)
+> 
+> i = 1
+> dat = read.table(sprintf("gene_counts_%d_%d.txt",idx1[i], idx2[i]), 
++ header=TRUE, sep="\t")
+> 
+> for(i in 2:length(idx1)){
++   ct = read.table(sprintf("gene_counts_%d_%d.txt",idx1[i], idx2[i]), 
++                   header=TRUE, sep="\t")
++   dat = cbind(dat, ct)
++ }
+> 
+> dim(dat)
+[1] 53561   685
+> dat[1:2,1:5]
+                A03L A03N A03O A03P A03R
+ENSG00000000003  886 1337 3034  740 1038
+ENSG00000000005    0    0   17    0   29
+> 
+> write.table(dat, file = "../data/gene_counts_all.txt", append = FALSE, 
++   quote = FALSE, sep = "\t", row.names = TRUE, col.names = TRUE)
+> 
+> # ------------------------------------------------------------
+> # find a cutoff to filter out low expressed genes
+> # ------------------------------------------------------------
+> 
+> rMin = apply(dat, 1, min)
+> rMed = apply(dat, 1, median)
+> r75  = apply(dat, 1, quantile, probs=0.75)
+> r90  = apply(dat, 1, quantile, probs=0.90)
+> 
+> summary(rMin)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    0.0     0.0     0.0   147.1     4.0 47750.0 
+> summary(rMed)
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+     0.0      0.0      0.0    903.3    146.0 310300.0 
+> summary(r75)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      0       0       2    1314     268  544100 
+> summary(r90)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      0       0       3    1890     479  874800 
+> 
+> cor(rMin, rMed)
+[1] 0.8049558
+> cor(r75, rMed)
+[1] 0.98506
+> cor(r90, rMed)
+[1] 0.9434324
+> 
+> pdf("../figures/cts_summary.pdf", width=6, height=6)
+> par(mfrow=c(2,2), mar=c(5,4,1,1), bty="n")
+> hist(log10(1+rMin), xlab="log10(min + 1)", main="")
+> hist(log10(1+rMed), xlab="log10(median + 1)", main="")
+> hist(log10(1+r75),  xlab="log10(75 percentile + 1)", main="")
+> hist(log10(1+r90),  xlab="log10(90 percentile + 1)", main="")
+> dev.off()
+null device 
+          1 
+> 
+> summary(rMin[rMed >=10])
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    0.0     2.0    58.0   419.3   379.0 47750.0 
+> summary(rMed[r75 >=20])
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      0      97     809    2569    2646  310300 
+> 
+> table(rMed >=10)
+
+FALSE  TRUE 
+34766 18795 
+> table(r75 >=20)
+
+FALSE  TRUE 
+34734 18827 
+> 
+> dim(dat)
+[1] 53561   685
+> dat = dat[which(r75 >=20),]
+> dim(dat)
+[1] 18827   685
+> 
+> # ------------------------------------------------------------
+> # read in sample list
+> # ------------------------------------------------------------
+> 
+> aa = read.table("../info/brca_samples2use_after_qc_female_aa.txt", 
++   header=TRUE, sep="\t", as.is=TRUE)
+> dim(aa)
+[1] 50 23
+> aa$RNA_patientID[1:5]
+[1] "A0BW" "A0DG" "A1FC" "A209" "A1LB"
+> 
+> ea = read.table("../info/brca_samples2use_after_qc_female_caucasian.txt", 
++ header=TRUE, sep="\t", as.is=TRUE)
+> dim(ea)
+[1] 551  23
+> ea$RNA_patientID[1:5]
+[1] "A0D9" "A0DB" "A13G" "A0AU" "A0AY"
+> 
+> # ------------------------------------------------------------
+> # output gene counts for EA or AA population
+> # ------------------------------------------------------------
+> 
+> waa = match(aa$RNA_patientID, names(dat))
+> datAA = dat[,waa]
+> dim(datAA)
+[1] 18827    50
+> datAA[1:2,1:5]
+                A0BW A0DG A1FC A209 A1LB
+ENSG00000000003 2990 2567 4469 1964 1388
+ENSG00000000005    1   49    1   24    2
+> 
+> wea = match(ea$RNA_patientID, names(dat))
+> datEA = dat[,wea]
+> dim(datEA)
+[1] 18827   551
+> datEA[1:2,1:5]
+                A0D9 A0DB A13G A0AU A0AY
+ENSG00000000003 2444 4707 3729 1249 2186
+ENSG00000000005   63   65    3   36   34
+> 
+> summary(apply(datAA, 1, median))
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+     0.0     90.5    774.5   2468.0   2576.0 274700.0 
+> summary(apply(datEA, 1, median))
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      0      99     812    2582    2658  318900 
+> 
+> summary(apply(datAA, 1, max))
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+     28.0     948.5    3760.0   12330.0   10260.0 5069000.0 
+> summary(apply(datEA, 1, max))
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+     48    1997    7025   23820   18450 6661000 
+> 
+> datAA[apply(datAA, 1, max)>1e7,]
+ [1] A0BW A0DG A1FC A209 A1LB A04P A0CM A0D0 A0EQ A26G A08R A0J4 A0JE A0I6 A0IE
+[16] A0RE A0WX A0AV A14X A1LG A1LK A1LL A1PB A0SJ A04R A0CQ A0D4 A0YF A259 A25B
+[31] A25E A03O A03P A0JA A125 A0TT A0IJ A0IM A0RH A0RL A0RM A0WS A0WZ A0X5 A0B0
+[46] A0E2 A15L A15O A1L8 A1OX
+<0 rows> (or 0-length row.names)
+> 
+> write.table(datEA, file = "../data/gene_counts_EA.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = TRUE, col.names = TRUE)
+> 
+> write.table(datAA, file = "../data/gene_counts_AA.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = TRUE, col.names = TRUE)
+> 
+> 
+> proc.time()
+   user  system elapsed 
+117.350   2.063 120.378 

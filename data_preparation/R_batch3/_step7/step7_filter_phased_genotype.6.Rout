@@ -1,0 +1,147 @@
+
+R version 2.10.1 Patched (2010-04-07 r51635)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> chr1 = 7
+> 
+> setwd("/lustre/scr/w/e/weisun/TCGA/phased_geno_EA/")
+> 
+> chr2 = sprintf("chr%d", chr1)
+> 
+> st1 = "\n---------------------------------------------------\n"
+> message(sprintf("%s chr: %d %s", st1, chr1, st1))
+
+---------------------------------------------------
+ chr: 7 
+---------------------------------------------------
+
+> 
+> # -------------------------------------------------------------------------
+> # Prepare genotype data
+> # -------------------------------------------------------------------------
+> 
+> datFile = sprintf("%s.txt", chr2)
+> genoDat = read.table(datFile, comment.char = "", sep="\t", 
++                      header = FALSE, as.is=TRUE, row.names=1)
+> dim(genoDat)
+[1]     551 2138423
+> genoDat[1:2,1:5]
+     V2 V3 V4 V5 V6
+A0D9  4  4  0  4  0
+A0DB  4  4  0  4  0
+> 
+> infFile = sprintf("../1000G/anno_out/%s.annotation.txt", chr2)
+> genoInf = read.table(infFile, comment.char = "", sep="\t", 
++ header = TRUE, as.is=TRUE)
+> 
+> dim(genoInf)
+[1] 2138423      11
+> genoInf[1:2,]
+  X.chr coordinate reference_allele observed_allele        SNP geneSYM geneID
+1  chr7      16161                A               G chr7:16161      --     --
+2  chr7      16487                G               T chr7:16487      --     --
+  CCDS_protein_effect CCDS_transcript_for_effect all_protein_effects
+1                  --                         --                  --
+2                  --                         --                  --
+  transcripts_for_effects
+1                      --
+2                      --
+> 
+> if(ncol(genoDat) != nrow(genoInf)){
++   stop("dimension does not match\n")
++ }
+> 
+> genoDat = data.matrix(genoDat)
+> 
+> w2rm  = which(rownames(genoDat) == "A15R")
+> w2rm
+[1] 521
+> 
+> if(length(w2rm) > 0){
++   genoDat = genoDat[-w2rm,]
++ }
+> 
+> nna     = colSums(is.na(genoDat))
+> summary(nna)
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+0.000e+00 0.000e+00 0.000e+00 1.122e-05 0.000e+00 2.100e+01 
+> table(nna > 0)
+
+  FALSE    TRUE 
+2138421       2 
+> if(any(nna > 0)){
++   genoDat[is.na(genoDat)] = 0
++ }
+> 
+> tmpDat = genoDat
+> ww2    = tmpDat > 2
+> tmpDat[ww2] = genoDat[ww2] - 2
+> 
+> maf = 0.5*colSums(tmpDat)/nrow(tmpDat)
+> summary(maf)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.00000 0.00000 0.00000 0.06151 0.00000 1.00000 
+> 
+> rm(tmpDat)
+> 
+> # -------------------------------------------------------------------------
+> # keep those MAF >= 0.02
+> # -------------------------------------------------------------------------
+> 
+> wkp     = which( maf >= 0.02 & maf <= 0.98)
+> genoDat = genoDat[,wkp]
+> dim(genoDat)
+[1]    550 402108
+> genoDat[1:2,1:5]
+     V11 V14 V19 V21 V24
+A0D9   0   1   3   3   0
+A0DB   3   4   0   0   3
+> 
+> genoInf = genoInf[wkp,]
+> dim(genoInf)
+[1] 402108     11
+> genoInf[1:2,]
+   X.chr coordinate reference_allele observed_allele        SNP geneSYM geneID
+10  chr7      31439                T               A chr7:31439      --     --
+13  chr7      33617                G               T rs62429382      --     --
+   CCDS_protein_effect CCDS_transcript_for_effect all_protein_effects
+10                  --                         --                  --
+13                  --                         --                  --
+   transcripts_for_effects
+10                      --
+13                      --
+> 
+> summary(maf[wkp])
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+0.02000 0.07818 0.21180 0.29520 0.45640 0.98000 
+> 
+> message(sprintf("%d out of %d SNPs with MAF >= 0.02 are used", 
++                 length(wkp), length(maf)))
+402108 out of 2138423 SNPs with MAF >= 0.02 are used
+> 
+> write.table(genoDat, file = sprintf("%s_MAF_0.02.txt", chr2), 
++             append = FALSE, quote = FALSE, sep = "\t", 
++             row.names = TRUE, col.names = FALSE)
+> 
+> write.table(genoInf, file = sprintf("%s_MAF_0.02_info.txt", chr2), 
++             append = FALSE, quote = FALSE, sep = "\t", 
++             row.names = FALSE, col.names = FALSE)
+> 
+> proc.time()
+     user    system   elapsed 
+12327.212    16.011 12349.041 

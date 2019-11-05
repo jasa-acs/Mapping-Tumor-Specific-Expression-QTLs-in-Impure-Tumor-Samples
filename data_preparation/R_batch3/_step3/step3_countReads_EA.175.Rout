@@ -1,0 +1,56 @@
+
+R version 2.10.1 Patched (2010-04-07 r51635)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> i = 176
+> 
+> library(isoform, lib.loc="/nas02/home/w/e/weisun/R/Rlibs/") 
+Loading required package: gtools
+Loading required package: MASS
+> bedFile = "/nas02/home/w/e/weisun/research/data/human/Homo_sapiens.GRCh37.66.nonoverlap.exon.bed"
+> 
+> setwd("/lustre/scr/w/e/weisun/TCGA/bam/")
+> 
+> cmd  = "ls *_asCounts_hetSNP_EA_hap1.bam"
+> ffs  = system(cmd, intern=TRUE)
+> length(ffs)
+[1] 551
+> head(ffs)
+[1] "A03N_asCounts_hetSNP_EA_hap1.bam" "A03R_asCounts_hetSNP_EA_hap1.bam"
+[3] "A03T_asCounts_hetSNP_EA_hap1.bam" "A03U_asCounts_hetSNP_EA_hap1.bam"
+[5] "A03V_asCounts_hetSNP_EA_hap1.bam" "A049_asCounts_hetSNP_EA_hap1.bam"
+> sams = gsub("_asCounts_hetSNP_EA_hap1.bam", "", ffs)
+> 
+> sam1 = sams[i]
+> cat(i, sam1, date(), "\n")
+176 A0H7 Fri Nov 16 18:06:44 2012 
+> 
+> bamFile = ffs[i]
+> outFile = sprintf("%s_asCounts_hap1.txt", sam1)
+> 
+> countReads(bamFile, bedFile, outFile)
+> 
+> 
+> bamFile = gsub("_hap1", "_hap2", ffs[i], fixed=TRUE)
+> outFile = sprintf("%s_asCounts_hap2.txt", sam1)
+> 
+> countReads(bamFile, bedFile, outFile)
+> 
+> proc.time()
+   user  system elapsed 
+126.134   2.401 127.102 

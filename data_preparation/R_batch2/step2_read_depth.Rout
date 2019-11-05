@@ -1,0 +1,126 @@
+
+R version 2.11.0 (2010-04-22)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> # -----------------------------------------------------------------
+> # read in sample information
+> # -----------------------------------------------------------------
+> 
+> setwd("~/research/TCGA/BRCA/info/")
+> 
+> sam = read.table("brca_samples2use_after_qc_female_caucasian.txt", 
++ header=TRUE, sep="\t", as.is=TRUE)
+> dim(sam)
+[1] 551  23
+> sam[1,]
+  DNAtumor_institution DNAtumor_patientID DNAtumor_type DNAtumor_portion
+1                   A7               A0D9           01A              31D
+  DNAtumor_plate                                   DNAtumor_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_H07_697072.CEL
+  DNAnorml_institution DNAnorml_patientID DNAnorml_type DNAnorml_portion
+1                   A7               A0D9           10A              01D
+  DNAnorml_plate                                   DNAnorml_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+                     RNA_Exome             RNA_RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+             RNA_RNAseq.Normal              RNA_rnaseqID.Tumor
+1 TCGA-A7-A0D9-11A-53R-A089-07 110318_SN749_0046_AB039FABXX_4_
+                   RNA_rnaseqID.Normal RNA_institution RNA_patientID RNA_type
+1 110909_UNC9-SN296_0240_BD0DDBABXX_1_              A7          A0D9      01A
+  RNA_portion RNA_plate gender
+1         31R      A056 female
+> 
+> # -----------------------------------------------------------------
+> # read in count data
+> # -----------------------------------------------------------------
+> 
+> setwd("~/research/TCGA/BRCA/bam/_count")
+> 
+> files = list.files(pattern="count")
+> sams  = gsub("count_", "", files, fixed=TRUE)
+> sams  = gsub(".txt",  "", sams,  fixed=TRUE)
+> cts   = matrix(NA, nrow=length(sams), ncol=2)
+> 
+> for(i in 1:length(sams)){
++ 
++   sam1 = sams[i]
++   ff1  = files[i]
++   
++   ct   = scan(ff1, quiet=TRUE)
++   cts[i,] = ct
++ }
+> 
+> cts = cts/1e6
+> 
+> summary((cts[,1] - cts[,2])/cts[,1] )
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.1293  0.1728  0.1877  0.1956  0.2068  0.6152 
+> 
+> # -----------------------------------------------------------------
+> # summarize
+> # -----------------------------------------------------------------
+> 
+> setwd("~/research/TCGA/BRCA/figures")
+> 
+> pdf("TReC_vs_QCed_TReC.pdf", width=3, height=3)
+> par(mar=c(5,4,1,1))
+> plot(cts[,1], cts[,2], xlab="Total # of Reads (million)", 
++   ylab="Total # of Reads after QC", bty="n", cex=0.5, pch=20, col="darkgrey")
+> w2kp = which(sams %in% sam$DNAnorml_patientID)
+> length(w2kp)
+[1] 551
+> points(cts[w2kp,1], cts[w2kp,2], col="darkgreen", cex=0.5)
+> 
+> b = median(cts[,2])/median(cts[,1])
+> abline(0, b, col="darkred", lwd=2)
+> abline(0, 0.70, col="orange", lwd=2)
+> 
+> table(cts[w2kp,2]/cts[w2kp,1] < 0.7)
+
+FALSE  TRUE 
+  535    16 
+> 
+> lg = c(sprintf("y=%.2fx", b), "y=0.70x")
+> legend("topleft", lg, lty=c(1,1), col=c("darkred", "orange"), bty="n")
+> dev.off()
+null device 
+          1 
+> 
+> female_caucasian = sams %in% sam$DNAnorml_patientID
+> 
+> db = data.frame(sample=sams, cts, round(cts[,2]/cts[,1],4), female_caucasian)
+> 
+> names(db) = c("sample", "TReC", "TReC_after_QC", "ratio", "femaleCau")
+> dim(db)
+[1] 685   5
+> db[1:2,]
+  sample     TReC TReC_after_QC  ratio femaleCau
+1   A03L 164.5676      135.7907 0.8251     FALSE
+2   A03N 167.2361      123.0309 0.7357      TRUE
+> 
+> setwd("~/research/TCGA/BRCA/info")
+> 
+> write.table(db, file = "samples_count.txt", append = FALSE, quote = FALSE, 
++   sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  0.619   0.101   0.990 

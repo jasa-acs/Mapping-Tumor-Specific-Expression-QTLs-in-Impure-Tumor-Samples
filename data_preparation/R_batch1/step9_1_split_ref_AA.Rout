@@ -1,0 +1,48 @@
+
+R version 2.10.1 Patched (2010-04-07 r51635)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("/lustre/scr/w/e/weisun/TCGA/1000G")
+> 
+> #-------------------------------------------------------------------------------
+> # splitRef, which can be found here 
+> # http://www.sph.umich.edu/csg/yli/splitRef/
+> # the 1000G reference data were downloaded from 
+> # ftp://share.sph.umich.edu/1000genomes/fullProject/2012.02.14/
+> #   v2.20101123.EUR.autosomes.hap.tgz
+> #   v2.20101123.autosomes.snps.tgz
+> #-------------------------------------------------------------------------------
+> 
+> bsubF = "ALL_submit_jobs.sh"
+> cat("", file=bsubF)
+> 
+> for (chr in 1:22){
++   cmd = "software/splitRef.V002/splitRef_V002/splitRef.pl"
++   cmd = sprintf("%s -windowSize 100000 -overlapSize 10000", cmd)
++   cmd = sprintf("%s -hap hap/v2.20101123.chr%d.hap.gz", cmd, chr)
++   cmd = sprintf("%s -snps snps/v2.20101123.chr%d.snps", cmd, chr)
++   cmd = sprintf("%s -o ../data_AA/chr%d  > ../data_AA/chr%d.log\n", cmd, chr, chr)
++   ff1 = sprintf("ALL_splitRef_chr%d.sh", chr)
++   cat(cmd, file=ff1)
++   cat(sprintf("bsub -q week bash %s\n", ff1), file=bsubF, append=TRUE)
++ }
+> 
+> proc.time()
+   user  system elapsed 
+  0.182   0.033   1.128 

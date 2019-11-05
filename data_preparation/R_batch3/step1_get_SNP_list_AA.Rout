@@ -1,0 +1,2385 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> # ----------------------------------------------------------------------
+> # gerate a list of heterzygous SNPs for each sample, which will be 
+> # used by function "asCounts"
+> #
+> # the output file is a tab-delimiated file with four columns, 
+> # chromosome, position, allele 1 and allele 2, without header. 
+> #
+> # ----------------------------------------------------------------------
+> 
+> for(chrId in 1:22){
++   chr1  = sprintf("chr%d", chrId)
++ 
++   message(chr1, " ", date())
++ 
++   # ----------------------------------------------------------------------
++   # read in the SNP annotation 
++   # ----------------------------------------------------------------------
++ 
++   setwd("/Volumes/Moon/TCGA_BRCA/1000G/anno_out/")
++ 
++   annoFile = sprintf("%s.annotation.txt", chr1)
++   anno1    = read.table(annoFile, header=TRUE, sep="\t", 
++               comment.char="", as.is=TRUE)
++ 
++   dim(anno1)
++   anno1[1:5,]
++ 
++   setwd("/Volumes/Moon/TCGA_BRCA/1000G/snps/")
++ 
++   snpFile = sprintf("v2.20101123.%s.snps", chr1)
++   snp1    = scan(snpFile, what=character())
++   snp1[1:5]
++ 
++   ## some of the markers in snpFile are indels
++   ## try to exclude them for now
++ 
++   wsnp = match(anno1$SNP, snp1)
++   all(snp1[wsnp] == anno1$SNP)
++ 
++   if(any(anno1$X.chr != chr1)){
++     stop("chromsome name does not match\n")
++   }
++ 
++   # ----------------------------------------------------------------------
++   # read in the list of the SNP to be excluded
++   # ----------------------------------------------------------------------
++ 
++   setwd("/Volumes/Moon/TCGA_BRCA/MACH_output_AA/")
++ 
++   ff1 = sprintf("%s.hap", chr1)
++   cmd = sprintf("wc -l %s", ff1)
++   wc1 = system(cmd, intern=TRUE)
++   wc1 = unlist(strsplit(wc1, split="\\s+"))[2]
++   if(wc1 != "100") stop("number of lines is not correct")
++ 
++   for(k in 1:50){
++     message("  ", k, " ", date())
++     
++     ff2  = sprintf("%s.%d.%d.tmp", ff1, 2*k-1, 2*k)
++     cmd1 = sprintf("sed -n '%d,%d p' %s > %s", 2*k-1, 2*k, ff1, ff2)
++     system(cmd1)
++ 
++     dat1 = scan(ff2, what=character())
++     
++     cmd1 = sprintf("rm %s", ff2)
++     system(cmd1)
++ 
++     if(dat1[1] != dat1[4]){ stop("sample names do not match\n") }
++     
++     if(dat1[2] != "HAPLO1"){ 
++       stop(sprintf("expect HAPLO1 but see %s\n", dat1[2])) 
++     }
++     
++     if(dat1[5] != "HAPLO2"){ 
++       stop(sprintf("expect HAPLO2 but see %s\n", dat1[5])) 
++     }
++     
++     hap1 = unlist(strsplit(dat1[3], split=""))
++     hap2 = unlist(strsplit(dat1[6], split=""))
++     
++     if(length(hap1) != length(snp1)){
++       stop("length of haplotype 1 does not match annotation\n")
++     }
++     
++     if(length(hap2) != length(snp1)){
++       stop("length of haplotype 2 does not match annotation\n")
++     }
++     
++     hap1 = toupper(hap1[wsnp])
++     hap2 = toupper(hap2[wsnp])
++     
++     alleles = c("A", "C", "G", "T")
++     
++     wdiff = which(hap1 != hap2 & hap1 %in% alleles & hap2 %in% alleles)
++     
++     hap1A = hap1[wdiff]
++     hap1B = hap2[wdiff]
++     pos1  = anno1$coordinate[wdiff]
++     
++     hetDat = data.frame(chr=rep(chr1, length(pos1)), pos=pos1, hap1A, hap1B)
++     hetDat = hetDat[order(pos1),]
++     
++     sam1   = unlist(strsplit(dat1[1], split="->"))[2]
++     ff2 = sprintf("../hetSNP_AA/hetSNP_%s.txt", sam1)
++     
++     if(chr1 == "chr1"){
++       app = FALSE
++     }else{
++       app = TRUE
++     }
++     
++     write.table(hetDat, file = ff2, append = app, quote = FALSE, sep = "\t",
++                 row.names = FALSE, col.names = FALSE)
++ 
++   }
++ }
+chr1 Tue Nov  6 01:07:57 2012
+Read 3172620 items
+  1 Tue Nov  6 01:09:33 2012
+Read 6 items
+  2 Tue Nov  6 01:09:39 2012
+Read 6 items
+  3 Tue Nov  6 01:09:44 2012
+Read 6 items
+  4 Tue Nov  6 01:09:49 2012
+Read 6 items
+  5 Tue Nov  6 01:09:55 2012
+Read 6 items
+  6 Tue Nov  6 01:10:00 2012
+Read 6 items
+  7 Tue Nov  6 01:10:05 2012
+Read 6 items
+  8 Tue Nov  6 01:10:11 2012
+Read 6 items
+  9 Tue Nov  6 01:10:16 2012
+Read 6 items
+  10 Tue Nov  6 01:10:21 2012
+Read 6 items
+  11 Tue Nov  6 01:10:26 2012
+Read 6 items
+  12 Tue Nov  6 01:10:32 2012
+Read 6 items
+  13 Tue Nov  6 01:10:37 2012
+Read 6 items
+  14 Tue Nov  6 01:10:42 2012
+Read 6 items
+  15 Tue Nov  6 01:10:46 2012
+Read 6 items
+  16 Tue Nov  6 01:10:52 2012
+Read 6 items
+  17 Tue Nov  6 01:10:57 2012
+Read 6 items
+  18 Tue Nov  6 01:11:02 2012
+Read 6 items
+  19 Tue Nov  6 01:11:07 2012
+Read 6 items
+  20 Tue Nov  6 01:11:12 2012
+Read 6 items
+  21 Tue Nov  6 01:11:17 2012
+Read 6 items
+  22 Tue Nov  6 01:11:22 2012
+Read 6 items
+  23 Tue Nov  6 01:11:28 2012
+Read 6 items
+  24 Tue Nov  6 01:11:33 2012
+Read 6 items
+  25 Tue Nov  6 01:11:39 2012
+Read 6 items
+  26 Tue Nov  6 01:11:44 2012
+Read 6 items
+  27 Tue Nov  6 01:11:49 2012
+Read 6 items
+  28 Tue Nov  6 01:11:55 2012
+Read 6 items
+  29 Tue Nov  6 01:12:00 2012
+Read 6 items
+  30 Tue Nov  6 01:12:05 2012
+Read 6 items
+  31 Tue Nov  6 01:12:11 2012
+Read 6 items
+  32 Tue Nov  6 01:12:16 2012
+Read 6 items
+  33 Tue Nov  6 01:12:22 2012
+Read 6 items
+  34 Tue Nov  6 01:12:27 2012
+Read 6 items
+  35 Tue Nov  6 01:12:33 2012
+Read 6 items
+  36 Tue Nov  6 01:12:38 2012
+Read 6 items
+  37 Tue Nov  6 01:12:44 2012
+Read 6 items
+  38 Tue Nov  6 01:12:49 2012
+Read 6 items
+  39 Tue Nov  6 01:12:55 2012
+Read 6 items
+  40 Tue Nov  6 01:13:00 2012
+Read 6 items
+  41 Tue Nov  6 01:13:06 2012
+Read 6 items
+  42 Tue Nov  6 01:13:11 2012
+Read 6 items
+  43 Tue Nov  6 01:13:17 2012
+Read 6 items
+  44 Tue Nov  6 01:13:22 2012
+Read 6 items
+  45 Tue Nov  6 01:13:28 2012
+Read 6 items
+  46 Tue Nov  6 01:13:33 2012
+Read 6 items
+  47 Tue Nov  6 01:13:39 2012
+Read 6 items
+  48 Tue Nov  6 01:13:43 2012
+Read 6 items
+  49 Tue Nov  6 01:13:49 2012
+Read 6 items
+  50 Tue Nov  6 01:13:54 2012
+Read 6 items
+chr2 Tue Nov  6 01:14:00 2012
+Read 3492186 items
+  1 Tue Nov  6 01:15:38 2012
+Read 6 items
+  2 Tue Nov  6 01:15:52 2012
+Read 6 items
+  3 Tue Nov  6 01:16:05 2012
+Read 6 items
+  4 Tue Nov  6 01:16:16 2012
+Read 6 items
+  5 Tue Nov  6 01:16:29 2012
+Read 6 items
+  6 Tue Nov  6 01:16:41 2012
+Read 6 items
+  7 Tue Nov  6 01:16:53 2012
+Read 6 items
+  8 Tue Nov  6 01:17:05 2012
+Read 6 items
+  9 Tue Nov  6 01:17:13 2012
+Read 6 items
+  10 Tue Nov  6 01:17:22 2012
+Read 6 items
+  11 Tue Nov  6 01:17:31 2012
+Read 6 items
+  12 Tue Nov  6 01:17:40 2012
+Read 6 items
+  13 Tue Nov  6 01:17:50 2012
+Read 6 items
+  14 Tue Nov  6 01:17:59 2012
+Read 6 items
+  15 Tue Nov  6 01:18:10 2012
+Read 6 items
+  16 Tue Nov  6 01:18:16 2012
+Read 6 items
+  17 Tue Nov  6 01:18:21 2012
+Read 6 items
+  18 Tue Nov  6 01:18:25 2012
+Read 6 items
+  19 Tue Nov  6 01:18:31 2012
+Read 6 items
+  20 Tue Nov  6 01:18:36 2012
+Read 6 items
+  21 Tue Nov  6 01:18:41 2012
+Read 6 items
+  22 Tue Nov  6 01:18:46 2012
+Read 6 items
+  23 Tue Nov  6 01:18:50 2012
+Read 6 items
+  24 Tue Nov  6 01:18:55 2012
+Read 6 items
+  25 Tue Nov  6 01:19:00 2012
+Read 6 items
+  26 Tue Nov  6 01:19:05 2012
+Read 6 items
+  27 Tue Nov  6 01:19:10 2012
+Read 6 items
+  28 Tue Nov  6 01:19:15 2012
+Read 6 items
+  29 Tue Nov  6 01:19:20 2012
+Read 6 items
+  30 Tue Nov  6 01:19:25 2012
+Read 6 items
+  31 Tue Nov  6 01:19:30 2012
+Read 6 items
+  32 Tue Nov  6 01:19:34 2012
+Read 6 items
+  33 Tue Nov  6 01:19:39 2012
+Read 6 items
+  34 Tue Nov  6 01:19:44 2012
+Read 6 items
+  35 Tue Nov  6 01:19:49 2012
+Read 6 items
+  36 Tue Nov  6 01:19:54 2012
+Read 6 items
+  37 Tue Nov  6 01:19:59 2012
+Read 6 items
+  38 Tue Nov  6 01:20:05 2012
+Read 6 items
+  39 Tue Nov  6 01:20:10 2012
+Read 6 items
+  40 Tue Nov  6 01:20:14 2012
+Read 6 items
+  41 Tue Nov  6 01:20:19 2012
+Read 6 items
+  42 Tue Nov  6 01:20:24 2012
+Read 6 items
+  43 Tue Nov  6 01:20:29 2012
+Read 6 items
+  44 Tue Nov  6 01:20:34 2012
+Read 6 items
+  45 Tue Nov  6 01:20:39 2012
+Read 6 items
+  46 Tue Nov  6 01:20:44 2012
+Read 6 items
+  47 Tue Nov  6 01:20:49 2012
+Read 6 items
+  48 Tue Nov  6 01:20:54 2012
+Read 6 items
+  49 Tue Nov  6 01:20:59 2012
+Read 6 items
+  50 Tue Nov  6 01:21:04 2012
+Read 6 items
+chr3 Tue Nov  6 01:21:09 2012
+Read 2914582 items
+  1 Tue Nov  6 01:22:06 2012
+Read 6 items
+  2 Tue Nov  6 01:22:09 2012
+Read 6 items
+  3 Tue Nov  6 01:22:14 2012
+Read 6 items
+  4 Tue Nov  6 01:22:17 2012
+Read 6 items
+  5 Tue Nov  6 01:22:22 2012
+Read 6 items
+  6 Tue Nov  6 01:22:26 2012
+Read 6 items
+  7 Tue Nov  6 01:22:29 2012
+Read 6 items
+  8 Tue Nov  6 01:22:34 2012
+Read 6 items
+  9 Tue Nov  6 01:22:38 2012
+Read 6 items
+  10 Tue Nov  6 01:22:42 2012
+Read 6 items
+  11 Tue Nov  6 01:22:46 2012
+Read 6 items
+  12 Tue Nov  6 01:22:50 2012
+Read 6 items
+  13 Tue Nov  6 01:22:54 2012
+Read 6 items
+  14 Tue Nov  6 01:22:59 2012
+Read 6 items
+  15 Tue Nov  6 01:23:02 2012
+Read 6 items
+  16 Tue Nov  6 01:23:06 2012
+Read 6 items
+  17 Tue Nov  6 01:23:11 2012
+Read 6 items
+  18 Tue Nov  6 01:23:15 2012
+Read 6 items
+  19 Tue Nov  6 01:23:19 2012
+Read 6 items
+  20 Tue Nov  6 01:23:23 2012
+Read 6 items
+  21 Tue Nov  6 01:23:27 2012
+Read 6 items
+  22 Tue Nov  6 01:23:31 2012
+Read 6 items
+  23 Tue Nov  6 01:23:35 2012
+Read 6 items
+  24 Tue Nov  6 01:23:39 2012
+Read 6 items
+  25 Tue Nov  6 01:23:43 2012
+Read 6 items
+  26 Tue Nov  6 01:23:48 2012
+Read 6 items
+  27 Tue Nov  6 01:23:52 2012
+Read 6 items
+  28 Tue Nov  6 01:23:55 2012
+Read 6 items
+  29 Tue Nov  6 01:24:00 2012
+Read 6 items
+  30 Tue Nov  6 01:24:04 2012
+Read 6 items
+  31 Tue Nov  6 01:24:08 2012
+Read 6 items
+  32 Tue Nov  6 01:24:12 2012
+Read 6 items
+  33 Tue Nov  6 01:24:16 2012
+Read 6 items
+  34 Tue Nov  6 01:24:20 2012
+Read 6 items
+  35 Tue Nov  6 01:24:24 2012
+Read 6 items
+  36 Tue Nov  6 01:24:28 2012
+Read 6 items
+  37 Tue Nov  6 01:24:32 2012
+Read 6 items
+  38 Tue Nov  6 01:24:37 2012
+Read 6 items
+  39 Tue Nov  6 01:24:41 2012
+Read 6 items
+  40 Tue Nov  6 01:24:45 2012
+Read 6 items
+  41 Tue Nov  6 01:24:49 2012
+Read 6 items
+  42 Tue Nov  6 01:24:53 2012
+Read 6 items
+  43 Tue Nov  6 01:24:58 2012
+Read 6 items
+  44 Tue Nov  6 01:25:01 2012
+Read 6 items
+  45 Tue Nov  6 01:25:05 2012
+Read 6 items
+  46 Tue Nov  6 01:25:10 2012
+Read 6 items
+  47 Tue Nov  6 01:25:14 2012
+Read 6 items
+  48 Tue Nov  6 01:25:18 2012
+Read 6 items
+  49 Tue Nov  6 01:25:22 2012
+Read 6 items
+  50 Tue Nov  6 01:25:26 2012
+Read 6 items
+chr4 Tue Nov  6 01:25:30 2012
+Read 2888657 items
+  1 Tue Nov  6 01:26:20 2012
+Read 6 items
+  2 Tue Nov  6 01:26:25 2012
+Read 6 items
+  3 Tue Nov  6 01:26:30 2012
+Read 6 items
+  4 Tue Nov  6 01:26:34 2012
+Read 6 items
+  5 Tue Nov  6 01:26:38 2012
+Read 6 items
+  6 Tue Nov  6 01:26:42 2012
+Read 6 items
+  7 Tue Nov  6 01:26:46 2012
+Read 6 items
+  8 Tue Nov  6 01:26:50 2012
+Read 6 items
+  9 Tue Nov  6 01:26:54 2012
+Read 6 items
+  10 Tue Nov  6 01:26:58 2012
+Read 6 items
+  11 Tue Nov  6 01:27:02 2012
+Read 6 items
+  12 Tue Nov  6 01:27:06 2012
+Read 6 items
+  13 Tue Nov  6 01:27:10 2012
+Read 6 items
+  14 Tue Nov  6 01:27:14 2012
+Read 6 items
+  15 Tue Nov  6 01:27:19 2012
+Read 6 items
+  16 Tue Nov  6 01:27:23 2012
+Read 6 items
+  17 Tue Nov  6 01:27:28 2012
+Read 6 items
+  18 Tue Nov  6 01:27:31 2012
+Read 6 items
+  19 Tue Nov  6 01:27:35 2012
+Read 6 items
+  20 Tue Nov  6 01:27:39 2012
+Read 6 items
+  21 Tue Nov  6 01:27:43 2012
+Read 6 items
+  22 Tue Nov  6 01:27:47 2012
+Read 6 items
+  23 Tue Nov  6 01:27:52 2012
+Read 6 items
+  24 Tue Nov  6 01:27:57 2012
+Read 6 items
+  25 Tue Nov  6 01:28:01 2012
+Read 6 items
+  26 Tue Nov  6 01:28:05 2012
+Read 6 items
+  27 Tue Nov  6 01:28:08 2012
+Read 6 items
+  28 Tue Nov  6 01:28:13 2012
+Read 6 items
+  29 Tue Nov  6 01:28:16 2012
+Read 6 items
+  30 Tue Nov  6 01:28:20 2012
+Read 6 items
+  31 Tue Nov  6 01:28:25 2012
+Read 6 items
+  32 Tue Nov  6 01:28:28 2012
+Read 6 items
+  33 Tue Nov  6 01:28:32 2012
+Read 6 items
+  34 Tue Nov  6 01:28:37 2012
+Read 6 items
+  35 Tue Nov  6 01:28:41 2012
+Read 6 items
+  36 Tue Nov  6 01:28:45 2012
+Read 6 items
+  37 Tue Nov  6 01:28:49 2012
+Read 6 items
+  38 Tue Nov  6 01:28:53 2012
+Read 6 items
+  39 Tue Nov  6 01:28:57 2012
+Read 6 items
+  40 Tue Nov  6 01:29:01 2012
+Read 6 items
+  41 Tue Nov  6 01:29:05 2012
+Read 6 items
+  42 Tue Nov  6 01:29:09 2012
+Read 6 items
+  43 Tue Nov  6 01:29:14 2012
+Read 6 items
+  44 Tue Nov  6 01:29:17 2012
+Read 6 items
+  45 Tue Nov  6 01:29:22 2012
+Read 6 items
+  46 Tue Nov  6 01:29:25 2012
+Read 6 items
+  47 Tue Nov  6 01:29:29 2012
+Read 6 items
+  48 Tue Nov  6 01:29:33 2012
+Read 6 items
+  49 Tue Nov  6 01:29:37 2012
+Read 6 items
+  50 Tue Nov  6 01:29:41 2012
+Read 6 items
+chr5 Tue Nov  6 01:29:46 2012
+Read 2670385 items
+  1 Tue Nov  6 01:30:33 2012
+Read 6 items
+  2 Tue Nov  6 01:30:38 2012
+Read 6 items
+  3 Tue Nov  6 01:30:42 2012
+Read 6 items
+  4 Tue Nov  6 01:30:46 2012
+Read 6 items
+  5 Tue Nov  6 01:30:49 2012
+Read 6 items
+  6 Tue Nov  6 01:30:53 2012
+Read 6 items
+  7 Tue Nov  6 01:30:56 2012
+Read 6 items
+  8 Tue Nov  6 01:31:00 2012
+Read 6 items
+  9 Tue Nov  6 01:31:04 2012
+Read 6 items
+  10 Tue Nov  6 01:31:07 2012
+Read 6 items
+  11 Tue Nov  6 01:31:11 2012
+Read 6 items
+  12 Tue Nov  6 01:31:15 2012
+Read 6 items
+  13 Tue Nov  6 01:31:20 2012
+Read 6 items
+  14 Tue Nov  6 01:31:23 2012
+Read 6 items
+  15 Tue Nov  6 01:31:27 2012
+Read 6 items
+  16 Tue Nov  6 01:31:31 2012
+Read 6 items
+  17 Tue Nov  6 01:31:34 2012
+Read 6 items
+  18 Tue Nov  6 01:31:38 2012
+Read 6 items
+  19 Tue Nov  6 01:31:41 2012
+Read 6 items
+  20 Tue Nov  6 01:31:45 2012
+Read 6 items
+  21 Tue Nov  6 01:31:49 2012
+Read 6 items
+  22 Tue Nov  6 01:31:53 2012
+Read 6 items
+  23 Tue Nov  6 01:31:57 2012
+Read 6 items
+  24 Tue Nov  6 01:32:00 2012
+Read 6 items
+  25 Tue Nov  6 01:32:04 2012
+Read 6 items
+  26 Tue Nov  6 01:32:08 2012
+Read 6 items
+  27 Tue Nov  6 01:32:12 2012
+Read 6 items
+  28 Tue Nov  6 01:32:16 2012
+Read 6 items
+  29 Tue Nov  6 01:32:19 2012
+Read 6 items
+  30 Tue Nov  6 01:32:23 2012
+Read 6 items
+  31 Tue Nov  6 01:32:27 2012
+Read 6 items
+  32 Tue Nov  6 01:32:30 2012
+Read 6 items
+  33 Tue Nov  6 01:32:34 2012
+Read 6 items
+  34 Tue Nov  6 01:32:38 2012
+Read 6 items
+  35 Tue Nov  6 01:32:42 2012
+Read 6 items
+  36 Tue Nov  6 01:32:45 2012
+Read 6 items
+  37 Tue Nov  6 01:32:49 2012
+Read 6 items
+  38 Tue Nov  6 01:32:53 2012
+Read 6 items
+  39 Tue Nov  6 01:32:57 2012
+Read 6 items
+  40 Tue Nov  6 01:33:01 2012
+Read 6 items
+  41 Tue Nov  6 01:33:04 2012
+Read 6 items
+  42 Tue Nov  6 01:33:08 2012
+Read 6 items
+  43 Tue Nov  6 01:33:12 2012
+Read 6 items
+  44 Tue Nov  6 01:33:15 2012
+Read 6 items
+  45 Tue Nov  6 01:33:19 2012
+Read 6 items
+  46 Tue Nov  6 01:33:23 2012
+Read 6 items
+  47 Tue Nov  6 01:33:26 2012
+Read 6 items
+  48 Tue Nov  6 01:33:30 2012
+Read 6 items
+  49 Tue Nov  6 01:33:34 2012
+Read 6 items
+  50 Tue Nov  6 01:33:38 2012
+Read 6 items
+chr6 Tue Nov  6 01:33:41 2012
+Read 2559970 items
+  1 Tue Nov  6 01:34:27 2012
+Read 6 items
+  2 Tue Nov  6 01:34:31 2012
+Read 6 items
+  3 Tue Nov  6 01:34:35 2012
+Read 6 items
+  4 Tue Nov  6 01:34:38 2012
+Read 6 items
+  5 Tue Nov  6 01:34:43 2012
+Read 6 items
+  6 Tue Nov  6 01:34:47 2012
+Read 6 items
+  7 Tue Nov  6 01:34:50 2012
+Read 6 items
+  8 Tue Nov  6 01:34:54 2012
+Read 6 items
+  9 Tue Nov  6 01:34:57 2012
+Read 6 items
+  10 Tue Nov  6 01:35:01 2012
+Read 6 items
+  11 Tue Nov  6 01:35:04 2012
+Read 6 items
+  12 Tue Nov  6 01:35:08 2012
+Read 6 items
+  13 Tue Nov  6 01:35:11 2012
+Read 6 items
+  14 Tue Nov  6 01:35:15 2012
+Read 6 items
+  15 Tue Nov  6 01:35:18 2012
+Read 6 items
+  16 Tue Nov  6 01:35:22 2012
+Read 6 items
+  17 Tue Nov  6 01:35:25 2012
+Read 6 items
+  18 Tue Nov  6 01:35:29 2012
+Read 6 items
+  19 Tue Nov  6 01:35:33 2012
+Read 6 items
+  20 Tue Nov  6 01:35:37 2012
+Read 6 items
+  21 Tue Nov  6 01:35:40 2012
+Read 6 items
+  22 Tue Nov  6 01:35:43 2012
+Read 6 items
+  23 Tue Nov  6 01:35:47 2012
+Read 6 items
+  24 Tue Nov  6 01:35:50 2012
+Read 6 items
+  25 Tue Nov  6 01:35:54 2012
+Read 6 items
+  26 Tue Nov  6 01:35:58 2012
+Read 6 items
+  27 Tue Nov  6 01:36:01 2012
+Read 6 items
+  28 Tue Nov  6 01:36:04 2012
+Read 6 items
+  29 Tue Nov  6 01:36:08 2012
+Read 6 items
+  30 Tue Nov  6 01:36:12 2012
+Read 6 items
+  31 Tue Nov  6 01:36:15 2012
+Read 6 items
+  32 Tue Nov  6 01:36:19 2012
+Read 6 items
+  33 Tue Nov  6 01:36:22 2012
+Read 6 items
+  34 Tue Nov  6 01:36:26 2012
+Read 6 items
+  35 Tue Nov  6 01:36:29 2012
+Read 6 items
+  36 Tue Nov  6 01:36:33 2012
+Read 6 items
+  37 Tue Nov  6 01:36:36 2012
+Read 6 items
+  38 Tue Nov  6 01:36:40 2012
+Read 6 items
+  39 Tue Nov  6 01:36:43 2012
+Read 6 items
+  40 Tue Nov  6 01:36:47 2012
+Read 6 items
+  41 Tue Nov  6 01:36:51 2012
+Read 6 items
+  42 Tue Nov  6 01:36:54 2012
+Read 6 items
+  43 Tue Nov  6 01:36:57 2012
+Read 6 items
+  44 Tue Nov  6 01:37:01 2012
+Read 6 items
+  45 Tue Nov  6 01:37:05 2012
+Read 6 items
+  46 Tue Nov  6 01:37:08 2012
+Read 6 items
+  47 Tue Nov  6 01:37:12 2012
+Read 6 items
+  48 Tue Nov  6 01:37:15 2012
+Read 6 items
+  49 Tue Nov  6 01:37:19 2012
+Read 6 items
+  50 Tue Nov  6 01:37:22 2012
+Read 6 items
+chr7 Tue Nov  6 01:37:26 2012
+Read 2339539 items
+  1 Tue Nov  6 01:38:10 2012
+Read 6 items
+  2 Tue Nov  6 01:38:13 2012
+Read 6 items
+  3 Tue Nov  6 01:38:16 2012
+Read 6 items
+  4 Tue Nov  6 01:38:19 2012
+Read 6 items
+  5 Tue Nov  6 01:38:22 2012
+Read 6 items
+  6 Tue Nov  6 01:38:25 2012
+Read 6 items
+  7 Tue Nov  6 01:38:29 2012
+Read 6 items
+  8 Tue Nov  6 01:38:32 2012
+Read 6 items
+  9 Tue Nov  6 01:38:35 2012
+Read 6 items
+  10 Tue Nov  6 01:38:38 2012
+Read 6 items
+  11 Tue Nov  6 01:38:42 2012
+Read 6 items
+  12 Tue Nov  6 01:38:45 2012
+Read 6 items
+  13 Tue Nov  6 01:38:48 2012
+Read 6 items
+  14 Tue Nov  6 01:38:51 2012
+Read 6 items
+  15 Tue Nov  6 01:38:54 2012
+Read 6 items
+  16 Tue Nov  6 01:38:58 2012
+Read 6 items
+  17 Tue Nov  6 01:39:01 2012
+Read 6 items
+  18 Tue Nov  6 01:39:04 2012
+Read 6 items
+  19 Tue Nov  6 01:39:07 2012
+Read 6 items
+  20 Tue Nov  6 01:39:10 2012
+Read 6 items
+  21 Tue Nov  6 01:39:14 2012
+Read 6 items
+  22 Tue Nov  6 01:39:17 2012
+Read 6 items
+  23 Tue Nov  6 01:39:20 2012
+Read 6 items
+  24 Tue Nov  6 01:39:23 2012
+Read 6 items
+  25 Tue Nov  6 01:39:27 2012
+Read 6 items
+  26 Tue Nov  6 01:39:30 2012
+Read 6 items
+  27 Tue Nov  6 01:39:33 2012
+Read 6 items
+  28 Tue Nov  6 01:39:37 2012
+Read 6 items
+  29 Tue Nov  6 01:39:40 2012
+Read 6 items
+  30 Tue Nov  6 01:39:43 2012
+Read 6 items
+  31 Tue Nov  6 01:39:46 2012
+Read 6 items
+  32 Tue Nov  6 01:39:50 2012
+Read 6 items
+  33 Tue Nov  6 01:39:53 2012
+Read 6 items
+  34 Tue Nov  6 01:39:56 2012
+Read 6 items
+  35 Tue Nov  6 01:40:00 2012
+Read 6 items
+  36 Tue Nov  6 01:40:03 2012
+Read 6 items
+  37 Tue Nov  6 01:40:06 2012
+Read 6 items
+  38 Tue Nov  6 01:40:09 2012
+Read 6 items
+  39 Tue Nov  6 01:40:13 2012
+Read 6 items
+  40 Tue Nov  6 01:40:16 2012
+Read 6 items
+  41 Tue Nov  6 01:40:19 2012
+Read 6 items
+  42 Tue Nov  6 01:40:23 2012
+Read 6 items
+  43 Tue Nov  6 01:40:26 2012
+Read 6 items
+  44 Tue Nov  6 01:40:29 2012
+Read 6 items
+  45 Tue Nov  6 01:40:32 2012
+Read 6 items
+  46 Tue Nov  6 01:40:35 2012
+Read 6 items
+  47 Tue Nov  6 01:40:39 2012
+Read 6 items
+  48 Tue Nov  6 01:40:42 2012
+Read 6 items
+  49 Tue Nov  6 01:40:45 2012
+Read 6 items
+  50 Tue Nov  6 01:40:48 2012
+Read 6 items
+chr8 Tue Nov  6 01:40:52 2012
+Read 2295951 items
+  1 Tue Nov  6 01:41:32 2012
+Read 6 items
+  2 Tue Nov  6 01:41:36 2012
+Read 6 items
+  3 Tue Nov  6 01:41:41 2012
+Read 6 items
+  4 Tue Nov  6 01:41:44 2012
+Read 6 items
+  5 Tue Nov  6 01:41:47 2012
+Read 6 items
+  6 Tue Nov  6 01:41:50 2012
+Read 6 items
+  7 Tue Nov  6 01:41:53 2012
+Read 6 items
+  8 Tue Nov  6 01:41:56 2012
+Read 6 items
+  9 Tue Nov  6 01:41:59 2012
+Read 6 items
+  10 Tue Nov  6 01:42:03 2012
+Read 6 items
+  11 Tue Nov  6 01:42:06 2012
+Read 6 items
+  12 Tue Nov  6 01:42:09 2012
+Read 6 items
+  13 Tue Nov  6 01:42:13 2012
+Read 6 items
+  14 Tue Nov  6 01:42:16 2012
+Read 6 items
+  15 Tue Nov  6 01:42:20 2012
+Read 6 items
+  16 Tue Nov  6 01:42:23 2012
+Read 6 items
+  17 Tue Nov  6 01:42:26 2012
+Read 6 items
+  18 Tue Nov  6 01:42:29 2012
+Read 6 items
+  19 Tue Nov  6 01:42:32 2012
+Read 6 items
+  20 Tue Nov  6 01:42:36 2012
+Read 6 items
+  21 Tue Nov  6 01:42:38 2012
+Read 6 items
+  22 Tue Nov  6 01:42:42 2012
+Read 6 items
+  23 Tue Nov  6 01:42:45 2012
+Read 6 items
+  24 Tue Nov  6 01:42:48 2012
+Read 6 items
+  25 Tue Nov  6 01:42:51 2012
+Read 6 items
+  26 Tue Nov  6 01:42:55 2012
+Read 6 items
+  27 Tue Nov  6 01:42:58 2012
+Read 6 items
+  28 Tue Nov  6 01:43:01 2012
+Read 6 items
+  29 Tue Nov  6 01:43:04 2012
+Read 6 items
+  30 Tue Nov  6 01:43:07 2012
+Read 6 items
+  31 Tue Nov  6 01:43:10 2012
+Read 6 items
+  32 Tue Nov  6 01:43:14 2012
+Read 6 items
+  33 Tue Nov  6 01:43:17 2012
+Read 6 items
+  34 Tue Nov  6 01:43:20 2012
+Read 6 items
+  35 Tue Nov  6 01:43:23 2012
+Read 6 items
+  36 Tue Nov  6 01:43:27 2012
+Read 6 items
+  37 Tue Nov  6 01:43:30 2012
+Read 6 items
+  38 Tue Nov  6 01:43:33 2012
+Read 6 items
+  39 Tue Nov  6 01:43:36 2012
+Read 6 items
+  40 Tue Nov  6 01:43:39 2012
+Read 6 items
+  41 Tue Nov  6 01:43:42 2012
+Read 6 items
+  42 Tue Nov  6 01:43:46 2012
+Read 6 items
+  43 Tue Nov  6 01:43:49 2012
+Read 6 items
+  44 Tue Nov  6 01:43:52 2012
+Read 6 items
+  45 Tue Nov  6 01:43:55 2012
+Read 6 items
+  46 Tue Nov  6 01:43:59 2012
+Read 6 items
+  47 Tue Nov  6 01:44:02 2012
+Read 6 items
+  48 Tue Nov  6 01:44:05 2012
+Read 6 items
+  49 Tue Nov  6 01:44:08 2012
+Read 6 items
+  50 Tue Nov  6 01:44:12 2012
+Read 6 items
+chr9 Tue Nov  6 01:44:15 2012
+Read 1741979 items
+  1 Tue Nov  6 01:44:45 2012
+Read 6 items
+  2 Tue Nov  6 01:44:49 2012
+Read 6 items
+  3 Tue Nov  6 01:44:51 2012
+Read 6 items
+  4 Tue Nov  6 01:44:53 2012
+Read 6 items
+  5 Tue Nov  6 01:44:56 2012
+Read 6 items
+  6 Tue Nov  6 01:44:58 2012
+Read 6 items
+  7 Tue Nov  6 01:45:00 2012
+Read 6 items
+  8 Tue Nov  6 01:45:03 2012
+Read 6 items
+  9 Tue Nov  6 01:45:05 2012
+Read 6 items
+  10 Tue Nov  6 01:45:08 2012
+Read 6 items
+  11 Tue Nov  6 01:45:10 2012
+Read 6 items
+  12 Tue Nov  6 01:45:13 2012
+Read 6 items
+  13 Tue Nov  6 01:45:15 2012
+Read 6 items
+  14 Tue Nov  6 01:45:18 2012
+Read 6 items
+  15 Tue Nov  6 01:45:20 2012
+Read 6 items
+  16 Tue Nov  6 01:45:23 2012
+Read 6 items
+  17 Tue Nov  6 01:45:25 2012
+Read 6 items
+  18 Tue Nov  6 01:45:28 2012
+Read 6 items
+  19 Tue Nov  6 01:45:30 2012
+Read 6 items
+  20 Tue Nov  6 01:45:32 2012
+Read 6 items
+  21 Tue Nov  6 01:45:35 2012
+Read 6 items
+  22 Tue Nov  6 01:45:37 2012
+Read 6 items
+  23 Tue Nov  6 01:45:40 2012
+Read 6 items
+  24 Tue Nov  6 01:45:42 2012
+Read 6 items
+  25 Tue Nov  6 01:45:45 2012
+Read 6 items
+  26 Tue Nov  6 01:45:47 2012
+Read 6 items
+  27 Tue Nov  6 01:45:50 2012
+Read 6 items
+  28 Tue Nov  6 01:45:52 2012
+Read 6 items
+  29 Tue Nov  6 01:45:55 2012
+Read 6 items
+  30 Tue Nov  6 01:45:57 2012
+Read 6 items
+  31 Tue Nov  6 01:46:00 2012
+Read 6 items
+  32 Tue Nov  6 01:46:02 2012
+Read 6 items
+  33 Tue Nov  6 01:46:05 2012
+Read 6 items
+  34 Tue Nov  6 01:46:08 2012
+Read 6 items
+  35 Tue Nov  6 01:46:10 2012
+Read 6 items
+  36 Tue Nov  6 01:46:13 2012
+Read 6 items
+  37 Tue Nov  6 01:46:15 2012
+Read 6 items
+  38 Tue Nov  6 01:46:18 2012
+Read 6 items
+  39 Tue Nov  6 01:46:20 2012
+Read 6 items
+  40 Tue Nov  6 01:46:23 2012
+Read 6 items
+  41 Tue Nov  6 01:46:25 2012
+Read 6 items
+  42 Tue Nov  6 01:46:28 2012
+Read 6 items
+  43 Tue Nov  6 01:46:31 2012
+Read 6 items
+  44 Tue Nov  6 01:46:33 2012
+Read 6 items
+  45 Tue Nov  6 01:46:35 2012
+Read 6 items
+  46 Tue Nov  6 01:46:38 2012
+Read 6 items
+  47 Tue Nov  6 01:46:41 2012
+Read 6 items
+  48 Tue Nov  6 01:46:43 2012
+Read 6 items
+  49 Tue Nov  6 01:46:46 2012
+Read 6 items
+  50 Tue Nov  6 01:46:48 2012
+Read 6 items
+chr10 Tue Nov  6 01:46:51 2012
+Read 1983653 items
+  1 Tue Nov  6 01:47:26 2012
+Read 6 items
+  2 Tue Nov  6 01:47:29 2012
+Read 6 items
+  3 Tue Nov  6 01:47:33 2012
+Read 6 items
+  4 Tue Nov  6 01:47:36 2012
+Read 6 items
+  5 Tue Nov  6 01:47:39 2012
+Read 6 items
+  6 Tue Nov  6 01:47:42 2012
+Read 6 items
+  7 Tue Nov  6 01:47:44 2012
+Read 6 items
+  8 Tue Nov  6 01:47:47 2012
+Read 6 items
+  9 Tue Nov  6 01:47:50 2012
+Read 6 items
+  10 Tue Nov  6 01:47:53 2012
+Read 6 items
+  11 Tue Nov  6 01:47:56 2012
+Read 6 items
+  12 Tue Nov  6 01:47:59 2012
+Read 6 items
+  13 Tue Nov  6 01:48:01 2012
+Read 6 items
+  14 Tue Nov  6 01:48:04 2012
+Read 6 items
+  15 Tue Nov  6 01:48:07 2012
+Read 6 items
+  16 Tue Nov  6 01:48:10 2012
+Read 6 items
+  17 Tue Nov  6 01:48:13 2012
+Read 6 items
+  18 Tue Nov  6 01:48:15 2012
+Read 6 items
+  19 Tue Nov  6 01:48:18 2012
+Read 6 items
+  20 Tue Nov  6 01:48:21 2012
+Read 6 items
+  21 Tue Nov  6 01:48:24 2012
+Read 6 items
+  22 Tue Nov  6 01:48:27 2012
+Read 6 items
+  23 Tue Nov  6 01:48:30 2012
+Read 6 items
+  24 Tue Nov  6 01:48:33 2012
+Read 6 items
+  25 Tue Nov  6 01:48:35 2012
+Read 6 items
+  26 Tue Nov  6 01:48:38 2012
+Read 6 items
+  27 Tue Nov  6 01:48:41 2012
+Read 6 items
+  28 Tue Nov  6 01:48:45 2012
+Read 6 items
+  29 Tue Nov  6 01:48:48 2012
+Read 6 items
+  30 Tue Nov  6 01:48:51 2012
+Read 6 items
+  31 Tue Nov  6 01:48:53 2012
+Read 6 items
+  32 Tue Nov  6 01:48:56 2012
+Read 6 items
+  33 Tue Nov  6 01:48:59 2012
+Read 6 items
+  34 Tue Nov  6 01:49:02 2012
+Read 6 items
+  35 Tue Nov  6 01:49:05 2012
+Read 6 items
+  36 Tue Nov  6 01:49:07 2012
+Read 6 items
+  37 Tue Nov  6 01:49:10 2012
+Read 6 items
+  38 Tue Nov  6 01:49:13 2012
+Read 6 items
+  39 Tue Nov  6 01:49:16 2012
+Read 6 items
+  40 Tue Nov  6 01:49:19 2012
+Read 6 items
+  41 Tue Nov  6 01:49:21 2012
+Read 6 items
+  42 Tue Nov  6 01:49:24 2012
+Read 6 items
+  43 Tue Nov  6 01:49:27 2012
+Read 6 items
+  44 Tue Nov  6 01:49:30 2012
+Read 6 items
+  45 Tue Nov  6 01:49:33 2012
+Read 6 items
+  46 Tue Nov  6 01:49:36 2012
+Read 6 items
+  47 Tue Nov  6 01:49:39 2012
+Read 6 items
+  48 Tue Nov  6 01:49:42 2012
+Read 6 items
+  49 Tue Nov  6 01:49:45 2012
+Read 6 items
+  50 Tue Nov  6 01:49:48 2012
+Read 6 items
+chr11 Tue Nov  6 01:49:50 2012
+Read 1993339 items
+  1 Tue Nov  6 01:50:27 2012
+Read 6 items
+  2 Tue Nov  6 01:50:31 2012
+Read 6 items
+  3 Tue Nov  6 01:50:33 2012
+Read 6 items
+  4 Tue Nov  6 01:50:36 2012
+Read 6 items
+  5 Tue Nov  6 01:50:39 2012
+Read 6 items
+  6 Tue Nov  6 01:50:42 2012
+Read 6 items
+  7 Tue Nov  6 01:50:45 2012
+Read 6 items
+  8 Tue Nov  6 01:50:47 2012
+Read 6 items
+  9 Tue Nov  6 01:50:50 2012
+Read 6 items
+  10 Tue Nov  6 01:50:53 2012
+Read 6 items
+  11 Tue Nov  6 01:50:56 2012
+Read 6 items
+  12 Tue Nov  6 01:50:59 2012
+Read 6 items
+  13 Tue Nov  6 01:51:01 2012
+Read 6 items
+  14 Tue Nov  6 01:51:04 2012
+Read 6 items
+  15 Tue Nov  6 01:51:07 2012
+Read 6 items
+  16 Tue Nov  6 01:51:10 2012
+Read 6 items
+  17 Tue Nov  6 01:51:13 2012
+Read 6 items
+  18 Tue Nov  6 01:51:16 2012
+Read 6 items
+  19 Tue Nov  6 01:51:18 2012
+Read 6 items
+  20 Tue Nov  6 01:51:21 2012
+Read 6 items
+  21 Tue Nov  6 01:51:24 2012
+Read 6 items
+  22 Tue Nov  6 01:51:27 2012
+Read 6 items
+  23 Tue Nov  6 01:51:30 2012
+Read 6 items
+  24 Tue Nov  6 01:51:33 2012
+Read 6 items
+  25 Tue Nov  6 01:51:35 2012
+Read 6 items
+  26 Tue Nov  6 01:51:38 2012
+Read 6 items
+  27 Tue Nov  6 01:51:41 2012
+Read 6 items
+  28 Tue Nov  6 01:51:44 2012
+Read 6 items
+  29 Tue Nov  6 01:51:47 2012
+Read 6 items
+  30 Tue Nov  6 01:51:50 2012
+Read 6 items
+  31 Tue Nov  6 01:51:53 2012
+Read 6 items
+  32 Tue Nov  6 01:51:56 2012
+Read 6 items
+  33 Tue Nov  6 01:51:58 2012
+Read 6 items
+  34 Tue Nov  6 01:52:02 2012
+Read 6 items
+  35 Tue Nov  6 01:52:04 2012
+Read 6 items
+  36 Tue Nov  6 01:52:07 2012
+Read 6 items
+  37 Tue Nov  6 01:52:10 2012
+Read 6 items
+  38 Tue Nov  6 01:52:13 2012
+Read 6 items
+  39 Tue Nov  6 01:52:15 2012
+Read 6 items
+  40 Tue Nov  6 01:52:18 2012
+Read 6 items
+  41 Tue Nov  6 01:52:21 2012
+Read 6 items
+  42 Tue Nov  6 01:52:24 2012
+Read 6 items
+  43 Tue Nov  6 01:52:27 2012
+Read 6 items
+  44 Tue Nov  6 01:52:30 2012
+Read 6 items
+  45 Tue Nov  6 01:52:32 2012
+Read 6 items
+  46 Tue Nov  6 01:52:35 2012
+Read 6 items
+  47 Tue Nov  6 01:52:38 2012
+Read 6 items
+  48 Tue Nov  6 01:52:41 2012
+Read 6 items
+  49 Tue Nov  6 01:52:44 2012
+Read 6 items
+  50 Tue Nov  6 01:52:46 2012
+Read 6 items
+chr12 Tue Nov  6 01:52:49 2012
+Read 1930886 items
+  1 Tue Nov  6 01:53:25 2012
+Read 6 items
+  2 Tue Nov  6 01:53:28 2012
+Read 6 items
+  3 Tue Nov  6 01:53:32 2012
+Read 6 items
+  4 Tue Nov  6 01:53:35 2012
+Read 6 items
+  5 Tue Nov  6 01:53:37 2012
+Read 6 items
+  6 Tue Nov  6 01:53:40 2012
+Read 6 items
+  7 Tue Nov  6 01:53:43 2012
+Read 6 items
+  8 Tue Nov  6 01:53:45 2012
+Read 6 items
+  9 Tue Nov  6 01:53:49 2012
+Read 6 items
+  10 Tue Nov  6 01:53:51 2012
+Read 6 items
+  11 Tue Nov  6 01:53:54 2012
+Read 6 items
+  12 Tue Nov  6 01:53:56 2012
+Read 6 items
+  13 Tue Nov  6 01:53:59 2012
+Read 6 items
+  14 Tue Nov  6 01:54:02 2012
+Read 6 items
+  15 Tue Nov  6 01:54:05 2012
+Read 6 items
+  16 Tue Nov  6 01:54:07 2012
+Read 6 items
+  17 Tue Nov  6 01:54:10 2012
+Read 6 items
+  18 Tue Nov  6 01:54:13 2012
+Read 6 items
+  19 Tue Nov  6 01:54:16 2012
+Read 6 items
+  20 Tue Nov  6 01:54:19 2012
+Read 6 items
+  21 Tue Nov  6 01:54:21 2012
+Read 6 items
+  22 Tue Nov  6 01:54:24 2012
+Read 6 items
+  23 Tue Nov  6 01:54:27 2012
+Read 6 items
+  24 Tue Nov  6 01:54:29 2012
+Read 6 items
+  25 Tue Nov  6 01:54:32 2012
+Read 6 items
+  26 Tue Nov  6 01:54:35 2012
+Read 6 items
+  27 Tue Nov  6 01:54:37 2012
+Read 6 items
+  28 Tue Nov  6 01:54:40 2012
+Read 6 items
+  29 Tue Nov  6 01:54:43 2012
+Read 6 items
+  30 Tue Nov  6 01:54:45 2012
+Read 6 items
+  31 Tue Nov  6 01:54:48 2012
+Read 6 items
+  32 Tue Nov  6 01:54:51 2012
+Read 6 items
+  33 Tue Nov  6 01:54:54 2012
+Read 6 items
+  34 Tue Nov  6 01:54:57 2012
+Read 6 items
+  35 Tue Nov  6 01:54:59 2012
+Read 6 items
+  36 Tue Nov  6 01:55:02 2012
+Read 6 items
+  37 Tue Nov  6 01:55:05 2012
+Read 6 items
+  38 Tue Nov  6 01:55:08 2012
+Read 6 items
+  39 Tue Nov  6 01:55:10 2012
+Read 6 items
+  40 Tue Nov  6 01:55:13 2012
+Read 6 items
+  41 Tue Nov  6 01:55:16 2012
+Read 6 items
+  42 Tue Nov  6 01:55:19 2012
+Read 6 items
+  43 Tue Nov  6 01:55:22 2012
+Read 6 items
+  44 Tue Nov  6 01:55:25 2012
+Read 6 items
+  45 Tue Nov  6 01:55:28 2012
+Read 6 items
+  46 Tue Nov  6 01:55:30 2012
+Read 6 items
+  47 Tue Nov  6 01:55:33 2012
+Read 6 items
+  48 Tue Nov  6 01:55:35 2012
+Read 6 items
+  49 Tue Nov  6 01:55:38 2012
+Read 6 items
+  50 Tue Nov  6 01:55:41 2012
+Read 6 items
+chr13 Tue Nov  6 01:55:43 2012
+Read 1450559 items
+  1 Tue Nov  6 01:56:09 2012
+Read 6 items
+  2 Tue Nov  6 01:56:12 2012
+Read 6 items
+  3 Tue Nov  6 01:56:13 2012
+Read 6 items
+  4 Tue Nov  6 01:56:16 2012
+Read 6 items
+  5 Tue Nov  6 01:56:18 2012
+Read 6 items
+  6 Tue Nov  6 01:56:21 2012
+Read 6 items
+  7 Tue Nov  6 01:56:23 2012
+Read 6 items
+  8 Tue Nov  6 01:56:25 2012
+Read 6 items
+  9 Tue Nov  6 01:56:27 2012
+Read 6 items
+  10 Tue Nov  6 01:56:30 2012
+Read 6 items
+  11 Tue Nov  6 01:56:32 2012
+Read 6 items
+  12 Tue Nov  6 01:56:35 2012
+Read 6 items
+  13 Tue Nov  6 01:56:37 2012
+Read 6 items
+  14 Tue Nov  6 01:56:39 2012
+Read 6 items
+  15 Tue Nov  6 01:56:41 2012
+Read 6 items
+  16 Tue Nov  6 01:56:43 2012
+Read 6 items
+  17 Tue Nov  6 01:56:45 2012
+Read 6 items
+  18 Tue Nov  6 01:56:47 2012
+Read 6 items
+  19 Tue Nov  6 01:56:49 2012
+Read 6 items
+  20 Tue Nov  6 01:56:51 2012
+Read 6 items
+  21 Tue Nov  6 01:56:53 2012
+Read 6 items
+  22 Tue Nov  6 01:56:55 2012
+Read 6 items
+  23 Tue Nov  6 01:56:57 2012
+Read 6 items
+  24 Tue Nov  6 01:56:59 2012
+Read 6 items
+  25 Tue Nov  6 01:57:01 2012
+Read 6 items
+  26 Tue Nov  6 01:57:03 2012
+Read 6 items
+  27 Tue Nov  6 01:57:05 2012
+Read 6 items
+  28 Tue Nov  6 01:57:07 2012
+Read 6 items
+  29 Tue Nov  6 01:57:09 2012
+Read 6 items
+  30 Tue Nov  6 01:57:11 2012
+Read 6 items
+  31 Tue Nov  6 01:57:13 2012
+Read 6 items
+  32 Tue Nov  6 01:57:16 2012
+Read 6 items
+  33 Tue Nov  6 01:57:18 2012
+Read 6 items
+  34 Tue Nov  6 01:57:20 2012
+Read 6 items
+  35 Tue Nov  6 01:57:22 2012
+Read 6 items
+  36 Tue Nov  6 01:57:24 2012
+Read 6 items
+  37 Tue Nov  6 01:57:26 2012
+Read 6 items
+  38 Tue Nov  6 01:57:28 2012
+Read 6 items
+  39 Tue Nov  6 01:57:30 2012
+Read 6 items
+  40 Tue Nov  6 01:57:32 2012
+Read 6 items
+  41 Tue Nov  6 01:57:34 2012
+Read 6 items
+  42 Tue Nov  6 01:57:36 2012
+Read 6 items
+  43 Tue Nov  6 01:57:38 2012
+Read 6 items
+  44 Tue Nov  6 01:57:40 2012
+Read 6 items
+  45 Tue Nov  6 01:57:42 2012
+Read 6 items
+  46 Tue Nov  6 01:57:44 2012
+Read 6 items
+  47 Tue Nov  6 01:57:47 2012
+Read 6 items
+  48 Tue Nov  6 01:57:48 2012
+Read 6 items
+  49 Tue Nov  6 01:57:51 2012
+Read 6 items
+  50 Tue Nov  6 01:57:53 2012
+Read 6 items
+chr14 Tue Nov  6 01:57:55 2012
+Read 1326913 items
+  1 Tue Nov  6 01:58:18 2012
+Read 6 items
+  2 Tue Nov  6 01:58:21 2012
+Read 6 items
+  3 Tue Nov  6 01:58:23 2012
+Read 6 items
+  4 Tue Nov  6 01:58:24 2012
+Read 6 items
+  5 Tue Nov  6 01:58:26 2012
+Read 6 items
+  6 Tue Nov  6 01:58:28 2012
+Read 6 items
+  7 Tue Nov  6 01:58:30 2012
+Read 6 items
+  8 Tue Nov  6 01:58:32 2012
+Read 6 items
+  9 Tue Nov  6 01:58:34 2012
+Read 6 items
+  10 Tue Nov  6 01:58:36 2012
+Read 6 items
+  11 Tue Nov  6 01:58:37 2012
+Read 6 items
+  12 Tue Nov  6 01:58:39 2012
+Read 6 items
+  13 Tue Nov  6 01:58:41 2012
+Read 6 items
+  14 Tue Nov  6 01:58:43 2012
+Read 6 items
+  15 Tue Nov  6 01:58:45 2012
+Read 6 items
+  16 Tue Nov  6 01:58:46 2012
+Read 6 items
+  17 Tue Nov  6 01:58:48 2012
+Read 6 items
+  18 Tue Nov  6 01:58:50 2012
+Read 6 items
+  19 Tue Nov  6 01:58:52 2012
+Read 6 items
+  20 Tue Nov  6 01:58:54 2012
+Read 6 items
+  21 Tue Nov  6 01:58:56 2012
+Read 6 items
+  22 Tue Nov  6 01:58:57 2012
+Read 6 items
+  23 Tue Nov  6 01:58:59 2012
+Read 6 items
+  24 Tue Nov  6 01:59:01 2012
+Read 6 items
+  25 Tue Nov  6 01:59:03 2012
+Read 6 items
+  26 Tue Nov  6 01:59:05 2012
+Read 6 items
+  27 Tue Nov  6 01:59:07 2012
+Read 6 items
+  28 Tue Nov  6 01:59:09 2012
+Read 6 items
+  29 Tue Nov  6 01:59:10 2012
+Read 6 items
+  30 Tue Nov  6 01:59:12 2012
+Read 6 items
+  31 Tue Nov  6 01:59:14 2012
+Read 6 items
+  32 Tue Nov  6 01:59:16 2012
+Read 6 items
+  33 Tue Nov  6 01:59:18 2012
+Read 6 items
+  34 Tue Nov  6 01:59:20 2012
+Read 6 items
+  35 Tue Nov  6 01:59:22 2012
+Read 6 items
+  36 Tue Nov  6 01:59:23 2012
+Read 6 items
+  37 Tue Nov  6 01:59:26 2012
+Read 6 items
+  38 Tue Nov  6 01:59:27 2012
+Read 6 items
+  39 Tue Nov  6 01:59:29 2012
+Read 6 items
+  40 Tue Nov  6 01:59:31 2012
+Read 6 items
+  41 Tue Nov  6 01:59:33 2012
+Read 6 items
+  42 Tue Nov  6 01:59:35 2012
+Read 6 items
+  43 Tue Nov  6 01:59:37 2012
+Read 6 items
+  44 Tue Nov  6 01:59:38 2012
+Read 6 items
+  45 Tue Nov  6 01:59:40 2012
+Read 6 items
+  46 Tue Nov  6 01:59:42 2012
+Read 6 items
+  47 Tue Nov  6 01:59:44 2012
+Read 6 items
+  48 Tue Nov  6 01:59:46 2012
+Read 6 items
+  49 Tue Nov  6 01:59:48 2012
+Read 6 items
+  50 Tue Nov  6 01:59:50 2012
+Read 6 items
+chr15 Tue Nov  6 01:59:52 2012
+Read 1193646 items
+  1 Tue Nov  6 02:00:14 2012
+Read 6 items
+  2 Tue Nov  6 02:00:16 2012
+Read 6 items
+  3 Tue Nov  6 02:00:17 2012
+Read 6 items
+  4 Tue Nov  6 02:00:19 2012
+Read 6 items
+  5 Tue Nov  6 02:00:21 2012
+Read 6 items
+  6 Tue Nov  6 02:00:23 2012
+Read 6 items
+  7 Tue Nov  6 02:00:25 2012
+Read 6 items
+  8 Tue Nov  6 02:00:27 2012
+Read 6 items
+  9 Tue Nov  6 02:00:28 2012
+Read 6 items
+  10 Tue Nov  6 02:00:30 2012
+Read 6 items
+  11 Tue Nov  6 02:00:33 2012
+Read 6 items
+  12 Tue Nov  6 02:00:34 2012
+Read 6 items
+  13 Tue Nov  6 02:00:36 2012
+Read 6 items
+  14 Tue Nov  6 02:00:37 2012
+Read 6 items
+  15 Tue Nov  6 02:00:39 2012
+Read 6 items
+  16 Tue Nov  6 02:00:41 2012
+Read 6 items
+  17 Tue Nov  6 02:00:42 2012
+Read 6 items
+  18 Tue Nov  6 02:00:44 2012
+Read 6 items
+  19 Tue Nov  6 02:00:46 2012
+Read 6 items
+  20 Tue Nov  6 02:00:47 2012
+Read 6 items
+  21 Tue Nov  6 02:00:49 2012
+Read 6 items
+  22 Tue Nov  6 02:00:51 2012
+Read 6 items
+  23 Tue Nov  6 02:00:53 2012
+Read 6 items
+  24 Tue Nov  6 02:00:54 2012
+Read 6 items
+  25 Tue Nov  6 02:00:56 2012
+Read 6 items
+  26 Tue Nov  6 02:00:58 2012
+Read 6 items
+  27 Tue Nov  6 02:00:59 2012
+Read 6 items
+  28 Tue Nov  6 02:01:01 2012
+Read 6 items
+  29 Tue Nov  6 02:01:03 2012
+Read 6 items
+  30 Tue Nov  6 02:01:04 2012
+Read 6 items
+  31 Tue Nov  6 02:01:06 2012
+Read 6 items
+  32 Tue Nov  6 02:01:08 2012
+Read 6 items
+  33 Tue Nov  6 02:01:09 2012
+Read 6 items
+  34 Tue Nov  6 02:01:11 2012
+Read 6 items
+  35 Tue Nov  6 02:01:13 2012
+Read 6 items
+  36 Tue Nov  6 02:01:14 2012
+Read 6 items
+  37 Tue Nov  6 02:01:16 2012
+Read 6 items
+  38 Tue Nov  6 02:01:18 2012
+Read 6 items
+  39 Tue Nov  6 02:01:19 2012
+Read 6 items
+  40 Tue Nov  6 02:01:21 2012
+Read 6 items
+  41 Tue Nov  6 02:01:23 2012
+Read 6 items
+  42 Tue Nov  6 02:01:25 2012
+Read 6 items
+  43 Tue Nov  6 02:01:26 2012
+Read 6 items
+  44 Tue Nov  6 02:01:28 2012
+Read 6 items
+  45 Tue Nov  6 02:01:30 2012
+Read 6 items
+  46 Tue Nov  6 02:01:31 2012
+Read 6 items
+  47 Tue Nov  6 02:01:33 2012
+Read 6 items
+  48 Tue Nov  6 02:01:35 2012
+Read 6 items
+  49 Tue Nov  6 02:01:36 2012
+Read 6 items
+  50 Tue Nov  6 02:01:38 2012
+Read 6 items
+chr16 Tue Nov  6 02:01:40 2012
+Read 1269720 items
+  1 Tue Nov  6 02:02:02 2012
+Read 6 items
+  2 Tue Nov  6 02:02:04 2012
+Read 6 items
+  3 Tue Nov  6 02:02:06 2012
+Read 6 items
+  4 Tue Nov  6 02:02:09 2012
+Read 6 items
+  5 Tue Nov  6 02:02:11 2012
+Read 6 items
+  6 Tue Nov  6 02:02:12 2012
+Read 6 items
+  7 Tue Nov  6 02:02:14 2012
+Read 6 items
+  8 Tue Nov  6 02:02:16 2012
+Read 6 items
+  9 Tue Nov  6 02:02:18 2012
+Read 6 items
+  10 Tue Nov  6 02:02:19 2012
+Read 6 items
+  11 Tue Nov  6 02:02:21 2012
+Read 6 items
+  12 Tue Nov  6 02:02:23 2012
+Read 6 items
+  13 Tue Nov  6 02:02:25 2012
+Read 6 items
+  14 Tue Nov  6 02:02:27 2012
+Read 6 items
+  15 Tue Nov  6 02:02:28 2012
+Read 6 items
+  16 Tue Nov  6 02:02:30 2012
+Read 6 items
+  17 Tue Nov  6 02:02:32 2012
+Read 6 items
+  18 Tue Nov  6 02:02:34 2012
+Read 6 items
+  19 Tue Nov  6 02:02:36 2012
+Read 6 items
+  20 Tue Nov  6 02:02:38 2012
+Read 6 items
+  21 Tue Nov  6 02:02:39 2012
+Read 6 items
+  22 Tue Nov  6 02:02:41 2012
+Read 6 items
+  23 Tue Nov  6 02:02:43 2012
+Read 6 items
+  24 Tue Nov  6 02:02:45 2012
+Read 6 items
+  25 Tue Nov  6 02:02:46 2012
+Read 6 items
+  26 Tue Nov  6 02:02:48 2012
+Read 6 items
+  27 Tue Nov  6 02:02:50 2012
+Read 6 items
+  28 Tue Nov  6 02:02:52 2012
+Read 6 items
+  29 Tue Nov  6 02:02:54 2012
+Read 6 items
+  30 Tue Nov  6 02:02:56 2012
+Read 6 items
+  31 Tue Nov  6 02:02:57 2012
+Read 6 items
+  32 Tue Nov  6 02:02:59 2012
+Read 6 items
+  33 Tue Nov  6 02:03:01 2012
+Read 6 items
+  34 Tue Nov  6 02:03:03 2012
+Read 6 items
+  35 Tue Nov  6 02:03:04 2012
+Read 6 items
+  36 Tue Nov  6 02:03:06 2012
+Read 6 items
+  37 Tue Nov  6 02:03:08 2012
+Read 6 items
+  38 Tue Nov  6 02:03:10 2012
+Read 6 items
+  39 Tue Nov  6 02:03:11 2012
+Read 6 items
+  40 Tue Nov  6 02:03:13 2012
+Read 6 items
+  41 Tue Nov  6 02:03:15 2012
+Read 6 items
+  42 Tue Nov  6 02:03:17 2012
+Read 6 items
+  43 Tue Nov  6 02:03:19 2012
+Read 6 items
+  44 Tue Nov  6 02:03:20 2012
+Read 6 items
+  45 Tue Nov  6 02:03:22 2012
+Read 6 items
+  46 Tue Nov  6 02:03:24 2012
+Read 6 items
+  47 Tue Nov  6 02:03:26 2012
+Read 6 items
+  48 Tue Nov  6 02:03:28 2012
+Read 6 items
+  49 Tue Nov  6 02:03:30 2012
+Read 6 items
+  50 Tue Nov  6 02:03:31 2012
+Read 6 items
+chr17 Tue Nov  6 02:03:33 2012
+Read 1106516 items
+  1 Tue Nov  6 02:03:53 2012
+Read 6 items
+  2 Tue Nov  6 02:03:54 2012
+Read 6 items
+  3 Tue Nov  6 02:03:56 2012
+Read 6 items
+  4 Tue Nov  6 02:03:58 2012
+Read 6 items
+  5 Tue Nov  6 02:04:00 2012
+Read 6 items
+  6 Tue Nov  6 02:04:01 2012
+Read 6 items
+  7 Tue Nov  6 02:04:03 2012
+Read 6 items
+  8 Tue Nov  6 02:04:05 2012
+Read 6 items
+  9 Tue Nov  6 02:04:06 2012
+Read 6 items
+  10 Tue Nov  6 02:04:08 2012
+Read 6 items
+  11 Tue Nov  6 02:04:10 2012
+Read 6 items
+  12 Tue Nov  6 02:04:11 2012
+Read 6 items
+  13 Tue Nov  6 02:04:13 2012
+Read 6 items
+  14 Tue Nov  6 02:04:15 2012
+Read 6 items
+  15 Tue Nov  6 02:04:16 2012
+Read 6 items
+  16 Tue Nov  6 02:04:18 2012
+Read 6 items
+  17 Tue Nov  6 02:04:20 2012
+Read 6 items
+  18 Tue Nov  6 02:04:22 2012
+Read 6 items
+  19 Tue Nov  6 02:04:23 2012
+Read 6 items
+  20 Tue Nov  6 02:04:25 2012
+Read 6 items
+  21 Tue Nov  6 02:04:26 2012
+Read 6 items
+  22 Tue Nov  6 02:04:28 2012
+Read 6 items
+  23 Tue Nov  6 02:04:29 2012
+Read 6 items
+  24 Tue Nov  6 02:04:31 2012
+Read 6 items
+  25 Tue Nov  6 02:04:33 2012
+Read 6 items
+  26 Tue Nov  6 02:04:34 2012
+Read 6 items
+  27 Tue Nov  6 02:04:36 2012
+Read 6 items
+  28 Tue Nov  6 02:04:37 2012
+Read 6 items
+  29 Tue Nov  6 02:04:39 2012
+Read 6 items
+  30 Tue Nov  6 02:04:40 2012
+Read 6 items
+  31 Tue Nov  6 02:04:42 2012
+Read 6 items
+  32 Tue Nov  6 02:04:43 2012
+Read 6 items
+  33 Tue Nov  6 02:04:45 2012
+Read 6 items
+  34 Tue Nov  6 02:04:46 2012
+Read 6 items
+  35 Tue Nov  6 02:04:48 2012
+Read 6 items
+  36 Tue Nov  6 02:04:50 2012
+Read 6 items
+  37 Tue Nov  6 02:04:51 2012
+Read 6 items
+  38 Tue Nov  6 02:04:53 2012
+Read 6 items
+  39 Tue Nov  6 02:04:55 2012
+Read 6 items
+  40 Tue Nov  6 02:04:56 2012
+Read 6 items
+  41 Tue Nov  6 02:04:58 2012
+Read 6 items
+  42 Tue Nov  6 02:04:59 2012
+Read 6 items
+  43 Tue Nov  6 02:05:01 2012
+Read 6 items
+  44 Tue Nov  6 02:05:02 2012
+Read 6 items
+  45 Tue Nov  6 02:05:04 2012
+Read 6 items
+  46 Tue Nov  6 02:05:05 2012
+Read 6 items
+  47 Tue Nov  6 02:05:07 2012
+Read 6 items
+  48 Tue Nov  6 02:05:08 2012
+Read 6 items
+  49 Tue Nov  6 02:05:10 2012
+Read 6 items
+  50 Tue Nov  6 02:05:11 2012
+Read 6 items
+chr18 Tue Nov  6 02:05:13 2012
+Read 1148537 items
+  1 Tue Nov  6 02:05:33 2012
+Read 6 items
+  2 Tue Nov  6 02:05:34 2012
+Read 6 items
+  3 Tue Nov  6 02:05:36 2012
+Read 6 items
+  4 Tue Nov  6 02:05:38 2012
+Read 6 items
+  5 Tue Nov  6 02:05:40 2012
+Read 6 items
+  6 Tue Nov  6 02:05:41 2012
+Read 6 items
+  7 Tue Nov  6 02:05:43 2012
+Read 6 items
+  8 Tue Nov  6 02:05:45 2012
+Read 6 items
+  9 Tue Nov  6 02:05:47 2012
+Read 6 items
+  10 Tue Nov  6 02:05:48 2012
+Read 6 items
+  11 Tue Nov  6 02:05:50 2012
+Read 6 items
+  12 Tue Nov  6 02:05:52 2012
+Read 6 items
+  13 Tue Nov  6 02:05:54 2012
+Read 6 items
+  14 Tue Nov  6 02:05:55 2012
+Read 6 items
+  15 Tue Nov  6 02:05:58 2012
+Read 6 items
+  16 Tue Nov  6 02:06:00 2012
+Read 6 items
+  17 Tue Nov  6 02:06:01 2012
+Read 6 items
+  18 Tue Nov  6 02:06:03 2012
+Read 6 items
+  19 Tue Nov  6 02:06:04 2012
+Read 6 items
+  20 Tue Nov  6 02:06:06 2012
+Read 6 items
+  21 Tue Nov  6 02:06:07 2012
+Read 6 items
+  22 Tue Nov  6 02:06:09 2012
+Read 6 items
+  23 Tue Nov  6 02:06:11 2012
+Read 6 items
+  24 Tue Nov  6 02:06:12 2012
+Read 6 items
+  25 Tue Nov  6 02:06:14 2012
+Read 6 items
+  26 Tue Nov  6 02:06:15 2012
+Read 6 items
+  27 Tue Nov  6 02:06:17 2012
+Read 6 items
+  28 Tue Nov  6 02:06:19 2012
+Read 6 items
+  29 Tue Nov  6 02:06:20 2012
+Read 6 items
+  30 Tue Nov  6 02:06:22 2012
+Read 6 items
+  31 Tue Nov  6 02:06:23 2012
+Read 6 items
+  32 Tue Nov  6 02:06:25 2012
+Read 6 items
+  33 Tue Nov  6 02:06:27 2012
+Read 6 items
+  34 Tue Nov  6 02:06:29 2012
+Read 6 items
+  35 Tue Nov  6 02:06:30 2012
+Read 6 items
+  36 Tue Nov  6 02:06:32 2012
+Read 6 items
+  37 Tue Nov  6 02:06:33 2012
+Read 6 items
+  38 Tue Nov  6 02:06:35 2012
+Read 6 items
+  39 Tue Nov  6 02:06:36 2012
+Read 6 items
+  40 Tue Nov  6 02:06:38 2012
+Read 6 items
+  41 Tue Nov  6 02:06:40 2012
+Read 6 items
+  42 Tue Nov  6 02:06:41 2012
+Read 6 items
+  43 Tue Nov  6 02:06:43 2012
+Read 6 items
+  44 Tue Nov  6 02:06:44 2012
+Read 6 items
+  45 Tue Nov  6 02:06:46 2012
+Read 6 items
+  46 Tue Nov  6 02:06:48 2012
+Read 6 items
+  47 Tue Nov  6 02:06:50 2012
+Read 6 items
+  48 Tue Nov  6 02:06:51 2012
+Read 6 items
+  49 Tue Nov  6 02:06:53 2012
+Read 6 items
+  50 Tue Nov  6 02:06:55 2012
+Read 6 items
+chr19 Tue Nov  6 02:06:56 2012
+Read 862063 items
+  1 Tue Nov  6 02:07:10 2012
+Read 6 items
+  2 Tue Nov  6 02:07:12 2012
+Read 6 items
+  3 Tue Nov  6 02:07:13 2012
+Read 6 items
+  4 Tue Nov  6 02:07:15 2012
+Read 6 items
+  5 Tue Nov  6 02:07:16 2012
+Read 6 items
+  6 Tue Nov  6 02:07:17 2012
+Read 6 items
+  7 Tue Nov  6 02:07:18 2012
+Read 6 items
+  8 Tue Nov  6 02:07:20 2012
+Read 6 items
+  9 Tue Nov  6 02:07:21 2012
+Read 6 items
+  10 Tue Nov  6 02:07:22 2012
+Read 6 items
+  11 Tue Nov  6 02:07:23 2012
+Read 6 items
+  12 Tue Nov  6 02:07:24 2012
+Read 6 items
+  13 Tue Nov  6 02:07:25 2012
+Read 6 items
+  14 Tue Nov  6 02:07:27 2012
+Read 6 items
+  15 Tue Nov  6 02:07:28 2012
+Read 6 items
+  16 Tue Nov  6 02:07:29 2012
+Read 6 items
+  17 Tue Nov  6 02:07:30 2012
+Read 6 items
+  18 Tue Nov  6 02:07:32 2012
+Read 6 items
+  19 Tue Nov  6 02:07:33 2012
+Read 6 items
+  20 Tue Nov  6 02:07:34 2012
+Read 6 items
+  21 Tue Nov  6 02:07:35 2012
+Read 6 items
+  22 Tue Nov  6 02:07:36 2012
+Read 6 items
+  23 Tue Nov  6 02:07:38 2012
+Read 6 items
+  24 Tue Nov  6 02:07:39 2012
+Read 6 items
+  25 Tue Nov  6 02:07:40 2012
+Read 6 items
+  26 Tue Nov  6 02:07:41 2012
+Read 6 items
+  27 Tue Nov  6 02:07:42 2012
+Read 6 items
+  28 Tue Nov  6 02:07:43 2012
+Read 6 items
+  29 Tue Nov  6 02:07:45 2012
+Read 6 items
+  30 Tue Nov  6 02:07:46 2012
+Read 6 items
+  31 Tue Nov  6 02:07:47 2012
+Read 6 items
+  32 Tue Nov  6 02:07:48 2012
+Read 6 items
+  33 Tue Nov  6 02:07:49 2012
+Read 6 items
+  34 Tue Nov  6 02:07:51 2012
+Read 6 items
+  35 Tue Nov  6 02:07:52 2012
+Read 6 items
+  36 Tue Nov  6 02:07:53 2012
+Read 6 items
+  37 Tue Nov  6 02:07:54 2012
+Read 6 items
+  38 Tue Nov  6 02:07:55 2012
+Read 6 items
+  39 Tue Nov  6 02:07:57 2012
+Read 6 items
+  40 Tue Nov  6 02:07:58 2012
+Read 6 items
+  41 Tue Nov  6 02:07:59 2012
+Read 6 items
+  42 Tue Nov  6 02:08:00 2012
+Read 6 items
+  43 Tue Nov  6 02:08:02 2012
+Read 6 items
+  44 Tue Nov  6 02:08:03 2012
+Read 6 items
+  45 Tue Nov  6 02:08:04 2012
+Read 6 items
+  46 Tue Nov  6 02:08:05 2012
+Read 6 items
+  47 Tue Nov  6 02:08:06 2012
+Read 6 items
+  48 Tue Nov  6 02:08:08 2012
+Read 6 items
+  49 Tue Nov  6 02:08:09 2012
+Read 6 items
+  50 Tue Nov  6 02:08:10 2012
+Read 6 items
+chr20 Tue Nov  6 02:08:11 2012
+Read 900217 items
+  1 Tue Nov  6 02:08:27 2012
+Read 6 items
+  2 Tue Nov  6 02:08:28 2012
+Read 6 items
+  3 Tue Nov  6 02:08:30 2012
+Read 6 items
+  4 Tue Nov  6 02:08:32 2012
+Read 6 items
+  5 Tue Nov  6 02:08:33 2012
+Read 6 items
+  6 Tue Nov  6 02:08:34 2012
+Read 6 items
+  7 Tue Nov  6 02:08:35 2012
+Read 6 items
+  8 Tue Nov  6 02:08:37 2012
+Read 6 items
+  9 Tue Nov  6 02:08:38 2012
+Read 6 items
+  10 Tue Nov  6 02:08:39 2012
+Read 6 items
+  11 Tue Nov  6 02:08:40 2012
+Read 6 items
+  12 Tue Nov  6 02:08:41 2012
+Read 6 items
+  13 Tue Nov  6 02:08:43 2012
+Read 6 items
+  14 Tue Nov  6 02:08:44 2012
+Read 6 items
+  15 Tue Nov  6 02:08:45 2012
+Read 6 items
+  16 Tue Nov  6 02:08:46 2012
+Read 6 items
+  17 Tue Nov  6 02:08:48 2012
+Read 6 items
+  18 Tue Nov  6 02:08:49 2012
+Read 6 items
+  19 Tue Nov  6 02:08:50 2012
+Read 6 items
+  20 Tue Nov  6 02:08:52 2012
+Read 6 items
+  21 Tue Nov  6 02:08:53 2012
+Read 6 items
+  22 Tue Nov  6 02:08:54 2012
+Read 6 items
+  23 Tue Nov  6 02:08:55 2012
+Read 6 items
+  24 Tue Nov  6 02:08:57 2012
+Read 6 items
+  25 Tue Nov  6 02:08:58 2012
+Read 6 items
+  26 Tue Nov  6 02:08:59 2012
+Read 6 items
+  27 Tue Nov  6 02:09:01 2012
+Read 6 items
+  28 Tue Nov  6 02:09:02 2012
+Read 6 items
+  29 Tue Nov  6 02:09:03 2012
+Read 6 items
+  30 Tue Nov  6 02:09:04 2012
+Read 6 items
+  31 Tue Nov  6 02:09:06 2012
+Read 6 items
+  32 Tue Nov  6 02:09:07 2012
+Read 6 items
+  33 Tue Nov  6 02:09:08 2012
+Read 6 items
+  34 Tue Nov  6 02:09:09 2012
+Read 6 items
+  35 Tue Nov  6 02:09:10 2012
+Read 6 items
+  36 Tue Nov  6 02:09:12 2012
+Read 6 items
+  37 Tue Nov  6 02:09:13 2012
+Read 6 items
+  38 Tue Nov  6 02:09:15 2012
+Read 6 items
+  39 Tue Nov  6 02:09:16 2012
+Read 6 items
+  40 Tue Nov  6 02:09:17 2012
+Read 6 items
+  41 Tue Nov  6 02:09:18 2012
+Read 6 items
+  42 Tue Nov  6 02:09:19 2012
+Read 6 items
+  43 Tue Nov  6 02:09:21 2012
+Read 6 items
+  44 Tue Nov  6 02:09:22 2012
+Read 6 items
+  45 Tue Nov  6 02:09:23 2012
+Read 6 items
+  46 Tue Nov  6 02:09:25 2012
+Read 6 items
+  47 Tue Nov  6 02:09:26 2012
+Read 6 items
+  48 Tue Nov  6 02:09:27 2012
+Read 6 items
+  49 Tue Nov  6 02:09:28 2012
+Read 6 items
+  50 Tue Nov  6 02:09:30 2012
+Read 6 items
+chr21 Tue Nov  6 02:09:31 2012
+Read 547213 items
+  1 Tue Nov  6 02:09:40 2012
+Read 6 items
+  2 Tue Nov  6 02:09:41 2012
+Read 6 items
+  3 Tue Nov  6 02:09:42 2012
+Read 6 items
+  4 Tue Nov  6 02:09:43 2012
+Read 6 items
+  5 Tue Nov  6 02:09:43 2012
+Read 6 items
+  6 Tue Nov  6 02:09:44 2012
+Read 6 items
+  7 Tue Nov  6 02:09:45 2012
+Read 6 items
+  8 Tue Nov  6 02:09:46 2012
+Read 6 items
+  9 Tue Nov  6 02:09:46 2012
+Read 6 items
+  10 Tue Nov  6 02:09:47 2012
+Read 6 items
+  11 Tue Nov  6 02:09:48 2012
+Read 6 items
+  12 Tue Nov  6 02:09:49 2012
+Read 6 items
+  13 Tue Nov  6 02:09:50 2012
+Read 6 items
+  14 Tue Nov  6 02:09:50 2012
+Read 6 items
+  15 Tue Nov  6 02:09:51 2012
+Read 6 items
+  16 Tue Nov  6 02:09:52 2012
+Read 6 items
+  17 Tue Nov  6 02:09:53 2012
+Read 6 items
+  18 Tue Nov  6 02:09:54 2012
+Read 6 items
+  19 Tue Nov  6 02:09:55 2012
+Read 6 items
+  20 Tue Nov  6 02:09:55 2012
+Read 6 items
+  21 Tue Nov  6 02:09:56 2012
+Read 6 items
+  22 Tue Nov  6 02:09:57 2012
+Read 6 items
+  23 Tue Nov  6 02:09:58 2012
+Read 6 items
+  24 Tue Nov  6 02:09:59 2012
+Read 6 items
+  25 Tue Nov  6 02:10:00 2012
+Read 6 items
+  26 Tue Nov  6 02:10:00 2012
+Read 6 items
+  27 Tue Nov  6 02:10:01 2012
+Read 6 items
+  28 Tue Nov  6 02:10:02 2012
+Read 6 items
+  29 Tue Nov  6 02:10:03 2012
+Read 6 items
+  30 Tue Nov  6 02:10:03 2012
+Read 6 items
+  31 Tue Nov  6 02:10:04 2012
+Read 6 items
+  32 Tue Nov  6 02:10:05 2012
+Read 6 items
+  33 Tue Nov  6 02:10:06 2012
+Read 6 items
+  34 Tue Nov  6 02:10:07 2012
+Read 6 items
+  35 Tue Nov  6 02:10:08 2012
+Read 6 items
+  36 Tue Nov  6 02:10:08 2012
+Read 6 items
+  37 Tue Nov  6 02:10:09 2012
+Read 6 items
+  38 Tue Nov  6 02:10:10 2012
+Read 6 items
+  39 Tue Nov  6 02:10:11 2012
+Read 6 items
+  40 Tue Nov  6 02:10:12 2012
+Read 6 items
+  41 Tue Nov  6 02:10:12 2012
+Read 6 items
+  42 Tue Nov  6 02:10:13 2012
+Read 6 items
+  43 Tue Nov  6 02:10:14 2012
+Read 6 items
+  44 Tue Nov  6 02:10:15 2012
+Read 6 items
+  45 Tue Nov  6 02:10:15 2012
+Read 6 items
+  46 Tue Nov  6 02:10:16 2012
+Read 6 items
+  47 Tue Nov  6 02:10:17 2012
+Read 6 items
+  48 Tue Nov  6 02:10:18 2012
+Read 6 items
+  49 Tue Nov  6 02:10:19 2012
+Read 6 items
+  50 Tue Nov  6 02:10:20 2012
+Read 6 items
+chr22 Tue Nov  6 02:10:21 2012
+Read 520581 items
+  1 Tue Nov  6 02:10:30 2012
+Read 6 items
+  2 Tue Nov  6 02:10:31 2012
+Read 6 items
+  3 Tue Nov  6 02:10:32 2012
+Read 6 items
+  4 Tue Nov  6 02:10:33 2012
+Read 6 items
+  5 Tue Nov  6 02:10:34 2012
+Read 6 items
+  6 Tue Nov  6 02:10:34 2012
+Read 6 items
+  7 Tue Nov  6 02:10:35 2012
+Read 6 items
+  8 Tue Nov  6 02:10:36 2012
+Read 6 items
+  9 Tue Nov  6 02:10:36 2012
+Read 6 items
+  10 Tue Nov  6 02:10:37 2012
+Read 6 items
+  11 Tue Nov  6 02:10:38 2012
+Read 6 items
+  12 Tue Nov  6 02:10:39 2012
+Read 6 items
+  13 Tue Nov  6 02:10:39 2012
+Read 6 items
+  14 Tue Nov  6 02:10:40 2012
+Read 6 items
+  15 Tue Nov  6 02:10:41 2012
+Read 6 items
+  16 Tue Nov  6 02:10:41 2012
+Read 6 items
+  17 Tue Nov  6 02:10:42 2012
+Read 6 items
+  18 Tue Nov  6 02:10:43 2012
+Read 6 items
+  19 Tue Nov  6 02:10:43 2012
+Read 6 items
+  20 Tue Nov  6 02:10:44 2012
+Read 6 items
+  21 Tue Nov  6 02:10:45 2012
+Read 6 items
+  22 Tue Nov  6 02:10:46 2012
+Read 6 items
+  23 Tue Nov  6 02:10:46 2012
+Read 6 items
+  24 Tue Nov  6 02:10:47 2012
+Read 6 items
+  25 Tue Nov  6 02:10:48 2012
+Read 6 items
+  26 Tue Nov  6 02:10:49 2012
+Read 6 items
+  27 Tue Nov  6 02:10:49 2012
+Read 6 items
+  28 Tue Nov  6 02:10:50 2012
+Read 6 items
+  29 Tue Nov  6 02:10:51 2012
+Read 6 items
+  30 Tue Nov  6 02:10:51 2012
+Read 6 items
+  31 Tue Nov  6 02:10:52 2012
+Read 6 items
+  32 Tue Nov  6 02:10:53 2012
+Read 6 items
+  33 Tue Nov  6 02:10:54 2012
+Read 6 items
+  34 Tue Nov  6 02:10:54 2012
+Read 6 items
+  35 Tue Nov  6 02:10:55 2012
+Read 6 items
+  36 Tue Nov  6 02:10:56 2012
+Read 6 items
+  37 Tue Nov  6 02:10:57 2012
+Read 6 items
+  38 Tue Nov  6 02:10:57 2012
+Read 6 items
+  39 Tue Nov  6 02:10:58 2012
+Read 6 items
+  40 Tue Nov  6 02:10:59 2012
+Read 6 items
+  41 Tue Nov  6 02:11:00 2012
+Read 6 items
+  42 Tue Nov  6 02:11:01 2012
+Read 6 items
+  43 Tue Nov  6 02:11:01 2012
+Read 6 items
+  44 Tue Nov  6 02:11:02 2012
+Read 6 items
+  45 Tue Nov  6 02:11:03 2012
+Read 6 items
+  46 Tue Nov  6 02:11:03 2012
+Read 6 items
+  47 Tue Nov  6 02:11:04 2012
+Read 6 items
+  48 Tue Nov  6 02:11:05 2012
+Read 6 items
+  49 Tue Nov  6 02:11:06 2012
+Read 6 items
+  50 Tue Nov  6 02:11:06 2012
+Read 6 items
+> 
+> proc.time()
+    user   system  elapsed 
+3271.024  387.300 3790.125 

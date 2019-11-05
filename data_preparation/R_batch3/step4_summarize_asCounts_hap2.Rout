@@ -1,0 +1,2915 @@
+
+R version 2.10.1 Patched (2010-04-07 r51635)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("/lustre/scr/w/e/weisun/TCGA/bam/")
+> 
+> load("~/research/data/human/Homo_sapiens.GRCh37.66.nTE.RData")
+> dim(nTE)
+[1] 53561     4
+> nTE[1:2,]
+           geneId nE nT clustID
+1 ENSG00000000003 29  4  chrX_1
+2 ENSG00000000005 10  2  chrX_2
+> length(unique(nTE$geneId))
+[1] 53561
+> 
+> ffs  = list.files(pattern="_asCounts_hap2.txt")
+> nn   = length(ffs)
+> ffs[1:2]
+[1] "A03N_asCounts_hap2.txt" "A03R_asCounts_hap2.txt"
+> nn
+[1] 551
+> 
+> sams  = gsub("_asCounts_hap2.txt", "", ffs)
+> couts = matrix(0, nrow=nrow(nTE), ncol=length(sams))
+> colnames(couts) = sams
+> rownames(couts) = nTE$geneId
+> 
+> for(idx in 1:length(sams)){
++   
++   cat(idx, date(), "\n")
++   
++   f1   = ffs[idx]
++   dat  = scan(f1, what=character(0))  
++   dat  = matrix(dat, ncol=2, byrow=TRUE);
++  
++   colNames = c("count", "exons")
++   cN = sprintf("%s and %s", colNames[1], colNames[2])
++   
++   if(ncol(dat) != 2){
++     stop(countFile, " should have 2 columns: ", cN, "\n")
++   }
++   
++   colnames(dat) = colNames
++   dim(dat)
++   dat[1:2,]
++   
++   # --------------------------------------------------------- 
++   # obtain transcript cluster IDs and gene IDs
++   # --------------------------------------------------------- 
++   
++   groupIDs = strsplit(dat[,"exons"], split=";|\\|", perl=TRUE)
++   
++   splitFun <- function(vx){
++     unique(vx[grep("ENSG", vx)])
++   }
++   
++   date()
++   geneIDs = lapply(groupIDs, splitFun)
++   date()
++   geneIDs[1:2]
++   
++   # --------------------------------------------------------- 
++   # if only one geneID is shared by all the geneIDs, 
++   # assign the count to this geneID, otherwise ignore it.
++   # --------------------------------------------------------- 
++   
++   ngIDs   = sapply(geneIDs, length)
++   table(ngIDs)
++   
++   w2check = which(ngIDs > 1)
++   
++   chkGIDs <- function(g1){
++     gkp    = ""
++     ncombo = sum(!grepl(":", g1, fixed=TRUE))
++     
++     if(ncombo <= 1){
++       g2s = strsplit(g1, split=":", fixed=TRUE)
++       gus = unique(unlist(g2s))
++       foundONE = FALSE
++       
++       for(gu1 in gus){
++         if (all(grepl(gu1, g1))){
++           if(foundONE){  
++             gkp = ""
++             break
++           }else{
++             foundONE = TRUE
++             gkp = gu1
++           }
++         }
++       }
++     }
++     
++     gkp
++   }
++ 
++   gIDchk  = sapply(geneIDs[w2check], chkGIDs)
++   length(gIDchk)
++   gIDchk[1:4]
++   
++   geneIDs[w2check] = gIDchk
++   n1      = length(geneIDs)
++   geneIDs = unlist(geneIDs)
++   if(n1 != length(geneIDs)){ stop("non-unique geneIDs\n") }
++   
++   gID2rm = w2check[which(gIDchk=="")]
++   str1   = "combinations are skipped because they belong to different genes"
++   message(length(gID2rm), " exon ", str1)
++   
++   dim(dat)
++   if(length(gID2rm) > 0){
++     dat     = dat[-gID2rm,]
++     geneIDs = geneIDs[-gID2rm]
++   }
++   
++   dim(dat)
++   length(unique(geneIDs))
++   
++   # --------------------------------------------------------- 
++   # record the counts
++   # --------------------------------------------------------- 
++     
++   cts     = as.numeric(dat[,"count"])
++   geneCts = tapply(cts, geneIDs, sum)
++   
++   mat1    = match(names(geneCts), nTE$geneId)
++   wNotNA  = which(! is.na(mat1))
++   
++   pp1 = round(sum(geneCts[-wNotNA])/sum(geneCts),4)
++   nn1 = length(geneCts) - length(wNotNA)
++   message(100*pp1, "% of reads @ ", nn1, " gene combinations are skipped\n")
++ 
++   couts[mat1[wNotNA],idx] = geneCts[wNotNA]
++ }
+1 Sat Nov 17 14:19:24 2012 
+Read 42616 items
+485 exon combinations are skipped because they belong to different genes
+2.5% of reads @ 315 gene combinations are skipped
+
+2 Sat Nov 17 14:19:25 2012 
+Read 82234 items
+1335 exon combinations are skipped because they belong to different genes
+2.75% of reads @ 379 gene combinations are skipped
+
+3 Sat Nov 17 14:19:27 2012 
+Read 94518 items
+1893 exon combinations are skipped because they belong to different genes
+2.49% of reads @ 426 gene combinations are skipped
+
+4 Sat Nov 17 14:19:30 2012 
+Read 149392 items
+3967 exon combinations are skipped because they belong to different genes
+1.77% of reads @ 523 gene combinations are skipped
+
+5 Sat Nov 17 14:19:34 2012 
+Read 129286 items
+2696 exon combinations are skipped because they belong to different genes
+2.39% of reads @ 488 gene combinations are skipped
+
+6 Sat Nov 17 14:19:38 2012 
+Read 136064 items
+4775 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 495 gene combinations are skipped
+
+7 Sat Nov 17 14:19:41 2012 
+Read 154932 items
+5088 exon combinations are skipped because they belong to different genes
+1.77% of reads @ 493 gene combinations are skipped
+
+8 Sat Nov 17 14:19:47 2012 
+Read 114246 items
+2776 exon combinations are skipped because they belong to different genes
+2.41% of reads @ 468 gene combinations are skipped
+
+9 Sat Nov 17 14:19:52 2012 
+Read 133378 items
+4352 exon combinations are skipped because they belong to different genes
+2.33% of reads @ 491 gene combinations are skipped
+
+10 Sat Nov 17 14:19:56 2012 
+Read 152460 items
+3965 exon combinations are skipped because they belong to different genes
+2% of reads @ 520 gene combinations are skipped
+
+11 Sat Nov 17 14:20:00 2012 
+Read 155662 items
+3791 exon combinations are skipped because they belong to different genes
+2.23% of reads @ 554 gene combinations are skipped
+
+12 Sat Nov 17 14:20:05 2012 
+Read 127762 items
+2672 exon combinations are skipped because they belong to different genes
+2.29% of reads @ 521 gene combinations are skipped
+
+13 Sat Nov 17 14:20:08 2012 
+Read 127192 items
+5376 exon combinations are skipped because they belong to different genes
+2.3% of reads @ 489 gene combinations are skipped
+
+14 Sat Nov 17 14:20:12 2012 
+Read 79670 items
+1512 exon combinations are skipped because they belong to different genes
+2.67% of reads @ 390 gene combinations are skipped
+
+15 Sat Nov 17 14:20:14 2012 
+Read 120038 items
+2740 exon combinations are skipped because they belong to different genes
+2.45% of reads @ 484 gene combinations are skipped
+
+16 Sat Nov 17 14:20:17 2012 
+Read 104966 items
+2364 exon combinations are skipped because they belong to different genes
+2.2% of reads @ 453 gene combinations are skipped
+
+17 Sat Nov 17 14:20:20 2012 
+Read 133044 items
+6258 exon combinations are skipped because they belong to different genes
+3.19% of reads @ 488 gene combinations are skipped
+
+18 Sat Nov 17 14:20:24 2012 
+Read 139138 items
+3599 exon combinations are skipped because they belong to different genes
+2.23% of reads @ 550 gene combinations are skipped
+
+19 Sat Nov 17 14:20:27 2012 
+Read 179674 items
+13066 exon combinations are skipped because they belong to different genes
+2.14% of reads @ 569 gene combinations are skipped
+
+20 Sat Nov 17 14:20:34 2012 
+Read 124706 items
+2780 exon combinations are skipped because they belong to different genes
+2.48% of reads @ 524 gene combinations are skipped
+
+21 Sat Nov 17 14:20:38 2012 
+Read 148274 items
+3576 exon combinations are skipped because they belong to different genes
+2.43% of reads @ 554 gene combinations are skipped
+
+22 Sat Nov 17 14:20:42 2012 
+Read 142892 items
+5915 exon combinations are skipped because they belong to different genes
+2.86% of reads @ 501 gene combinations are skipped
+
+23 Sat Nov 17 14:20:46 2012 
+Read 148474 items
+3760 exon combinations are skipped because they belong to different genes
+3.21% of reads @ 518 gene combinations are skipped
+
+24 Sat Nov 17 14:20:50 2012 
+Read 106862 items
+3092 exon combinations are skipped because they belong to different genes
+2.99% of reads @ 445 gene combinations are skipped
+
+25 Sat Nov 17 14:20:53 2012 
+Read 124932 items
+4636 exon combinations are skipped because they belong to different genes
+2.12% of reads @ 445 gene combinations are skipped
+
+26 Sat Nov 17 14:20:56 2012 
+Read 174886 items
+13763 exon combinations are skipped because they belong to different genes
+2.98% of reads @ 517 gene combinations are skipped
+
+27 Sat Nov 17 14:21:01 2012 
+Read 100540 items
+1670 exon combinations are skipped because they belong to different genes
+2.06% of reads @ 474 gene combinations are skipped
+
+28 Sat Nov 17 14:21:04 2012 
+Read 132190 items
+3380 exon combinations are skipped because they belong to different genes
+2.5% of reads @ 548 gene combinations are skipped
+
+29 Sat Nov 17 14:21:07 2012 
+Read 141282 items
+4313 exon combinations are skipped because they belong to different genes
+3.71% of reads @ 513 gene combinations are skipped
+
+30 Sat Nov 17 14:21:11 2012 
+Read 63342 items
+719 exon combinations are skipped because they belong to different genes
+3.48% of reads @ 261 gene combinations are skipped
+
+31 Sat Nov 17 14:21:14 2012 
+Read 136836 items
+5246 exon combinations are skipped because they belong to different genes
+3.25% of reads @ 522 gene combinations are skipped
+
+32 Sat Nov 17 14:21:18 2012 
+Read 181804 items
+5994 exon combinations are skipped because they belong to different genes
+2.51% of reads @ 541 gene combinations are skipped
+
+33 Sat Nov 17 14:21:23 2012 
+Read 167934 items
+4518 exon combinations are skipped because they belong to different genes
+2.26% of reads @ 563 gene combinations are skipped
+
+34 Sat Nov 17 14:21:28 2012 
+Read 143332 items
+4848 exon combinations are skipped because they belong to different genes
+2.22% of reads @ 510 gene combinations are skipped
+
+35 Sat Nov 17 14:21:33 2012 
+Read 133618 items
+5770 exon combinations are skipped because they belong to different genes
+2.38% of reads @ 461 gene combinations are skipped
+
+36 Sat Nov 17 14:21:37 2012 
+Read 110490 items
+1738 exon combinations are skipped because they belong to different genes
+2.06% of reads @ 439 gene combinations are skipped
+
+37 Sat Nov 17 14:21:40 2012 
+Read 153810 items
+8362 exon combinations are skipped because they belong to different genes
+2.34% of reads @ 508 gene combinations are skipped
+
+38 Sat Nov 17 14:21:44 2012 
+Read 149220 items
+10733 exon combinations are skipped because they belong to different genes
+2.26% of reads @ 485 gene combinations are skipped
+
+39 Sat Nov 17 14:21:48 2012 
+Read 123446 items
+2424 exon combinations are skipped because they belong to different genes
+1.91% of reads @ 482 gene combinations are skipped
+
+40 Sat Nov 17 14:21:53 2012 
+Read 124076 items
+4068 exon combinations are skipped because they belong to different genes
+1.85% of reads @ 433 gene combinations are skipped
+
+41 Sat Nov 17 14:21:56 2012 
+Read 138816 items
+5986 exon combinations are skipped because they belong to different genes
+2.86% of reads @ 496 gene combinations are skipped
+
+42 Sat Nov 17 14:22:00 2012 
+Read 143830 items
+4256 exon combinations are skipped because they belong to different genes
+1.93% of reads @ 488 gene combinations are skipped
+
+43 Sat Nov 17 14:22:04 2012 
+Read 164308 items
+3422 exon combinations are skipped because they belong to different genes
+2.74% of reads @ 555 gene combinations are skipped
+
+44 Sat Nov 17 14:22:09 2012 
+Read 145174 items
+4538 exon combinations are skipped because they belong to different genes
+3.42% of reads @ 453 gene combinations are skipped
+
+45 Sat Nov 17 14:22:15 2012 
+Read 135882 items
+5685 exon combinations are skipped because they belong to different genes
+1.92% of reads @ 509 gene combinations are skipped
+
+46 Sat Nov 17 14:22:18 2012 
+Read 51288 items
+1127 exon combinations are skipped because they belong to different genes
+2.38% of reads @ 263 gene combinations are skipped
+
+47 Sat Nov 17 14:22:20 2012 
+Read 138452 items
+2592 exon combinations are skipped because they belong to different genes
+2.17% of reads @ 518 gene combinations are skipped
+
+48 Sat Nov 17 14:22:24 2012 
+Read 137436 items
+3042 exon combinations are skipped because they belong to different genes
+2.46% of reads @ 486 gene combinations are skipped
+
+49 Sat Nov 17 14:22:27 2012 
+Read 226672 items
+24336 exon combinations are skipped because they belong to different genes
+3.44% of reads @ 617 gene combinations are skipped
+
+50 Sat Nov 17 14:22:34 2012 
+Read 122702 items
+2792 exon combinations are skipped because they belong to different genes
+2.59% of reads @ 522 gene combinations are skipped
+
+51 Sat Nov 17 14:22:37 2012 
+Read 114880 items
+3577 exon combinations are skipped because they belong to different genes
+4.33% of reads @ 548 gene combinations are skipped
+
+52 Sat Nov 17 14:22:40 2012 
+Read 126828 items
+4666 exon combinations are skipped because they belong to different genes
+2.56% of reads @ 488 gene combinations are skipped
+
+53 Sat Nov 17 14:22:44 2012 
+Read 94432 items
+2909 exon combinations are skipped because they belong to different genes
+2.77% of reads @ 385 gene combinations are skipped
+
+54 Sat Nov 17 14:22:46 2012 
+Read 143888 items
+5850 exon combinations are skipped because they belong to different genes
+2.18% of reads @ 533 gene combinations are skipped
+
+55 Sat Nov 17 14:22:50 2012 
+Read 138128 items
+2084 exon combinations are skipped because they belong to different genes
+2.06% of reads @ 524 gene combinations are skipped
+
+56 Sat Nov 17 14:22:54 2012 
+Read 107262 items
+3275 exon combinations are skipped because they belong to different genes
+1.97% of reads @ 438 gene combinations are skipped
+
+57 Sat Nov 17 14:22:57 2012 
+Read 142778 items
+5743 exon combinations are skipped because they belong to different genes
+2.16% of reads @ 478 gene combinations are skipped
+
+58 Sat Nov 17 14:23:01 2012 
+Read 201048 items
+14117 exon combinations are skipped because they belong to different genes
+2.48% of reads @ 630 gene combinations are skipped
+
+59 Sat Nov 17 14:23:07 2012 
+Read 130828 items
+3189 exon combinations are skipped because they belong to different genes
+2.56% of reads @ 512 gene combinations are skipped
+
+60 Sat Nov 17 14:23:10 2012 
+Read 120208 items
+3402 exon combinations are skipped because they belong to different genes
+2.49% of reads @ 537 gene combinations are skipped
+
+61 Sat Nov 17 14:23:14 2012 
+Read 108810 items
+2729 exon combinations are skipped because they belong to different genes
+2.37% of reads @ 401 gene combinations are skipped
+
+62 Sat Nov 17 14:23:16 2012 
+Read 129024 items
+1876 exon combinations are skipped because they belong to different genes
+3.09% of reads @ 541 gene combinations are skipped
+
+63 Sat Nov 17 14:23:20 2012 
+Read 167348 items
+7529 exon combinations are skipped because they belong to different genes
+2.27% of reads @ 538 gene combinations are skipped
+
+64 Sat Nov 17 14:23:24 2012 
+Read 126140 items
+4114 exon combinations are skipped because they belong to different genes
+2.41% of reads @ 470 gene combinations are skipped
+
+65 Sat Nov 17 14:23:28 2012 
+Read 170274 items
+6380 exon combinations are skipped because they belong to different genes
+1.9% of reads @ 542 gene combinations are skipped
+
+66 Sat Nov 17 14:23:33 2012 
+Read 136018 items
+2787 exon combinations are skipped because they belong to different genes
+3.63% of reads @ 518 gene combinations are skipped
+
+67 Sat Nov 17 14:23:37 2012 
+Read 124504 items
+2979 exon combinations are skipped because they belong to different genes
+2.49% of reads @ 541 gene combinations are skipped
+
+68 Sat Nov 17 14:23:40 2012 
+Read 145680 items
+4370 exon combinations are skipped because they belong to different genes
+2.52% of reads @ 517 gene combinations are skipped
+
+69 Sat Nov 17 14:23:44 2012 
+Read 187162 items
+11424 exon combinations are skipped because they belong to different genes
+2.33% of reads @ 578 gene combinations are skipped
+
+70 Sat Nov 17 14:23:50 2012 
+Read 110376 items
+4097 exon combinations are skipped because they belong to different genes
+2.75% of reads @ 462 gene combinations are skipped
+
+71 Sat Nov 17 14:23:53 2012 
+Read 135154 items
+5597 exon combinations are skipped because they belong to different genes
+1.84% of reads @ 460 gene combinations are skipped
+
+72 Sat Nov 17 14:23:57 2012 
+Read 134570 items
+4011 exon combinations are skipped because they belong to different genes
+2.85% of reads @ 533 gene combinations are skipped
+
+73 Sat Nov 17 14:24:00 2012 
+Read 143490 items
+6341 exon combinations are skipped because they belong to different genes
+2.52% of reads @ 551 gene combinations are skipped
+
+74 Sat Nov 17 14:24:05 2012 
+Read 77738 items
+1229 exon combinations are skipped because they belong to different genes
+1.81% of reads @ 314 gene combinations are skipped
+
+75 Sat Nov 17 14:24:07 2012 
+Read 167760 items
+4889 exon combinations are skipped because they belong to different genes
+2.33% of reads @ 596 gene combinations are skipped
+
+76 Sat Nov 17 14:24:11 2012 
+Read 104114 items
+2945 exon combinations are skipped because they belong to different genes
+2.95% of reads @ 424 gene combinations are skipped
+
+77 Sat Nov 17 14:24:14 2012 
+Read 157328 items
+4292 exon combinations are skipped because they belong to different genes
+2.42% of reads @ 606 gene combinations are skipped
+
+78 Sat Nov 17 14:24:18 2012 
+Read 138486 items
+2666 exon combinations are skipped because they belong to different genes
+2.04% of reads @ 492 gene combinations are skipped
+
+79 Sat Nov 17 14:24:22 2012 
+Read 121286 items
+2772 exon combinations are skipped because they belong to different genes
+2.94% of reads @ 490 gene combinations are skipped
+
+80 Sat Nov 17 14:24:26 2012 
+Read 139640 items
+4331 exon combinations are skipped because they belong to different genes
+2.6% of reads @ 550 gene combinations are skipped
+
+81 Sat Nov 17 14:24:30 2012 
+Read 153244 items
+5357 exon combinations are skipped because they belong to different genes
+2.25% of reads @ 528 gene combinations are skipped
+
+82 Sat Nov 17 14:24:35 2012 
+Read 89506 items
+1416 exon combinations are skipped because they belong to different genes
+1.95% of reads @ 499 gene combinations are skipped
+
+83 Sat Nov 17 14:24:38 2012 
+Read 125084 items
+2935 exon combinations are skipped because they belong to different genes
+2.48% of reads @ 452 gene combinations are skipped
+
+84 Sat Nov 17 14:24:42 2012 
+Read 135724 items
+3456 exon combinations are skipped because they belong to different genes
+2.79% of reads @ 421 gene combinations are skipped
+
+85 Sat Nov 17 14:24:46 2012 
+Read 140990 items
+4902 exon combinations are skipped because they belong to different genes
+3.03% of reads @ 533 gene combinations are skipped
+
+86 Sat Nov 17 14:24:50 2012 
+Read 94732 items
+1717 exon combinations are skipped because they belong to different genes
+1.99% of reads @ 452 gene combinations are skipped
+
+87 Sat Nov 17 14:24:54 2012 
+Read 147584 items
+5168 exon combinations are skipped because they belong to different genes
+2.84% of reads @ 525 gene combinations are skipped
+
+88 Sat Nov 17 14:24:58 2012 
+Read 144844 items
+4233 exon combinations are skipped because they belong to different genes
+2.9% of reads @ 493 gene combinations are skipped
+
+89 Sat Nov 17 14:25:03 2012 
+Read 108250 items
+2760 exon combinations are skipped because they belong to different genes
+2.6% of reads @ 406 gene combinations are skipped
+
+90 Sat Nov 17 14:25:06 2012 
+Read 74138 items
+1191 exon combinations are skipped because they belong to different genes
+2.5% of reads @ 373 gene combinations are skipped
+
+91 Sat Nov 17 14:25:09 2012 
+Read 109990 items
+2754 exon combinations are skipped because they belong to different genes
+1.82% of reads @ 474 gene combinations are skipped
+
+92 Sat Nov 17 14:25:12 2012 
+Read 142534 items
+9080 exon combinations are skipped because they belong to different genes
+2.24% of reads @ 497 gene combinations are skipped
+
+93 Sat Nov 17 14:25:16 2012 
+Read 158074 items
+5044 exon combinations are skipped because they belong to different genes
+2.09% of reads @ 543 gene combinations are skipped
+
+94 Sat Nov 17 14:25:21 2012 
+Read 142146 items
+2687 exon combinations are skipped because they belong to different genes
+2.68% of reads @ 540 gene combinations are skipped
+
+95 Sat Nov 17 14:25:26 2012 
+Read 138700 items
+4905 exon combinations are skipped because they belong to different genes
+3.02% of reads @ 564 gene combinations are skipped
+
+96 Sat Nov 17 14:25:30 2012 
+Read 164024 items
+6463 exon combinations are skipped because they belong to different genes
+3.3% of reads @ 540 gene combinations are skipped
+
+97 Sat Nov 17 14:25:36 2012 
+Read 146426 items
+6144 exon combinations are skipped because they belong to different genes
+5.1% of reads @ 535 gene combinations are skipped
+
+98 Sat Nov 17 14:25:40 2012 
+Read 128070 items
+2990 exon combinations are skipped because they belong to different genes
+2.84% of reads @ 455 gene combinations are skipped
+
+99 Sat Nov 17 14:25:45 2012 
+Read 72794 items
+1094 exon combinations are skipped because they belong to different genes
+2.79% of reads @ 430 gene combinations are skipped
+
+100 Sat Nov 17 14:25:47 2012 
+Read 155796 items
+4291 exon combinations are skipped because they belong to different genes
+2.46% of reads @ 571 gene combinations are skipped
+
+101 Sat Nov 17 14:25:51 2012 
+Read 109936 items
+1689 exon combinations are skipped because they belong to different genes
+2.71% of reads @ 469 gene combinations are skipped
+
+102 Sat Nov 17 14:25:55 2012 
+Read 111284 items
+2129 exon combinations are skipped because they belong to different genes
+2.44% of reads @ 492 gene combinations are skipped
+
+103 Sat Nov 17 14:25:58 2012 
+Read 122968 items
+2768 exon combinations are skipped because they belong to different genes
+2.57% of reads @ 456 gene combinations are skipped
+
+104 Sat Nov 17 14:26:02 2012 
+Read 135364 items
+3696 exon combinations are skipped because they belong to different genes
+2.1% of reads @ 448 gene combinations are skipped
+
+105 Sat Nov 17 14:26:06 2012 
+Read 113970 items
+2954 exon combinations are skipped because they belong to different genes
+3.3% of reads @ 480 gene combinations are skipped
+
+106 Sat Nov 17 14:26:10 2012 
+Read 156732 items
+5660 exon combinations are skipped because they belong to different genes
+1.99% of reads @ 474 gene combinations are skipped
+
+107 Sat Nov 17 14:26:14 2012 
+Read 130402 items
+3134 exon combinations are skipped because they belong to different genes
+2.86% of reads @ 506 gene combinations are skipped
+
+108 Sat Nov 17 14:26:19 2012 
+Read 91034 items
+2409 exon combinations are skipped because they belong to different genes
+2.16% of reads @ 457 gene combinations are skipped
+
+109 Sat Nov 17 14:26:21 2012 
+Read 130684 items
+2642 exon combinations are skipped because they belong to different genes
+2.33% of reads @ 510 gene combinations are skipped
+
+110 Sat Nov 17 14:26:25 2012 
+Read 139492 items
+2542 exon combinations are skipped because they belong to different genes
+3.24% of reads @ 510 gene combinations are skipped
+
+111 Sat Nov 17 14:26:30 2012 
+Read 154070 items
+3383 exon combinations are skipped because they belong to different genes
+2.56% of reads @ 538 gene combinations are skipped
+
+112 Sat Nov 17 14:26:34 2012 
+Read 127252 items
+3159 exon combinations are skipped because they belong to different genes
+2.85% of reads @ 513 gene combinations are skipped
+
+113 Sat Nov 17 14:26:38 2012 
+Read 124940 items
+3796 exon combinations are skipped because they belong to different genes
+2.31% of reads @ 503 gene combinations are skipped
+
+114 Sat Nov 17 14:26:42 2012 
+Read 154670 items
+5227 exon combinations are skipped because they belong to different genes
+2.28% of reads @ 481 gene combinations are skipped
+
+115 Sat Nov 17 14:26:47 2012 
+Read 122392 items
+2950 exon combinations are skipped because they belong to different genes
+2.03% of reads @ 488 gene combinations are skipped
+
+116 Sat Nov 17 14:26:51 2012 
+Read 106814 items
+3570 exon combinations are skipped because they belong to different genes
+2.41% of reads @ 487 gene combinations are skipped
+
+117 Sat Nov 17 14:26:54 2012 
+Read 133654 items
+4750 exon combinations are skipped because they belong to different genes
+2.36% of reads @ 526 gene combinations are skipped
+
+118 Sat Nov 17 14:26:58 2012 
+Read 139422 items
+4251 exon combinations are skipped because they belong to different genes
+2.91% of reads @ 500 gene combinations are skipped
+
+119 Sat Nov 17 14:27:03 2012 
+Read 123828 items
+2669 exon combinations are skipped because they belong to different genes
+2.99% of reads @ 479 gene combinations are skipped
+
+120 Sat Nov 17 14:27:07 2012 
+Read 123966 items
+3156 exon combinations are skipped because they belong to different genes
+2.42% of reads @ 492 gene combinations are skipped
+
+121 Sat Nov 17 14:27:11 2012 
+Read 113916 items
+2818 exon combinations are skipped because they belong to different genes
+1.98% of reads @ 456 gene combinations are skipped
+
+122 Sat Nov 17 14:27:14 2012 
+Read 121950 items
+4628 exon combinations are skipped because they belong to different genes
+2.38% of reads @ 514 gene combinations are skipped
+
+123 Sat Nov 17 14:27:18 2012 
+Read 137290 items
+2739 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 491 gene combinations are skipped
+
+124 Sat Nov 17 14:27:22 2012 
+Read 148936 items
+3975 exon combinations are skipped because they belong to different genes
+2.51% of reads @ 508 gene combinations are skipped
+
+125 Sat Nov 17 14:27:27 2012 
+Read 128164 items
+2584 exon combinations are skipped because they belong to different genes
+2.27% of reads @ 483 gene combinations are skipped
+
+126 Sat Nov 17 14:27:31 2012 
+Read 113030 items
+2154 exon combinations are skipped because they belong to different genes
+2.5% of reads @ 540 gene combinations are skipped
+
+127 Sat Nov 17 14:27:34 2012 
+Read 118246 items
+1569 exon combinations are skipped because they belong to different genes
+2.73% of reads @ 510 gene combinations are skipped
+
+128 Sat Nov 17 14:27:37 2012 
+Read 132508 items
+3768 exon combinations are skipped because they belong to different genes
+3.37% of reads @ 453 gene combinations are skipped
+
+129 Sat Nov 17 14:27:41 2012 
+Read 138784 items
+4931 exon combinations are skipped because they belong to different genes
+2.58% of reads @ 511 gene combinations are skipped
+
+130 Sat Nov 17 14:27:45 2012 
+Read 137046 items
+4012 exon combinations are skipped because they belong to different genes
+2.28% of reads @ 480 gene combinations are skipped
+
+131 Sat Nov 17 14:27:48 2012 
+Read 137856 items
+2914 exon combinations are skipped because they belong to different genes
+2.62% of reads @ 537 gene combinations are skipped
+
+132 Sat Nov 17 14:27:52 2012 
+Read 130862 items
+2473 exon combinations are skipped because they belong to different genes
+1.96% of reads @ 528 gene combinations are skipped
+
+133 Sat Nov 17 14:27:56 2012 
+Read 115698 items
+2987 exon combinations are skipped because they belong to different genes
+2.16% of reads @ 473 gene combinations are skipped
+
+134 Sat Nov 17 14:27:59 2012 
+Read 136038 items
+3026 exon combinations are skipped because they belong to different genes
+2.37% of reads @ 510 gene combinations are skipped
+
+135 Sat Nov 17 14:28:03 2012 
+Read 93990 items
+1914 exon combinations are skipped because they belong to different genes
+2.19% of reads @ 476 gene combinations are skipped
+
+136 Sat Nov 17 14:28:05 2012 
+Read 143486 items
+3080 exon combinations are skipped because they belong to different genes
+2.7% of reads @ 521 gene combinations are skipped
+
+137 Sat Nov 17 14:28:09 2012 
+Read 117554 items
+4090 exon combinations are skipped because they belong to different genes
+1.93% of reads @ 441 gene combinations are skipped
+
+138 Sat Nov 17 14:28:12 2012 
+Read 138052 items
+2750 exon combinations are skipped because they belong to different genes
+2.44% of reads @ 502 gene combinations are skipped
+
+139 Sat Nov 17 14:28:17 2012 
+Read 60418 items
+744 exon combinations are skipped because they belong to different genes
+3.06% of reads @ 281 gene combinations are skipped
+
+140 Sat Nov 17 14:28:18 2012 
+Read 76080 items
+1523 exon combinations are skipped because they belong to different genes
+8.3% of reads @ 398 gene combinations are skipped
+
+141 Sat Nov 17 14:28:20 2012 
+Read 129390 items
+3665 exon combinations are skipped because they belong to different genes
+2.76% of reads @ 463 gene combinations are skipped
+
+142 Sat Nov 17 14:28:24 2012 
+Read 92546 items
+1726 exon combinations are skipped because they belong to different genes
+2.42% of reads @ 427 gene combinations are skipped
+
+143 Sat Nov 17 14:28:27 2012 
+Read 136462 items
+2706 exon combinations are skipped because they belong to different genes
+2.71% of reads @ 504 gene combinations are skipped
+
+144 Sat Nov 17 14:28:30 2012 
+Read 155676 items
+3655 exon combinations are skipped because they belong to different genes
+2.09% of reads @ 564 gene combinations are skipped
+
+145 Sat Nov 17 14:28:35 2012 
+Read 138418 items
+5144 exon combinations are skipped because they belong to different genes
+2.22% of reads @ 526 gene combinations are skipped
+
+146 Sat Nov 17 14:28:39 2012 
+Read 113522 items
+4133 exon combinations are skipped because they belong to different genes
+2.65% of reads @ 502 gene combinations are skipped
+
+147 Sat Nov 17 14:28:42 2012 
+Read 126082 items
+1963 exon combinations are skipped because they belong to different genes
+1.74% of reads @ 493 gene combinations are skipped
+
+148 Sat Nov 17 14:28:45 2012 
+Read 121260 items
+3069 exon combinations are skipped because they belong to different genes
+1.94% of reads @ 480 gene combinations are skipped
+
+149 Sat Nov 17 14:28:48 2012 
+Read 169342 items
+5150 exon combinations are skipped because they belong to different genes
+2.34% of reads @ 557 gene combinations are skipped
+
+150 Sat Nov 17 14:28:53 2012 
+Read 113520 items
+2148 exon combinations are skipped because they belong to different genes
+2.64% of reads @ 490 gene combinations are skipped
+
+151 Sat Nov 17 14:28:56 2012 
+Read 133290 items
+3823 exon combinations are skipped because they belong to different genes
+2.4% of reads @ 495 gene combinations are skipped
+
+152 Sat Nov 17 14:29:00 2012 
+Read 138102 items
+2195 exon combinations are skipped because they belong to different genes
+2.33% of reads @ 527 gene combinations are skipped
+
+153 Sat Nov 17 14:29:04 2012 
+Read 129766 items
+2806 exon combinations are skipped because they belong to different genes
+2.19% of reads @ 473 gene combinations are skipped
+
+154 Sat Nov 17 14:29:08 2012 
+Read 145344 items
+3145 exon combinations are skipped because they belong to different genes
+2.52% of reads @ 503 gene combinations are skipped
+
+155 Sat Nov 17 14:29:12 2012 
+Read 144594 items
+2447 exon combinations are skipped because they belong to different genes
+2.24% of reads @ 543 gene combinations are skipped
+
+156 Sat Nov 17 14:29:16 2012 
+Read 124828 items
+2019 exon combinations are skipped because they belong to different genes
+1.98% of reads @ 445 gene combinations are skipped
+
+157 Sat Nov 17 14:29:19 2012 
+Read 151250 items
+3706 exon combinations are skipped because they belong to different genes
+2.46% of reads @ 472 gene combinations are skipped
+
+158 Sat Nov 17 14:29:23 2012 
+Read 117514 items
+2274 exon combinations are skipped because they belong to different genes
+2.82% of reads @ 470 gene combinations are skipped
+
+159 Sat Nov 17 14:29:27 2012 
+Read 156510 items
+4537 exon combinations are skipped because they belong to different genes
+2.65% of reads @ 528 gene combinations are skipped
+
+160 Sat Nov 17 14:29:31 2012 
+Read 102582 items
+2328 exon combinations are skipped because they belong to different genes
+1.91% of reads @ 393 gene combinations are skipped
+
+161 Sat Nov 17 14:29:34 2012 
+Read 132194 items
+3863 exon combinations are skipped because they belong to different genes
+2.13% of reads @ 464 gene combinations are skipped
+
+162 Sat Nov 17 14:29:38 2012 
+Read 101604 items
+2138 exon combinations are skipped because they belong to different genes
+2.31% of reads @ 438 gene combinations are skipped
+
+163 Sat Nov 17 14:29:41 2012 
+Read 137228 items
+4081 exon combinations are skipped because they belong to different genes
+2.33% of reads @ 518 gene combinations are skipped
+
+164 Sat Nov 17 14:29:44 2012 
+Read 163986 items
+5130 exon combinations are skipped because they belong to different genes
+2.6% of reads @ 574 gene combinations are skipped
+
+165 Sat Nov 17 14:29:49 2012 
+Read 93358 items
+2781 exon combinations are skipped because they belong to different genes
+3.12% of reads @ 416 gene combinations are skipped
+
+166 Sat Nov 17 14:29:51 2012 
+Read 133066 items
+2961 exon combinations are skipped because they belong to different genes
+2.35% of reads @ 489 gene combinations are skipped
+
+167 Sat Nov 17 14:29:55 2012 
+Read 148740 items
+3710 exon combinations are skipped because they belong to different genes
+2.59% of reads @ 554 gene combinations are skipped
+
+168 Sat Nov 17 14:29:59 2012 
+Read 153122 items
+4262 exon combinations are skipped because they belong to different genes
+2.54% of reads @ 554 gene combinations are skipped
+
+169 Sat Nov 17 14:30:03 2012 
+Read 157296 items
+8470 exon combinations are skipped because they belong to different genes
+1.85% of reads @ 495 gene combinations are skipped
+
+170 Sat Nov 17 14:30:08 2012 
+Read 144300 items
+4899 exon combinations are skipped because they belong to different genes
+1.81% of reads @ 458 gene combinations are skipped
+
+171 Sat Nov 17 14:30:12 2012 
+Read 92972 items
+2545 exon combinations are skipped because they belong to different genes
+3.21% of reads @ 469 gene combinations are skipped
+
+172 Sat Nov 17 14:30:15 2012 
+Read 153394 items
+4391 exon combinations are skipped because they belong to different genes
+2.7% of reads @ 564 gene combinations are skipped
+
+173 Sat Nov 17 14:30:19 2012 
+Read 151748 items
+4670 exon combinations are skipped because they belong to different genes
+2.67% of reads @ 522 gene combinations are skipped
+
+174 Sat Nov 17 14:30:23 2012 
+Read 140818 items
+3581 exon combinations are skipped because they belong to different genes
+2.62% of reads @ 559 gene combinations are skipped
+
+175 Sat Nov 17 14:30:27 2012 
+Read 114818 items
+3031 exon combinations are skipped because they belong to different genes
+3.05% of reads @ 518 gene combinations are skipped
+
+176 Sat Nov 17 14:30:30 2012 
+Read 145590 items
+3925 exon combinations are skipped because they belong to different genes
+2.35% of reads @ 486 gene combinations are skipped
+
+177 Sat Nov 17 14:30:34 2012 
+Read 116316 items
+3886 exon combinations are skipped because they belong to different genes
+2.04% of reads @ 497 gene combinations are skipped
+
+178 Sat Nov 17 14:30:37 2012 
+Read 96060 items
+1362 exon combinations are skipped because they belong to different genes
+2.58% of reads @ 466 gene combinations are skipped
+
+179 Sat Nov 17 14:30:40 2012 
+Read 103330 items
+2627 exon combinations are skipped because they belong to different genes
+2.64% of reads @ 422 gene combinations are skipped
+
+180 Sat Nov 17 14:30:42 2012 
+Read 157284 items
+5348 exon combinations are skipped because they belong to different genes
+2.16% of reads @ 501 gene combinations are skipped
+
+181 Sat Nov 17 14:30:47 2012 
+Read 124744 items
+3614 exon combinations are skipped because they belong to different genes
+2.04% of reads @ 444 gene combinations are skipped
+
+182 Sat Nov 17 14:30:51 2012 
+Read 150240 items
+5006 exon combinations are skipped because they belong to different genes
+1.14% of reads @ 495 gene combinations are skipped
+
+183 Sat Nov 17 14:30:55 2012 
+Read 153686 items
+4653 exon combinations are skipped because they belong to different genes
+3.05% of reads @ 535 gene combinations are skipped
+
+184 Sat Nov 17 14:30:59 2012 
+Read 133642 items
+3695 exon combinations are skipped because they belong to different genes
+2.35% of reads @ 537 gene combinations are skipped
+
+185 Sat Nov 17 14:31:03 2012 
+Read 131906 items
+2742 exon combinations are skipped because they belong to different genes
+1.88% of reads @ 509 gene combinations are skipped
+
+186 Sat Nov 17 14:31:06 2012 
+Read 132070 items
+6732 exon combinations are skipped because they belong to different genes
+2.41% of reads @ 501 gene combinations are skipped
+
+187 Sat Nov 17 14:31:10 2012 
+Read 135194 items
+3978 exon combinations are skipped because they belong to different genes
+2.01% of reads @ 502 gene combinations are skipped
+
+188 Sat Nov 17 14:31:14 2012 
+Read 114208 items
+3804 exon combinations are skipped because they belong to different genes
+3.35% of reads @ 440 gene combinations are skipped
+
+189 Sat Nov 17 14:31:17 2012 
+Read 82434 items
+1288 exon combinations are skipped because they belong to different genes
+2.98% of reads @ 446 gene combinations are skipped
+
+190 Sat Nov 17 14:31:20 2012 
+Read 147614 items
+5631 exon combinations are skipped because they belong to different genes
+2% of reads @ 518 gene combinations are skipped
+
+191 Sat Nov 17 14:31:24 2012 
+Read 147632 items
+6345 exon combinations are skipped because they belong to different genes
+2.17% of reads @ 498 gene combinations are skipped
+
+192 Sat Nov 17 14:31:28 2012 
+Read 103014 items
+3078 exon combinations are skipped because they belong to different genes
+2.93% of reads @ 448 gene combinations are skipped
+
+193 Sat Nov 17 14:31:31 2012 
+Read 125728 items
+3882 exon combinations are skipped because they belong to different genes
+2.22% of reads @ 459 gene combinations are skipped
+
+194 Sat Nov 17 14:31:34 2012 
+Read 169286 items
+7634 exon combinations are skipped because they belong to different genes
+2.6% of reads @ 560 gene combinations are skipped
+
+195 Sat Nov 17 14:31:39 2012 
+Read 140392 items
+4400 exon combinations are skipped because they belong to different genes
+2.41% of reads @ 516 gene combinations are skipped
+
+196 Sat Nov 17 14:31:43 2012 
+Read 79966 items
+1464 exon combinations are skipped because they belong to different genes
+3.18% of reads @ 399 gene combinations are skipped
+
+197 Sat Nov 17 14:31:45 2012 
+Read 105082 items
+2555 exon combinations are skipped because they belong to different genes
+2.36% of reads @ 446 gene combinations are skipped
+
+198 Sat Nov 17 14:31:48 2012 
+Read 143550 items
+5690 exon combinations are skipped because they belong to different genes
+2.55% of reads @ 545 gene combinations are skipped
+
+199 Sat Nov 17 14:31:52 2012 
+Read 156770 items
+5310 exon combinations are skipped because they belong to different genes
+2.5% of reads @ 556 gene combinations are skipped
+
+200 Sat Nov 17 14:31:56 2012 
+Read 142748 items
+4478 exon combinations are skipped because they belong to different genes
+2.86% of reads @ 536 gene combinations are skipped
+
+201 Sat Nov 17 14:32:00 2012 
+Read 139156 items
+4531 exon combinations are skipped because they belong to different genes
+3.04% of reads @ 498 gene combinations are skipped
+
+202 Sat Nov 17 14:32:05 2012 
+Read 146838 items
+4838 exon combinations are skipped because they belong to different genes
+2.32% of reads @ 540 gene combinations are skipped
+
+203 Sat Nov 17 14:32:09 2012 
+Read 166556 items
+7067 exon combinations are skipped because they belong to different genes
+2.25% of reads @ 567 gene combinations are skipped
+
+204 Sat Nov 17 14:32:14 2012 
+Read 148032 items
+6159 exon combinations are skipped because they belong to different genes
+1.72% of reads @ 467 gene combinations are skipped
+
+205 Sat Nov 17 14:32:18 2012 
+Read 121038 items
+3369 exon combinations are skipped because they belong to different genes
+1.71% of reads @ 464 gene combinations are skipped
+
+206 Sat Nov 17 14:32:21 2012 
+Read 155572 items
+3989 exon combinations are skipped because they belong to different genes
+1.63% of reads @ 516 gene combinations are skipped
+
+207 Sat Nov 17 14:32:26 2012 
+Read 108678 items
+1573 exon combinations are skipped because they belong to different genes
+3.26% of reads @ 508 gene combinations are skipped
+
+208 Sat Nov 17 14:32:29 2012 
+Read 163074 items
+5435 exon combinations are skipped because they belong to different genes
+2.33% of reads @ 565 gene combinations are skipped
+
+209 Sat Nov 17 14:32:33 2012 
+Read 134330 items
+4481 exon combinations are skipped because they belong to different genes
+2.91% of reads @ 432 gene combinations are skipped
+
+210 Sat Nov 17 14:32:37 2012 
+Read 136140 items
+5609 exon combinations are skipped because they belong to different genes
+2.09% of reads @ 523 gene combinations are skipped
+
+211 Sat Nov 17 14:32:41 2012 
+Read 195850 items
+22367 exon combinations are skipped because they belong to different genes
+2.39% of reads @ 587 gene combinations are skipped
+
+212 Sat Nov 17 14:32:46 2012 
+Read 119936 items
+2453 exon combinations are skipped because they belong to different genes
+2.92% of reads @ 518 gene combinations are skipped
+
+213 Sat Nov 17 14:32:50 2012 
+Read 111212 items
+2905 exon combinations are skipped because they belong to different genes
+3.31% of reads @ 508 gene combinations are skipped
+
+214 Sat Nov 17 14:32:53 2012 
+Read 64692 items
+881 exon combinations are skipped because they belong to different genes
+3.13% of reads @ 419 gene combinations are skipped
+
+215 Sat Nov 17 14:32:55 2012 
+Read 108716 items
+3338 exon combinations are skipped because they belong to different genes
+1.93% of reads @ 444 gene combinations are skipped
+
+216 Sat Nov 17 14:32:58 2012 
+Read 159062 items
+3896 exon combinations are skipped because they belong to different genes
+2.53% of reads @ 576 gene combinations are skipped
+
+217 Sat Nov 17 14:33:02 2012 
+Read 123298 items
+3046 exon combinations are skipped because they belong to different genes
+2.41% of reads @ 472 gene combinations are skipped
+
+218 Sat Nov 17 14:33:05 2012 
+Read 151186 items
+4247 exon combinations are skipped because they belong to different genes
+3.01% of reads @ 500 gene combinations are skipped
+
+219 Sat Nov 17 14:33:10 2012 
+Read 175552 items
+5835 exon combinations are skipped because they belong to different genes
+2.32% of reads @ 533 gene combinations are skipped
+
+220 Sat Nov 17 14:33:15 2012 
+Read 98770 items
+1467 exon combinations are skipped because they belong to different genes
+2.82% of reads @ 433 gene combinations are skipped
+
+221 Sat Nov 17 14:33:18 2012 
+Read 147124 items
+4925 exon combinations are skipped because they belong to different genes
+1.9% of reads @ 484 gene combinations are skipped
+
+222 Sat Nov 17 14:33:22 2012 
+Read 174796 items
+6753 exon combinations are skipped because they belong to different genes
+2.41% of reads @ 562 gene combinations are skipped
+
+223 Sat Nov 17 14:33:27 2012 
+Read 89046 items
+839 exon combinations are skipped because they belong to different genes
+2.08% of reads @ 458 gene combinations are skipped
+
+224 Sat Nov 17 14:33:29 2012 
+Read 149644 items
+7295 exon combinations are skipped because they belong to different genes
+2.87% of reads @ 543 gene combinations are skipped
+
+225 Sat Nov 17 14:33:34 2012 
+Read 113934 items
+3000 exon combinations are skipped because they belong to different genes
+3.04% of reads @ 479 gene combinations are skipped
+
+226 Sat Nov 17 14:33:37 2012 
+Read 136814 items
+2236 exon combinations are skipped because they belong to different genes
+2.12% of reads @ 526 gene combinations are skipped
+
+227 Sat Nov 17 14:33:40 2012 
+Read 158864 items
+3406 exon combinations are skipped because they belong to different genes
+2.37% of reads @ 537 gene combinations are skipped
+
+228 Sat Nov 17 14:33:45 2012 
+Read 130104 items
+3285 exon combinations are skipped because they belong to different genes
+3.03% of reads @ 540 gene combinations are skipped
+
+229 Sat Nov 17 14:33:49 2012 
+Read 125462 items
+3072 exon combinations are skipped because they belong to different genes
+2.27% of reads @ 480 gene combinations are skipped
+
+230 Sat Nov 17 14:33:52 2012 
+Read 156122 items
+6202 exon combinations are skipped because they belong to different genes
+2.18% of reads @ 510 gene combinations are skipped
+
+231 Sat Nov 17 14:33:56 2012 
+Read 146234 items
+4174 exon combinations are skipped because they belong to different genes
+2.21% of reads @ 561 gene combinations are skipped
+
+232 Sat Nov 17 14:34:01 2012 
+Read 109934 items
+4575 exon combinations are skipped because they belong to different genes
+1.93% of reads @ 451 gene combinations are skipped
+
+233 Sat Nov 17 14:34:04 2012 
+Read 140806 items
+3583 exon combinations are skipped because they belong to different genes
+3.11% of reads @ 503 gene combinations are skipped
+
+234 Sat Nov 17 14:34:09 2012 
+Read 136022 items
+3583 exon combinations are skipped because they belong to different genes
+2.94% of reads @ 518 gene combinations are skipped
+
+235 Sat Nov 17 14:34:13 2012 
+Read 135078 items
+2980 exon combinations are skipped because they belong to different genes
+2.22% of reads @ 469 gene combinations are skipped
+
+236 Sat Nov 17 14:34:17 2012 
+Read 175930 items
+7121 exon combinations are skipped because they belong to different genes
+2.37% of reads @ 525 gene combinations are skipped
+
+237 Sat Nov 17 14:34:22 2012 
+Read 148068 items
+6903 exon combinations are skipped because they belong to different genes
+2.25% of reads @ 472 gene combinations are skipped
+
+238 Sat Nov 17 14:34:27 2012 
+Read 184570 items
+7682 exon combinations are skipped because they belong to different genes
+2.51% of reads @ 555 gene combinations are skipped
+
+239 Sat Nov 17 14:34:33 2012 
+Read 154340 items
+5262 exon combinations are skipped because they belong to different genes
+2.85% of reads @ 519 gene combinations are skipped
+
+240 Sat Nov 17 14:34:37 2012 
+Read 125184 items
+3065 exon combinations are skipped because they belong to different genes
+1.86% of reads @ 495 gene combinations are skipped
+
+241 Sat Nov 17 14:34:41 2012 
+Read 141246 items
+2980 exon combinations are skipped because they belong to different genes
+2.86% of reads @ 513 gene combinations are skipped
+
+242 Sat Nov 17 14:34:46 2012 
+Read 131018 items
+2288 exon combinations are skipped because they belong to different genes
+3.51% of reads @ 496 gene combinations are skipped
+
+243 Sat Nov 17 14:34:50 2012 
+Read 178750 items
+6908 exon combinations are skipped because they belong to different genes
+2.31% of reads @ 545 gene combinations are skipped
+
+244 Sat Nov 17 14:34:55 2012 
+Read 178374 items
+7486 exon combinations are skipped because they belong to different genes
+1.9% of reads @ 515 gene combinations are skipped
+
+245 Sat Nov 17 14:35:01 2012 
+Read 148164 items
+4132 exon combinations are skipped because they belong to different genes
+2.15% of reads @ 485 gene combinations are skipped
+
+246 Sat Nov 17 14:35:05 2012 
+Read 156404 items
+6032 exon combinations are skipped because they belong to different genes
+2.28% of reads @ 550 gene combinations are skipped
+
+247 Sat Nov 17 14:35:10 2012 
+Read 165748 items
+4633 exon combinations are skipped because they belong to different genes
+2.71% of reads @ 533 gene combinations are skipped
+
+248 Sat Nov 17 14:35:15 2012 
+Read 157692 items
+5403 exon combinations are skipped because they belong to different genes
+3.1% of reads @ 524 gene combinations are skipped
+
+249 Sat Nov 17 14:35:20 2012 
+Read 80966 items
+2595 exon combinations are skipped because they belong to different genes
+2.9% of reads @ 425 gene combinations are skipped
+
+250 Sat Nov 17 14:35:22 2012 
+Read 150850 items
+4714 exon combinations are skipped because they belong to different genes
+2.43% of reads @ 499 gene combinations are skipped
+
+251 Sat Nov 17 14:35:27 2012 
+Read 166202 items
+7713 exon combinations are skipped because they belong to different genes
+2.09% of reads @ 453 gene combinations are skipped
+
+252 Sat Nov 17 14:35:31 2012 
+Read 169186 items
+5196 exon combinations are skipped because they belong to different genes
+2.85% of reads @ 514 gene combinations are skipped
+
+253 Sat Nov 17 14:35:36 2012 
+Read 134720 items
+3627 exon combinations are skipped because they belong to different genes
+2.14% of reads @ 526 gene combinations are skipped
+
+254 Sat Nov 17 14:35:40 2012 
+Read 198928 items
+10130 exon combinations are skipped because they belong to different genes
+2.61% of reads @ 571 gene combinations are skipped
+
+255 Sat Nov 17 14:35:45 2012 
+Read 105744 items
+3096 exon combinations are skipped because they belong to different genes
+3.86% of reads @ 473 gene combinations are skipped
+
+256 Sat Nov 17 14:35:48 2012 
+Read 92436 items
+1390 exon combinations are skipped because they belong to different genes
+3.17% of reads @ 468 gene combinations are skipped
+
+257 Sat Nov 17 14:35:50 2012 
+Read 129766 items
+2988 exon combinations are skipped because they belong to different genes
+2.53% of reads @ 475 gene combinations are skipped
+
+258 Sat Nov 17 14:35:54 2012 
+Read 116050 items
+3056 exon combinations are skipped because they belong to different genes
+1.86% of reads @ 436 gene combinations are skipped
+
+259 Sat Nov 17 14:35:57 2012 
+Read 139616 items
+4666 exon combinations are skipped because they belong to different genes
+3.37% of reads @ 505 gene combinations are skipped
+
+260 Sat Nov 17 14:36:01 2012 
+Read 134548 items
+3441 exon combinations are skipped because they belong to different genes
+2.25% of reads @ 485 gene combinations are skipped
+
+261 Sat Nov 17 14:36:05 2012 
+Read 145048 items
+3565 exon combinations are skipped because they belong to different genes
+3.01% of reads @ 515 gene combinations are skipped
+
+262 Sat Nov 17 14:36:09 2012 
+Read 118920 items
+2289 exon combinations are skipped because they belong to different genes
+2.48% of reads @ 562 gene combinations are skipped
+
+263 Sat Nov 17 14:36:12 2012 
+Read 121720 items
+2233 exon combinations are skipped because they belong to different genes
+2.58% of reads @ 519 gene combinations are skipped
+
+264 Sat Nov 17 14:36:15 2012 
+Read 103272 items
+2964 exon combinations are skipped because they belong to different genes
+3.98% of reads @ 469 gene combinations are skipped
+
+265 Sat Nov 17 14:36:18 2012 
+Read 101502 items
+1664 exon combinations are skipped because they belong to different genes
+2.1% of reads @ 470 gene combinations are skipped
+
+266 Sat Nov 17 14:36:21 2012 
+Read 109820 items
+2885 exon combinations are skipped because they belong to different genes
+3.26% of reads @ 476 gene combinations are skipped
+
+267 Sat Nov 17 14:36:24 2012 
+Read 136358 items
+3309 exon combinations are skipped because they belong to different genes
+2.52% of reads @ 497 gene combinations are skipped
+
+268 Sat Nov 17 14:36:28 2012 
+Read 102254 items
+2008 exon combinations are skipped because they belong to different genes
+2.27% of reads @ 445 gene combinations are skipped
+
+269 Sat Nov 17 14:36:31 2012 
+Read 89358 items
+2139 exon combinations are skipped because they belong to different genes
+2.59% of reads @ 503 gene combinations are skipped
+
+270 Sat Nov 17 14:36:33 2012 
+Read 110446 items
+1417 exon combinations are skipped because they belong to different genes
+2.56% of reads @ 478 gene combinations are skipped
+
+271 Sat Nov 17 14:36:36 2012 
+Read 138324 items
+4021 exon combinations are skipped because they belong to different genes
+2.46% of reads @ 538 gene combinations are skipped
+
+272 Sat Nov 17 14:36:40 2012 
+Read 100888 items
+2570 exon combinations are skipped because they belong to different genes
+1.79% of reads @ 425 gene combinations are skipped
+
+273 Sat Nov 17 14:36:43 2012 
+Read 140742 items
+3309 exon combinations are skipped because they belong to different genes
+2.19% of reads @ 571 gene combinations are skipped
+
+274 Sat Nov 17 14:36:47 2012 
+Read 125584 items
+2647 exon combinations are skipped because they belong to different genes
+2.81% of reads @ 495 gene combinations are skipped
+
+275 Sat Nov 17 14:36:50 2012 
+Read 123272 items
+3378 exon combinations are skipped because they belong to different genes
+2.77% of reads @ 478 gene combinations are skipped
+
+276 Sat Nov 17 14:36:54 2012 
+Read 134286 items
+2975 exon combinations are skipped because they belong to different genes
+2.61% of reads @ 522 gene combinations are skipped
+
+277 Sat Nov 17 14:36:57 2012 
+Read 74602 items
+1219 exon combinations are skipped because they belong to different genes
+2.39% of reads @ 430 gene combinations are skipped
+
+278 Sat Nov 17 14:36:59 2012 
+Read 130294 items
+3582 exon combinations are skipped because they belong to different genes
+2.51% of reads @ 515 gene combinations are skipped
+
+279 Sat Nov 17 14:37:03 2012 
+Read 138232 items
+5993 exon combinations are skipped because they belong to different genes
+2.2% of reads @ 491 gene combinations are skipped
+
+280 Sat Nov 17 14:37:07 2012 
+Read 151618 items
+4204 exon combinations are skipped because they belong to different genes
+2.49% of reads @ 580 gene combinations are skipped
+
+281 Sat Nov 17 14:37:11 2012 
+Read 145542 items
+3416 exon combinations are skipped because they belong to different genes
+2.88% of reads @ 556 gene combinations are skipped
+
+282 Sat Nov 17 14:37:15 2012 
+Read 118190 items
+2967 exon combinations are skipped because they belong to different genes
+2.61% of reads @ 523 gene combinations are skipped
+
+283 Sat Nov 17 14:37:18 2012 
+Read 110940 items
+3024 exon combinations are skipped because they belong to different genes
+3.58% of reads @ 482 gene combinations are skipped
+
+284 Sat Nov 17 14:37:21 2012 
+Read 141546 items
+4014 exon combinations are skipped because they belong to different genes
+2.44% of reads @ 541 gene combinations are skipped
+
+285 Sat Nov 17 14:37:25 2012 
+Read 122972 items
+2749 exon combinations are skipped because they belong to different genes
+2.2% of reads @ 437 gene combinations are skipped
+
+286 Sat Nov 17 14:37:28 2012 
+Read 136084 items
+3346 exon combinations are skipped because they belong to different genes
+2.7% of reads @ 542 gene combinations are skipped
+
+287 Sat Nov 17 14:37:32 2012 
+Read 133762 items
+2960 exon combinations are skipped because they belong to different genes
+2.46% of reads @ 586 gene combinations are skipped
+
+288 Sat Nov 17 14:37:36 2012 
+Read 150882 items
+5755 exon combinations are skipped because they belong to different genes
+2.51% of reads @ 518 gene combinations are skipped
+
+289 Sat Nov 17 14:37:40 2012 
+Read 122586 items
+3671 exon combinations are skipped because they belong to different genes
+2.12% of reads @ 445 gene combinations are skipped
+
+290 Sat Nov 17 14:37:43 2012 
+Read 118250 items
+2249 exon combinations are skipped because they belong to different genes
+2.68% of reads @ 527 gene combinations are skipped
+
+291 Sat Nov 17 14:37:46 2012 
+Read 119322 items
+2570 exon combinations are skipped because they belong to different genes
+2.41% of reads @ 490 gene combinations are skipped
+
+292 Sat Nov 17 14:37:49 2012 
+Read 154102 items
+3759 exon combinations are skipped because they belong to different genes
+2.95% of reads @ 556 gene combinations are skipped
+
+293 Sat Nov 17 14:37:53 2012 
+Read 105298 items
+2385 exon combinations are skipped because they belong to different genes
+1.99% of reads @ 507 gene combinations are skipped
+
+294 Sat Nov 17 14:37:56 2012 
+Read 144160 items
+3433 exon combinations are skipped because they belong to different genes
+2.29% of reads @ 501 gene combinations are skipped
+
+295 Sat Nov 17 14:38:00 2012 
+Read 133952 items
+4274 exon combinations are skipped because they belong to different genes
+2.14% of reads @ 459 gene combinations are skipped
+
+296 Sat Nov 17 14:38:04 2012 
+Read 141472 items
+4590 exon combinations are skipped because they belong to different genes
+2.13% of reads @ 504 gene combinations are skipped
+
+297 Sat Nov 17 14:38:08 2012 
+Read 171792 items
+3846 exon combinations are skipped because they belong to different genes
+3.18% of reads @ 572 gene combinations are skipped
+
+298 Sat Nov 17 14:38:13 2012 
+Read 126110 items
+1973 exon combinations are skipped because they belong to different genes
+2.67% of reads @ 498 gene combinations are skipped
+
+299 Sat Nov 17 14:38:16 2012 
+Read 115028 items
+1585 exon combinations are skipped because they belong to different genes
+2.25% of reads @ 438 gene combinations are skipped
+
+300 Sat Nov 17 14:38:20 2012 
+Read 148434 items
+3107 exon combinations are skipped because they belong to different genes
+2.68% of reads @ 584 gene combinations are skipped
+
+301 Sat Nov 17 14:38:24 2012 
+Read 163018 items
+6611 exon combinations are skipped because they belong to different genes
+2.09% of reads @ 526 gene combinations are skipped
+
+302 Sat Nov 17 14:38:28 2012 
+Read 155894 items
+5748 exon combinations are skipped because they belong to different genes
+2.49% of reads @ 531 gene combinations are skipped
+
+303 Sat Nov 17 14:38:32 2012 
+Read 122276 items
+3572 exon combinations are skipped because they belong to different genes
+2.43% of reads @ 468 gene combinations are skipped
+
+304 Sat Nov 17 14:38:36 2012 
+Read 140974 items
+3329 exon combinations are skipped because they belong to different genes
+2.46% of reads @ 535 gene combinations are skipped
+
+305 Sat Nov 17 14:38:40 2012 
+Read 143038 items
+2509 exon combinations are skipped because they belong to different genes
+2.48% of reads @ 570 gene combinations are skipped
+
+306 Sat Nov 17 14:38:44 2012 
+Read 152576 items
+4016 exon combinations are skipped because they belong to different genes
+1.63% of reads @ 503 gene combinations are skipped
+
+307 Sat Nov 17 14:38:48 2012 
+Read 69312 items
+1179 exon combinations are skipped because they belong to different genes
+3.29% of reads @ 396 gene combinations are skipped
+
+308 Sat Nov 17 14:38:50 2012 
+Read 118518 items
+3083 exon combinations are skipped because they belong to different genes
+2.01% of reads @ 435 gene combinations are skipped
+
+309 Sat Nov 17 14:38:53 2012 
+Read 145080 items
+4015 exon combinations are skipped because they belong to different genes
+2.3% of reads @ 536 gene combinations are skipped
+
+310 Sat Nov 17 14:38:57 2012 
+Read 119346 items
+2153 exon combinations are skipped because they belong to different genes
+3.8% of reads @ 519 gene combinations are skipped
+
+311 Sat Nov 17 14:39:00 2012 
+Read 93948 items
+2084 exon combinations are skipped because they belong to different genes
+3.3% of reads @ 391 gene combinations are skipped
+
+312 Sat Nov 17 14:39:03 2012 
+Read 114062 items
+2548 exon combinations are skipped because they belong to different genes
+2.14% of reads @ 493 gene combinations are skipped
+
+313 Sat Nov 17 14:39:06 2012 
+Read 109726 items
+2987 exon combinations are skipped because they belong to different genes
+2.1% of reads @ 432 gene combinations are skipped
+
+314 Sat Nov 17 14:39:09 2012 
+Read 125678 items
+2839 exon combinations are skipped because they belong to different genes
+2.39% of reads @ 469 gene combinations are skipped
+
+315 Sat Nov 17 14:39:12 2012 
+Read 95916 items
+1406 exon combinations are skipped because they belong to different genes
+2.45% of reads @ 401 gene combinations are skipped
+
+316 Sat Nov 17 14:39:15 2012 
+Read 101182 items
+5565 exon combinations are skipped because they belong to different genes
+2.64% of reads @ 431 gene combinations are skipped
+
+317 Sat Nov 17 14:39:18 2012 
+Read 139262 items
+4278 exon combinations are skipped because they belong to different genes
+2.14% of reads @ 495 gene combinations are skipped
+
+318 Sat Nov 17 14:39:21 2012 
+Read 90140 items
+1416 exon combinations are skipped because they belong to different genes
+2.44% of reads @ 438 gene combinations are skipped
+
+319 Sat Nov 17 14:39:24 2012 
+Read 119682 items
+3245 exon combinations are skipped because they belong to different genes
+3.1% of reads @ 521 gene combinations are skipped
+
+320 Sat Nov 17 14:39:28 2012 
+Read 145774 items
+4606 exon combinations are skipped because they belong to different genes
+1.94% of reads @ 483 gene combinations are skipped
+
+321 Sat Nov 17 14:39:31 2012 
+Read 135490 items
+3333 exon combinations are skipped because they belong to different genes
+2.39% of reads @ 495 gene combinations are skipped
+
+322 Sat Nov 17 14:39:35 2012 
+Read 119504 items
+2780 exon combinations are skipped because they belong to different genes
+2% of reads @ 475 gene combinations are skipped
+
+323 Sat Nov 17 14:39:39 2012 
+Read 132416 items
+2703 exon combinations are skipped because they belong to different genes
+2.08% of reads @ 514 gene combinations are skipped
+
+324 Sat Nov 17 14:39:42 2012 
+Read 135368 items
+3883 exon combinations are skipped because they belong to different genes
+2.31% of reads @ 526 gene combinations are skipped
+
+325 Sat Nov 17 14:39:46 2012 
+Read 138942 items
+3795 exon combinations are skipped because they belong to different genes
+2.21% of reads @ 571 gene combinations are skipped
+
+326 Sat Nov 17 14:39:50 2012 
+Read 135038 items
+3030 exon combinations are skipped because they belong to different genes
+2.97% of reads @ 496 gene combinations are skipped
+
+327 Sat Nov 17 14:39:53 2012 
+Read 132268 items
+3265 exon combinations are skipped because they belong to different genes
+2.35% of reads @ 592 gene combinations are skipped
+
+328 Sat Nov 17 14:39:57 2012 
+Read 115206 items
+2206 exon combinations are skipped because they belong to different genes
+2.78% of reads @ 464 gene combinations are skipped
+
+329 Sat Nov 17 14:40:00 2012 
+Read 117770 items
+2570 exon combinations are skipped because they belong to different genes
+2.51% of reads @ 466 gene combinations are skipped
+
+330 Sat Nov 17 14:40:03 2012 
+Read 150336 items
+2989 exon combinations are skipped because they belong to different genes
+2.13% of reads @ 531 gene combinations are skipped
+
+331 Sat Nov 17 14:40:08 2012 
+Read 132730 items
+3231 exon combinations are skipped because they belong to different genes
+2.42% of reads @ 516 gene combinations are skipped
+
+332 Sat Nov 17 14:40:11 2012 
+Read 120090 items
+1948 exon combinations are skipped because they belong to different genes
+2.57% of reads @ 526 gene combinations are skipped
+
+333 Sat Nov 17 14:40:14 2012 
+Read 144776 items
+4622 exon combinations are skipped because they belong to different genes
+2.85% of reads @ 457 gene combinations are skipped
+
+334 Sat Nov 17 14:40:19 2012 
+Read 139906 items
+2725 exon combinations are skipped because they belong to different genes
+2.52% of reads @ 511 gene combinations are skipped
+
+335 Sat Nov 17 14:40:22 2012 
+Read 134520 items
+2492 exon combinations are skipped because they belong to different genes
+3.27% of reads @ 511 gene combinations are skipped
+
+336 Sat Nov 17 14:40:26 2012 
+Read 131018 items
+3914 exon combinations are skipped because they belong to different genes
+1.85% of reads @ 455 gene combinations are skipped
+
+337 Sat Nov 17 14:40:30 2012 
+Read 118388 items
+2591 exon combinations are skipped because they belong to different genes
+2.53% of reads @ 415 gene combinations are skipped
+
+338 Sat Nov 17 14:40:33 2012 
+Read 138654 items
+3360 exon combinations are skipped because they belong to different genes
+3.1% of reads @ 507 gene combinations are skipped
+
+339 Sat Nov 17 14:40:37 2012 
+Read 141948 items
+3895 exon combinations are skipped because they belong to different genes
+2.4% of reads @ 481 gene combinations are skipped
+
+340 Sat Nov 17 14:40:41 2012 
+Read 122332 items
+3163 exon combinations are skipped because they belong to different genes
+2.66% of reads @ 449 gene combinations are skipped
+
+341 Sat Nov 17 14:40:44 2012 
+Read 139726 items
+7559 exon combinations are skipped because they belong to different genes
+2.42% of reads @ 496 gene combinations are skipped
+
+342 Sat Nov 17 14:40:48 2012 
+Read 160812 items
+7235 exon combinations are skipped because they belong to different genes
+2.13% of reads @ 557 gene combinations are skipped
+
+343 Sat Nov 17 14:40:52 2012 
+Read 155326 items
+3558 exon combinations are skipped because they belong to different genes
+2.5% of reads @ 550 gene combinations are skipped
+
+344 Sat Nov 17 14:40:57 2012 
+Read 143044 items
+4644 exon combinations are skipped because they belong to different genes
+2.86% of reads @ 498 gene combinations are skipped
+
+345 Sat Nov 17 14:41:01 2012 
+Read 137558 items
+4134 exon combinations are skipped because they belong to different genes
+2.87% of reads @ 538 gene combinations are skipped
+
+346 Sat Nov 17 14:41:05 2012 
+Read 133542 items
+6278 exon combinations are skipped because they belong to different genes
+2.65% of reads @ 466 gene combinations are skipped
+
+347 Sat Nov 17 14:41:08 2012 
+Read 104526 items
+3296 exon combinations are skipped because they belong to different genes
+2.08% of reads @ 438 gene combinations are skipped
+
+348 Sat Nov 17 14:41:11 2012 
+Read 129610 items
+4295 exon combinations are skipped because they belong to different genes
+1.96% of reads @ 536 gene combinations are skipped
+
+349 Sat Nov 17 14:41:15 2012 
+Read 157230 items
+7453 exon combinations are skipped because they belong to different genes
+2.15% of reads @ 518 gene combinations are skipped
+
+350 Sat Nov 17 14:41:19 2012 
+Read 160050 items
+5480 exon combinations are skipped because they belong to different genes
+2.6% of reads @ 530 gene combinations are skipped
+
+351 Sat Nov 17 14:41:24 2012 
+Read 134882 items
+3549 exon combinations are skipped because they belong to different genes
+2.66% of reads @ 498 gene combinations are skipped
+
+352 Sat Nov 17 14:41:27 2012 
+Read 139316 items
+3939 exon combinations are skipped because they belong to different genes
+2.01% of reads @ 469 gene combinations are skipped
+
+353 Sat Nov 17 14:41:31 2012 
+Read 158264 items
+9063 exon combinations are skipped because they belong to different genes
+2.32% of reads @ 548 gene combinations are skipped
+
+354 Sat Nov 17 14:41:36 2012 
+Read 188306 items
+10684 exon combinations are skipped because they belong to different genes
+2.05% of reads @ 552 gene combinations are skipped
+
+355 Sat Nov 17 14:41:41 2012 
+Read 104482 items
+2996 exon combinations are skipped because they belong to different genes
+2.74% of reads @ 471 gene combinations are skipped
+
+356 Sat Nov 17 14:41:44 2012 
+Read 99996 items
+2799 exon combinations are skipped because they belong to different genes
+2.39% of reads @ 429 gene combinations are skipped
+
+357 Sat Nov 17 14:41:47 2012 
+Read 123440 items
+2996 exon combinations are skipped because they belong to different genes
+3.51% of reads @ 453 gene combinations are skipped
+
+358 Sat Nov 17 14:41:50 2012 
+Read 97802 items
+1826 exon combinations are skipped because they belong to different genes
+2.09% of reads @ 459 gene combinations are skipped
+
+359 Sat Nov 17 14:41:53 2012 
+Read 140390 items
+4314 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 546 gene combinations are skipped
+
+360 Sat Nov 17 14:41:57 2012 
+Read 166674 items
+5111 exon combinations are skipped because they belong to different genes
+1.89% of reads @ 617 gene combinations are skipped
+
+361 Sat Nov 17 14:42:01 2012 
+Read 147770 items
+4451 exon combinations are skipped because they belong to different genes
+1.89% of reads @ 530 gene combinations are skipped
+
+362 Sat Nov 17 14:42:06 2012 
+Read 131246 items
+3920 exon combinations are skipped because they belong to different genes
+2.58% of reads @ 489 gene combinations are skipped
+
+363 Sat Nov 17 14:42:09 2012 
+Read 118192 items
+4630 exon combinations are skipped because they belong to different genes
+2.15% of reads @ 480 gene combinations are skipped
+
+364 Sat Nov 17 14:42:13 2012 
+Read 161110 items
+6584 exon combinations are skipped because they belong to different genes
+3.09% of reads @ 553 gene combinations are skipped
+
+365 Sat Nov 17 14:42:17 2012 
+Read 96498 items
+4315 exon combinations are skipped because they belong to different genes
+2.22% of reads @ 487 gene combinations are skipped
+
+366 Sat Nov 17 14:42:20 2012 
+Read 120746 items
+3583 exon combinations are skipped because they belong to different genes
+1.95% of reads @ 466 gene combinations are skipped
+
+367 Sat Nov 17 14:42:23 2012 
+Read 120424 items
+6723 exon combinations are skipped because they belong to different genes
+2.24% of reads @ 434 gene combinations are skipped
+
+368 Sat Nov 17 14:42:26 2012 
+Read 153446 items
+4454 exon combinations are skipped because they belong to different genes
+2.5% of reads @ 527 gene combinations are skipped
+
+369 Sat Nov 17 14:42:31 2012 
+Read 163584 items
+6316 exon combinations are skipped because they belong to different genes
+2.39% of reads @ 548 gene combinations are skipped
+
+370 Sat Nov 17 14:42:35 2012 
+Read 118348 items
+3236 exon combinations are skipped because they belong to different genes
+2.02% of reads @ 488 gene combinations are skipped
+
+371 Sat Nov 17 14:42:38 2012 
+Read 169946 items
+6061 exon combinations are skipped because they belong to different genes
+2.28% of reads @ 529 gene combinations are skipped
+
+372 Sat Nov 17 14:42:43 2012 
+Read 152212 items
+4010 exon combinations are skipped because they belong to different genes
+2.45% of reads @ 562 gene combinations are skipped
+
+373 Sat Nov 17 14:42:47 2012 
+Read 148892 items
+3210 exon combinations are skipped because they belong to different genes
+2.72% of reads @ 568 gene combinations are skipped
+
+374 Sat Nov 17 14:42:51 2012 
+Read 81474 items
+2573 exon combinations are skipped because they belong to different genes
+2.83% of reads @ 400 gene combinations are skipped
+
+375 Sat Nov 17 14:42:53 2012 
+Read 118280 items
+4726 exon combinations are skipped because they belong to different genes
+1.54% of reads @ 467 gene combinations are skipped
+
+376 Sat Nov 17 14:42:57 2012 
+Read 132192 items
+3206 exon combinations are skipped because they belong to different genes
+2.57% of reads @ 499 gene combinations are skipped
+
+377 Sat Nov 17 14:43:00 2012 
+Read 125408 items
+3438 exon combinations are skipped because they belong to different genes
+2.47% of reads @ 522 gene combinations are skipped
+
+378 Sat Nov 17 14:43:04 2012 
+Read 125322 items
+4576 exon combinations are skipped because they belong to different genes
+2.22% of reads @ 533 gene combinations are skipped
+
+379 Sat Nov 17 14:43:07 2012 
+Read 153320 items
+4475 exon combinations are skipped because they belong to different genes
+2.37% of reads @ 504 gene combinations are skipped
+
+380 Sat Nov 17 14:43:11 2012 
+Read 166106 items
+5929 exon combinations are skipped because they belong to different genes
+2.08% of reads @ 549 gene combinations are skipped
+
+381 Sat Nov 17 14:43:16 2012 
+Read 151434 items
+8370 exon combinations are skipped because they belong to different genes
+1.83% of reads @ 514 gene combinations are skipped
+
+382 Sat Nov 17 14:43:20 2012 
+Read 169862 items
+5039 exon combinations are skipped because they belong to different genes
+1.79% of reads @ 543 gene combinations are skipped
+
+383 Sat Nov 17 14:43:25 2012 
+Read 153844 items
+8988 exon combinations are skipped because they belong to different genes
+2.51% of reads @ 507 gene combinations are skipped
+
+384 Sat Nov 17 14:43:29 2012 
+Read 164532 items
+7869 exon combinations are skipped because they belong to different genes
+4.65% of reads @ 508 gene combinations are skipped
+
+385 Sat Nov 17 14:43:34 2012 
+Read 134162 items
+3693 exon combinations are skipped because they belong to different genes
+2.5% of reads @ 532 gene combinations are skipped
+
+386 Sat Nov 17 14:43:37 2012 
+Read 173834 items
+6085 exon combinations are skipped because they belong to different genes
+2.23% of reads @ 530 gene combinations are skipped
+
+387 Sat Nov 17 14:43:42 2012 
+Read 132966 items
+2766 exon combinations are skipped because they belong to different genes
+2% of reads @ 524 gene combinations are skipped
+
+388 Sat Nov 17 14:43:46 2012 
+Read 110956 items
+3031 exon combinations are skipped because they belong to different genes
+2.57% of reads @ 480 gene combinations are skipped
+
+389 Sat Nov 17 14:43:49 2012 
+Read 146282 items
+5325 exon combinations are skipped because they belong to different genes
+1.89% of reads @ 479 gene combinations are skipped
+
+390 Sat Nov 17 14:43:53 2012 
+Read 95104 items
+2606 exon combinations are skipped because they belong to different genes
+2.39% of reads @ 501 gene combinations are skipped
+
+391 Sat Nov 17 14:43:56 2012 
+Read 122026 items
+4204 exon combinations are skipped because they belong to different genes
+3.5% of reads @ 445 gene combinations are skipped
+
+392 Sat Nov 17 14:43:59 2012 
+Read 113754 items
+2453 exon combinations are skipped because they belong to different genes
+2.55% of reads @ 461 gene combinations are skipped
+
+393 Sat Nov 17 14:44:02 2012 
+Read 105318 items
+3784 exon combinations are skipped because they belong to different genes
+2.26% of reads @ 409 gene combinations are skipped
+
+394 Sat Nov 17 14:44:05 2012 
+Read 139174 items
+4798 exon combinations are skipped because they belong to different genes
+2.75% of reads @ 512 gene combinations are skipped
+
+395 Sat Nov 17 14:44:09 2012 
+Read 131464 items
+3187 exon combinations are skipped because they belong to different genes
+2.01% of reads @ 522 gene combinations are skipped
+
+396 Sat Nov 17 14:44:12 2012 
+Read 154356 items
+6080 exon combinations are skipped because they belong to different genes
+2.47% of reads @ 503 gene combinations are skipped
+
+397 Sat Nov 17 14:44:17 2012 
+Read 160658 items
+7305 exon combinations are skipped because they belong to different genes
+2.07% of reads @ 493 gene combinations are skipped
+
+398 Sat Nov 17 14:44:21 2012 
+Read 143520 items
+3846 exon combinations are skipped because they belong to different genes
+3.24% of reads @ 553 gene combinations are skipped
+
+399 Sat Nov 17 14:44:25 2012 
+Read 132102 items
+7375 exon combinations are skipped because they belong to different genes
+1.92% of reads @ 546 gene combinations are skipped
+
+400 Sat Nov 17 14:44:29 2012 
+Read 141134 items
+4951 exon combinations are skipped because they belong to different genes
+2.35% of reads @ 515 gene combinations are skipped
+
+401 Sat Nov 17 14:44:33 2012 
+Read 120162 items
+2986 exon combinations are skipped because they belong to different genes
+3.47% of reads @ 509 gene combinations are skipped
+
+402 Sat Nov 17 14:44:36 2012 
+Read 179606 items
+7791 exon combinations are skipped because they belong to different genes
+2.59% of reads @ 558 gene combinations are skipped
+
+403 Sat Nov 17 14:44:41 2012 
+Read 140394 items
+3166 exon combinations are skipped because they belong to different genes
+2.62% of reads @ 534 gene combinations are skipped
+
+404 Sat Nov 17 14:44:45 2012 
+Read 142068 items
+8722 exon combinations are skipped because they belong to different genes
+1.81% of reads @ 509 gene combinations are skipped
+
+405 Sat Nov 17 14:44:49 2012 
+Read 137594 items
+5069 exon combinations are skipped because they belong to different genes
+2.34% of reads @ 502 gene combinations are skipped
+
+406 Sat Nov 17 14:44:53 2012 
+Read 179014 items
+9272 exon combinations are skipped because they belong to different genes
+2.12% of reads @ 526 gene combinations are skipped
+
+407 Sat Nov 17 14:44:58 2012 
+Read 191706 items
+7587 exon combinations are skipped because they belong to different genes
+1.93% of reads @ 586 gene combinations are skipped
+
+408 Sat Nov 17 14:45:03 2012 
+Read 123974 items
+5831 exon combinations are skipped because they belong to different genes
+2.32% of reads @ 475 gene combinations are skipped
+
+409 Sat Nov 17 14:45:07 2012 
+Read 154486 items
+6249 exon combinations are skipped because they belong to different genes
+1.92% of reads @ 514 gene combinations are skipped
+
+410 Sat Nov 17 14:45:11 2012 
+Read 112710 items
+5575 exon combinations are skipped because they belong to different genes
+1.95% of reads @ 451 gene combinations are skipped
+
+411 Sat Nov 17 14:45:14 2012 
+Read 173110 items
+7430 exon combinations are skipped because they belong to different genes
+1.82% of reads @ 546 gene combinations are skipped
+
+412 Sat Nov 17 14:45:19 2012 
+Read 136560 items
+5111 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 458 gene combinations are skipped
+
+413 Sat Nov 17 14:45:23 2012 
+Read 104144 items
+3179 exon combinations are skipped because they belong to different genes
+2.9% of reads @ 493 gene combinations are skipped
+
+414 Sat Nov 17 14:45:26 2012 
+Read 109802 items
+2162 exon combinations are skipped because they belong to different genes
+2.29% of reads @ 496 gene combinations are skipped
+
+415 Sat Nov 17 14:45:29 2012 
+Read 125720 items
+3285 exon combinations are skipped because they belong to different genes
+2.29% of reads @ 454 gene combinations are skipped
+
+416 Sat Nov 17 14:45:33 2012 
+Read 104798 items
+6129 exon combinations are skipped because they belong to different genes
+2.08% of reads @ 457 gene combinations are skipped
+
+417 Sat Nov 17 14:45:35 2012 
+Read 136050 items
+5674 exon combinations are skipped because they belong to different genes
+2.52% of reads @ 525 gene combinations are skipped
+
+418 Sat Nov 17 14:45:39 2012 
+Read 139560 items
+7265 exon combinations are skipped because they belong to different genes
+2.09% of reads @ 479 gene combinations are skipped
+
+419 Sat Nov 17 14:45:43 2012 
+Read 104202 items
+3659 exon combinations are skipped because they belong to different genes
+2.44% of reads @ 429 gene combinations are skipped
+
+420 Sat Nov 17 14:45:46 2012 
+Read 110168 items
+4175 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 492 gene combinations are skipped
+
+421 Sat Nov 17 14:45:49 2012 
+Read 64886 items
+1162 exon combinations are skipped because they belong to different genes
+4.09% of reads @ 347 gene combinations are skipped
+
+422 Sat Nov 17 14:45:51 2012 
+Read 137430 items
+6107 exon combinations are skipped because they belong to different genes
+3.29% of reads @ 504 gene combinations are skipped
+
+423 Sat Nov 17 14:45:55 2012 
+Read 128646 items
+4655 exon combinations are skipped because they belong to different genes
+3.28% of reads @ 468 gene combinations are skipped
+
+424 Sat Nov 17 14:45:58 2012 
+Read 152386 items
+9738 exon combinations are skipped because they belong to different genes
+2.03% of reads @ 569 gene combinations are skipped
+
+425 Sat Nov 17 14:46:02 2012 
+Read 82408 items
+2555 exon combinations are skipped because they belong to different genes
+2.43% of reads @ 422 gene combinations are skipped
+
+426 Sat Nov 17 14:46:05 2012 
+Read 132042 items
+5758 exon combinations are skipped because they belong to different genes
+2.43% of reads @ 544 gene combinations are skipped
+
+427 Sat Nov 17 14:46:09 2012 
+Read 155612 items
+6749 exon combinations are skipped because they belong to different genes
+1.97% of reads @ 574 gene combinations are skipped
+
+428 Sat Nov 17 14:46:12 2012 
+Read 151686 items
+5786 exon combinations are skipped because they belong to different genes
+3.22% of reads @ 539 gene combinations are skipped
+
+429 Sat Nov 17 14:46:17 2012 
+Read 116484 items
+2779 exon combinations are skipped because they belong to different genes
+2.41% of reads @ 538 gene combinations are skipped
+
+430 Sat Nov 17 14:46:20 2012 
+Read 117914 items
+2868 exon combinations are skipped because they belong to different genes
+2.72% of reads @ 483 gene combinations are skipped
+
+431 Sat Nov 17 14:46:23 2012 
+Read 114712 items
+2387 exon combinations are skipped because they belong to different genes
+2.48% of reads @ 486 gene combinations are skipped
+
+432 Sat Nov 17 14:46:26 2012 
+Read 135852 items
+3987 exon combinations are skipped because they belong to different genes
+2.05% of reads @ 525 gene combinations are skipped
+
+433 Sat Nov 17 14:46:30 2012 
+Read 127182 items
+5397 exon combinations are skipped because they belong to different genes
+1.61% of reads @ 485 gene combinations are skipped
+
+434 Sat Nov 17 14:46:33 2012 
+Read 170736 items
+7377 exon combinations are skipped because they belong to different genes
+2.2% of reads @ 552 gene combinations are skipped
+
+435 Sat Nov 17 14:46:38 2012 
+Read 111036 items
+5347 exon combinations are skipped because they belong to different genes
+2.01% of reads @ 475 gene combinations are skipped
+
+436 Sat Nov 17 14:46:42 2012 
+Read 151720 items
+6338 exon combinations are skipped because they belong to different genes
+2.34% of reads @ 489 gene combinations are skipped
+
+437 Sat Nov 17 14:46:46 2012 
+Read 119148 items
+3655 exon combinations are skipped because they belong to different genes
+2.23% of reads @ 468 gene combinations are skipped
+
+438 Sat Nov 17 14:46:49 2012 
+Read 109084 items
+3576 exon combinations are skipped because they belong to different genes
+2.24% of reads @ 445 gene combinations are skipped
+
+439 Sat Nov 17 14:46:52 2012 
+Read 131282 items
+3994 exon combinations are skipped because they belong to different genes
+2.69% of reads @ 475 gene combinations are skipped
+
+440 Sat Nov 17 14:46:55 2012 
+Read 109568 items
+2350 exon combinations are skipped because they belong to different genes
+2.05% of reads @ 466 gene combinations are skipped
+
+441 Sat Nov 17 14:46:58 2012 
+Read 140602 items
+5273 exon combinations are skipped because they belong to different genes
+3.38% of reads @ 487 gene combinations are skipped
+
+442 Sat Nov 17 14:47:02 2012 
+Read 124912 items
+2926 exon combinations are skipped because they belong to different genes
+2.58% of reads @ 461 gene combinations are skipped
+
+443 Sat Nov 17 14:47:06 2012 
+Read 133126 items
+6518 exon combinations are skipped because they belong to different genes
+1.98% of reads @ 444 gene combinations are skipped
+
+444 Sat Nov 17 14:47:09 2012 
+Read 133576 items
+3231 exon combinations are skipped because they belong to different genes
+2.37% of reads @ 491 gene combinations are skipped
+
+445 Sat Nov 17 14:47:13 2012 
+Read 115800 items
+2826 exon combinations are skipped because they belong to different genes
+1.66% of reads @ 458 gene combinations are skipped
+
+446 Sat Nov 17 14:47:16 2012 
+Read 134928 items
+6330 exon combinations are skipped because they belong to different genes
+2.72% of reads @ 506 gene combinations are skipped
+
+447 Sat Nov 17 14:47:20 2012 
+Read 146210 items
+5652 exon combinations are skipped because they belong to different genes
+2.16% of reads @ 521 gene combinations are skipped
+
+448 Sat Nov 17 14:47:24 2012 
+Read 141818 items
+6402 exon combinations are skipped because they belong to different genes
+2.7% of reads @ 610 gene combinations are skipped
+
+449 Sat Nov 17 14:47:28 2012 
+Read 131266 items
+5747 exon combinations are skipped because they belong to different genes
+2.49% of reads @ 457 gene combinations are skipped
+
+450 Sat Nov 17 14:47:31 2012 
+Read 167188 items
+8144 exon combinations are skipped because they belong to different genes
+2.22% of reads @ 534 gene combinations are skipped
+
+451 Sat Nov 17 14:47:36 2012 
+Read 132082 items
+4496 exon combinations are skipped because they belong to different genes
+2.27% of reads @ 501 gene combinations are skipped
+
+452 Sat Nov 17 14:47:40 2012 
+Read 147178 items
+4590 exon combinations are skipped because they belong to different genes
+2.17% of reads @ 517 gene combinations are skipped
+
+453 Sat Nov 17 14:47:44 2012 
+Read 143194 items
+7073 exon combinations are skipped because they belong to different genes
+2.38% of reads @ 506 gene combinations are skipped
+
+454 Sat Nov 17 14:47:48 2012 
+Read 127484 items
+5559 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 461 gene combinations are skipped
+
+455 Sat Nov 17 14:47:51 2012 
+Read 139542 items
+5179 exon combinations are skipped because they belong to different genes
+2.21% of reads @ 534 gene combinations are skipped
+
+456 Sat Nov 17 14:47:55 2012 
+Read 159774 items
+6022 exon combinations are skipped because they belong to different genes
+1.86% of reads @ 567 gene combinations are skipped
+
+457 Sat Nov 17 14:48:00 2012 
+Read 138612 items
+5720 exon combinations are skipped because they belong to different genes
+2.05% of reads @ 494 gene combinations are skipped
+
+458 Sat Nov 17 14:48:04 2012 
+Read 148460 items
+6162 exon combinations are skipped because they belong to different genes
+2.72% of reads @ 546 gene combinations are skipped
+
+459 Sat Nov 17 14:48:08 2012 
+Read 129048 items
+3725 exon combinations are skipped because they belong to different genes
+1.62% of reads @ 526 gene combinations are skipped
+
+460 Sat Nov 17 14:48:12 2012 
+Read 137356 items
+4576 exon combinations are skipped because they belong to different genes
+2.99% of reads @ 497 gene combinations are skipped
+
+461 Sat Nov 17 14:48:16 2012 
+Read 136816 items
+3431 exon combinations are skipped because they belong to different genes
+2.27% of reads @ 507 gene combinations are skipped
+
+462 Sat Nov 17 14:48:19 2012 
+Read 124206 items
+4091 exon combinations are skipped because they belong to different genes
+2.32% of reads @ 471 gene combinations are skipped
+
+463 Sat Nov 17 14:48:23 2012 
+Read 134956 items
+5009 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 518 gene combinations are skipped
+
+464 Sat Nov 17 14:48:27 2012 
+Read 163094 items
+7793 exon combinations are skipped because they belong to different genes
+2.2% of reads @ 549 gene combinations are skipped
+
+465 Sat Nov 17 14:48:31 2012 
+Read 157642 items
+6316 exon combinations are skipped because they belong to different genes
+2.46% of reads @ 528 gene combinations are skipped
+
+466 Sat Nov 17 14:48:35 2012 
+Read 165200 items
+7690 exon combinations are skipped because they belong to different genes
+1.95% of reads @ 563 gene combinations are skipped
+
+467 Sat Nov 17 14:48:40 2012 
+Read 142956 items
+5907 exon combinations are skipped because they belong to different genes
+2.1% of reads @ 503 gene combinations are skipped
+
+468 Sat Nov 17 14:48:44 2012 
+Read 133636 items
+4683 exon combinations are skipped because they belong to different genes
+2.71% of reads @ 521 gene combinations are skipped
+
+469 Sat Nov 17 14:48:48 2012 
+Read 139810 items
+7561 exon combinations are skipped because they belong to different genes
+2.09% of reads @ 484 gene combinations are skipped
+
+470 Sat Nov 17 14:48:52 2012 
+Read 140922 items
+5841 exon combinations are skipped because they belong to different genes
+2.77% of reads @ 544 gene combinations are skipped
+
+471 Sat Nov 17 14:48:56 2012 
+Read 146268 items
+5420 exon combinations are skipped because they belong to different genes
+2.3% of reads @ 513 gene combinations are skipped
+
+472 Sat Nov 17 14:49:00 2012 
+Read 132286 items
+5085 exon combinations are skipped because they belong to different genes
+2.63% of reads @ 491 gene combinations are skipped
+
+473 Sat Nov 17 14:49:03 2012 
+Read 133136 items
+5477 exon combinations are skipped because they belong to different genes
+2.75% of reads @ 482 gene combinations are skipped
+
+474 Sat Nov 17 14:49:07 2012 
+Read 171730 items
+7581 exon combinations are skipped because they belong to different genes
+2.67% of reads @ 590 gene combinations are skipped
+
+475 Sat Nov 17 14:49:12 2012 
+Read 157434 items
+6506 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 526 gene combinations are skipped
+
+476 Sat Nov 17 14:49:16 2012 
+Read 172492 items
+6316 exon combinations are skipped because they belong to different genes
+1.75% of reads @ 566 gene combinations are skipped
+
+477 Sat Nov 17 14:49:21 2012 
+Read 151602 items
+6477 exon combinations are skipped because they belong to different genes
+2.61% of reads @ 536 gene combinations are skipped
+
+478 Sat Nov 17 14:49:25 2012 
+Read 164648 items
+8670 exon combinations are skipped because they belong to different genes
+2.2% of reads @ 566 gene combinations are skipped
+
+479 Sat Nov 17 14:49:30 2012 
+Read 114134 items
+5287 exon combinations are skipped because they belong to different genes
+1.45% of reads @ 460 gene combinations are skipped
+
+480 Sat Nov 17 14:49:33 2012 
+Read 145282 items
+6239 exon combinations are skipped because they belong to different genes
+2.32% of reads @ 538 gene combinations are skipped
+
+481 Sat Nov 17 14:49:37 2012 
+Read 148608 items
+6866 exon combinations are skipped because they belong to different genes
+1.76% of reads @ 552 gene combinations are skipped
+
+482 Sat Nov 17 14:49:42 2012 
+Read 150864 items
+6604 exon combinations are skipped because they belong to different genes
+2.78% of reads @ 530 gene combinations are skipped
+
+483 Sat Nov 17 14:49:46 2012 
+Read 182122 items
+7145 exon combinations are skipped because they belong to different genes
+1.85% of reads @ 599 gene combinations are skipped
+
+484 Sat Nov 17 14:49:51 2012 
+Read 134206 items
+4616 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 506 gene combinations are skipped
+
+485 Sat Nov 17 14:49:54 2012 
+Read 102094 items
+3603 exon combinations are skipped because they belong to different genes
+2.45% of reads @ 435 gene combinations are skipped
+
+486 Sat Nov 17 14:49:57 2012 
+Read 162354 items
+5586 exon combinations are skipped because they belong to different genes
+2.61% of reads @ 546 gene combinations are skipped
+
+487 Sat Nov 17 14:50:02 2012 
+Read 161096 items
+9460 exon combinations are skipped because they belong to different genes
+2.14% of reads @ 506 gene combinations are skipped
+
+488 Sat Nov 17 14:50:06 2012 
+Read 123290 items
+3420 exon combinations are skipped because they belong to different genes
+2.18% of reads @ 482 gene combinations are skipped
+
+489 Sat Nov 17 14:50:09 2012 
+Read 172302 items
+14175 exon combinations are skipped because they belong to different genes
+2.43% of reads @ 533 gene combinations are skipped
+
+490 Sat Nov 17 14:50:14 2012 
+Read 115632 items
+4373 exon combinations are skipped because they belong to different genes
+2.78% of reads @ 470 gene combinations are skipped
+
+491 Sat Nov 17 14:50:18 2012 
+Read 51446 items
+852 exon combinations are skipped because they belong to different genes
+2.25% of reads @ 320 gene combinations are skipped
+
+492 Sat Nov 17 14:50:19 2012 
+Read 139058 items
+4104 exon combinations are skipped because they belong to different genes
+2.69% of reads @ 505 gene combinations are skipped
+
+493 Sat Nov 17 14:50:23 2012 
+Read 156168 items
+6149 exon combinations are skipped because they belong to different genes
+2.77% of reads @ 560 gene combinations are skipped
+
+494 Sat Nov 17 14:50:27 2012 
+Read 162578 items
+5918 exon combinations are skipped because they belong to different genes
+2.43% of reads @ 566 gene combinations are skipped
+
+495 Sat Nov 17 14:50:32 2012 
+Read 143062 items
+5721 exon combinations are skipped because they belong to different genes
+2.36% of reads @ 527 gene combinations are skipped
+
+496 Sat Nov 17 14:50:36 2012 
+Read 137840 items
+5761 exon combinations are skipped because they belong to different genes
+2.85% of reads @ 520 gene combinations are skipped
+
+497 Sat Nov 17 14:50:40 2012 
+Read 145912 items
+7827 exon combinations are skipped because they belong to different genes
+3.2% of reads @ 521 gene combinations are skipped
+
+498 Sat Nov 17 14:50:44 2012 
+Read 110140 items
+3899 exon combinations are skipped because they belong to different genes
+2.13% of reads @ 463 gene combinations are skipped
+
+499 Sat Nov 17 14:50:47 2012 
+Read 112642 items
+5614 exon combinations are skipped because they belong to different genes
+2.42% of reads @ 413 gene combinations are skipped
+
+500 Sat Nov 17 14:50:50 2012 
+Read 157324 items
+4330 exon combinations are skipped because they belong to different genes
+2.36% of reads @ 585 gene combinations are skipped
+
+501 Sat Nov 17 14:50:54 2012 
+Read 164036 items
+7570 exon combinations are skipped because they belong to different genes
+2.1% of reads @ 555 gene combinations are skipped
+
+502 Sat Nov 17 14:50:59 2012 
+Read 155438 items
+6627 exon combinations are skipped because they belong to different genes
+3.22% of reads @ 525 gene combinations are skipped
+
+503 Sat Nov 17 14:51:03 2012 
+Read 100546 items
+2809 exon combinations are skipped because they belong to different genes
+2.51% of reads @ 498 gene combinations are skipped
+
+504 Sat Nov 17 14:51:06 2012 
+Read 102634 items
+1740 exon combinations are skipped because they belong to different genes
+2.27% of reads @ 515 gene combinations are skipped
+
+505 Sat Nov 17 14:51:09 2012 
+Read 128680 items
+3438 exon combinations are skipped because they belong to different genes
+2.11% of reads @ 522 gene combinations are skipped
+
+506 Sat Nov 17 14:51:12 2012 
+Read 136046 items
+5080 exon combinations are skipped because they belong to different genes
+2.02% of reads @ 506 gene combinations are skipped
+
+507 Sat Nov 17 14:51:16 2012 
+Read 146326 items
+4490 exon combinations are skipped because they belong to different genes
+2.21% of reads @ 511 gene combinations are skipped
+
+508 Sat Nov 17 14:51:20 2012 
+Read 141050 items
+5037 exon combinations are skipped because they belong to different genes
+1.87% of reads @ 550 gene combinations are skipped
+
+509 Sat Nov 17 14:51:24 2012 
+Read 151646 items
+3941 exon combinations are skipped because they belong to different genes
+2.58% of reads @ 549 gene combinations are skipped
+
+510 Sat Nov 17 14:51:28 2012 
+Read 118504 items
+2914 exon combinations are skipped because they belong to different genes
+2.54% of reads @ 523 gene combinations are skipped
+
+511 Sat Nov 17 14:51:32 2012 
+Read 153198 items
+4033 exon combinations are skipped because they belong to different genes
+2.12% of reads @ 523 gene combinations are skipped
+
+512 Sat Nov 17 14:51:36 2012 
+Read 151724 items
+5159 exon combinations are skipped because they belong to different genes
+2.52% of reads @ 532 gene combinations are skipped
+
+513 Sat Nov 17 14:51:40 2012 
+Read 147970 items
+4166 exon combinations are skipped because they belong to different genes
+2.15% of reads @ 565 gene combinations are skipped
+
+514 Sat Nov 17 14:51:44 2012 
+Read 152290 items
+4900 exon combinations are skipped because they belong to different genes
+2.37% of reads @ 573 gene combinations are skipped
+
+515 Sat Nov 17 14:51:48 2012 
+Read 145854 items
+5019 exon combinations are skipped because they belong to different genes
+2.65% of reads @ 515 gene combinations are skipped
+
+516 Sat Nov 17 14:51:52 2012 
+Read 166498 items
+5736 exon combinations are skipped because they belong to different genes
+2.85% of reads @ 525 gene combinations are skipped
+
+517 Sat Nov 17 14:51:57 2012 
+Read 157234 items
+4222 exon combinations are skipped because they belong to different genes
+2.43% of reads @ 550 gene combinations are skipped
+
+518 Sat Nov 17 14:52:01 2012 
+Read 143334 items
+4148 exon combinations are skipped because they belong to different genes
+2.61% of reads @ 479 gene combinations are skipped
+
+519 Sat Nov 17 14:52:05 2012 
+Read 152618 items
+4186 exon combinations are skipped because they belong to different genes
+1.87% of reads @ 551 gene combinations are skipped
+
+520 Sat Nov 17 14:52:09 2012 
+Read 133652 items
+3188 exon combinations are skipped because they belong to different genes
+2.1% of reads @ 510 gene combinations are skipped
+
+521 Sat Nov 17 14:52:13 2012 
+Read 114078 items
+2721 exon combinations are skipped because they belong to different genes
+2.58% of reads @ 475 gene combinations are skipped
+
+522 Sat Nov 17 14:52:16 2012 
+Read 165068 items
+5013 exon combinations are skipped because they belong to different genes
+1.99% of reads @ 519 gene combinations are skipped
+
+523 Sat Nov 17 14:52:21 2012 
+Read 155646 items
+4381 exon combinations are skipped because they belong to different genes
+2.31% of reads @ 523 gene combinations are skipped
+
+524 Sat Nov 17 14:52:25 2012 
+Read 156568 items
+4809 exon combinations are skipped because they belong to different genes
+2.48% of reads @ 630 gene combinations are skipped
+
+525 Sat Nov 17 14:52:29 2012 
+Read 164018 items
+6406 exon combinations are skipped because they belong to different genes
+2.04% of reads @ 509 gene combinations are skipped
+
+526 Sat Nov 17 14:52:34 2012 
+Read 133328 items
+5431 exon combinations are skipped because they belong to different genes
+2.32% of reads @ 521 gene combinations are skipped
+
+527 Sat Nov 17 14:52:37 2012 
+Read 141858 items
+2813 exon combinations are skipped because they belong to different genes
+2.17% of reads @ 549 gene combinations are skipped
+
+528 Sat Nov 17 14:52:41 2012 
+Read 123026 items
+3154 exon combinations are skipped because they belong to different genes
+1.62% of reads @ 471 gene combinations are skipped
+
+529 Sat Nov 17 14:52:45 2012 
+Read 156898 items
+7868 exon combinations are skipped because they belong to different genes
+2.66% of reads @ 590 gene combinations are skipped
+
+530 Sat Nov 17 14:52:49 2012 
+Read 194998 items
+9400 exon combinations are skipped because they belong to different genes
+2.28% of reads @ 616 gene combinations are skipped
+
+531 Sat Nov 17 14:52:55 2012 
+Read 128608 items
+3547 exon combinations are skipped because they belong to different genes
+2.59% of reads @ 500 gene combinations are skipped
+
+532 Sat Nov 17 14:52:58 2012 
+Read 157068 items
+6658 exon combinations are skipped because they belong to different genes
+1.77% of reads @ 511 gene combinations are skipped
+
+533 Sat Nov 17 14:53:02 2012 
+Read 151320 items
+5740 exon combinations are skipped because they belong to different genes
+1.59% of reads @ 542 gene combinations are skipped
+
+534 Sat Nov 17 14:53:07 2012 
+Read 213062 items
+12900 exon combinations are skipped because they belong to different genes
+1.77% of reads @ 552 gene combinations are skipped
+
+535 Sat Nov 17 14:53:12 2012 
+Read 170272 items
+6370 exon combinations are skipped because they belong to different genes
+1.96% of reads @ 569 gene combinations are skipped
+
+536 Sat Nov 17 14:53:17 2012 
+Read 122898 items
+3445 exon combinations are skipped because they belong to different genes
+2.54% of reads @ 544 gene combinations are skipped
+
+537 Sat Nov 17 14:53:20 2012 
+Read 156188 items
+4265 exon combinations are skipped because they belong to different genes
+1.84% of reads @ 544 gene combinations are skipped
+
+538 Sat Nov 17 14:53:25 2012 
+Read 145470 items
+7035 exon combinations are skipped because they belong to different genes
+1.7% of reads @ 529 gene combinations are skipped
+
+539 Sat Nov 17 14:53:29 2012 
+Read 140306 items
+6222 exon combinations are skipped because they belong to different genes
+3% of reads @ 545 gene combinations are skipped
+
+540 Sat Nov 17 14:53:33 2012 
+Read 156438 items
+7648 exon combinations are skipped because they belong to different genes
+2.26% of reads @ 615 gene combinations are skipped
+
+541 Sat Nov 17 14:53:37 2012 
+Read 144204 items
+3613 exon combinations are skipped because they belong to different genes
+1.79% of reads @ 553 gene combinations are skipped
+
+542 Sat Nov 17 14:53:41 2012 
+Read 177294 items
+9366 exon combinations are skipped because they belong to different genes
+2.44% of reads @ 595 gene combinations are skipped
+
+543 Sat Nov 17 14:53:46 2012 
+Read 166668 items
+9020 exon combinations are skipped because they belong to different genes
+2.51% of reads @ 624 gene combinations are skipped
+
+544 Sat Nov 17 14:53:51 2012 
+Read 133210 items
+5013 exon combinations are skipped because they belong to different genes
+5.24% of reads @ 516 gene combinations are skipped
+
+545 Sat Nov 17 14:53:54 2012 
+Read 129012 items
+4467 exon combinations are skipped because they belong to different genes
+2.46% of reads @ 499 gene combinations are skipped
+
+546 Sat Nov 17 14:53:58 2012 
+Read 136078 items
+4669 exon combinations are skipped because they belong to different genes
+2.82% of reads @ 586 gene combinations are skipped
+
+547 Sat Nov 17 14:54:02 2012 
+Read 141788 items
+4503 exon combinations are skipped because they belong to different genes
+2.57% of reads @ 555 gene combinations are skipped
+
+548 Sat Nov 17 14:54:05 2012 
+Read 147616 items
+6103 exon combinations are skipped because they belong to different genes
+2.21% of reads @ 527 gene combinations are skipped
+
+549 Sat Nov 17 14:54:09 2012 
+Read 148266 items
+4391 exon combinations are skipped because they belong to different genes
+1.98% of reads @ 581 gene combinations are skipped
+
+550 Sat Nov 17 14:54:14 2012 
+Read 111076 items
+2788 exon combinations are skipped because they belong to different genes
+2.94% of reads @ 468 gene combinations are skipped
+
+551 Sat Nov 17 14:54:17 2012 
+Read 153160 items
+5264 exon combinations are skipped because they belong to different genes
+3.61% of reads @ 556 gene combinations are skipped
+
+> 
+> outF = "../data/gene_asCounts_EA_hap2.txt"
+> 
+> write.table(couts, file = outF, append = FALSE, quote = FALSE, sep = "\t",
++ row.names = TRUE, col.names = TRUE)
+> 
+> proc.time()
+    user   system  elapsed 
+2086.778    5.025 2117.559 

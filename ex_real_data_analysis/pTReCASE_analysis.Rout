@@ -1,0 +1,288 @@
+
+R version 3.5.0 (2018-04-23) -- "Joy in Playing"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library(pTReCASE)
+Loading required package: Rcpp
+Loading required package: RcppEigen
+> 
+> # chromsome to work on
+> chrNum   = 21
+> 
+> #------------------------------------------------------------------#
+> # read in total read count and gene information
+> #------------------------------------------------------------------#
+> 
+> datT = read.table(file = "data/gene_counts_EA_filtered.txt", sep = "\t", 
++                   header = TRUE, as.is=TRUE)
+> 
+> info = read.table(file = "data/ens_gene_loci.txt", sep = "\t", 
++                   header = TRUE, as.is=TRUE)
+> 
+> dim(datT)
+[1] 18827   550
+> dim(info)
+[1] 53561     4
+> 
+> datT[1:2,1:5]
+                A0D9 A0DB A13G A0AU A0AY
+ENSG00000000003 2444 4707 3729 1249 2186
+ENSG00000000005   63   65    3   36   34
+> info[1:2,]
+               id  chr    start      end
+1 ENSG00000000003 chrX 99883667 99894988
+2 ENSG00000000005 chrX 99839799 99854882
+> 
+> mati = match(rownames(datT), info$id)
+> table(is.na(mati))
+
+FALSE 
+18827 
+> 
+> info = info[mati,]
+> dim(info)
+[1] 18827     4
+> all(rownames(datT) == info$id)
+[1] TRUE
+> datT[1:2, 1:5]
+                A0D9 A0DB A13G A0AU A0AY
+ENSG00000000003 2444 4707 3729 1249 2186
+ENSG00000000005   63   65    3   36   34
+> info[1:2,]
+               id  chr    start      end
+1 ENSG00000000003 chrX 99883667 99894988
+2 ENSG00000000005 chrX 99839799 99854882
+> 
+> sams = names(datT)
+> 
+> #------------------------------------------------------------------#
+> # read in allele-specific read counts
+> #------------------------------------------------------------------#
+> 
+> datA1 = read.table(file = "data/gene_asCounts_EA_hap1_filtered.txt", 
++                    sep = "\t", header = TRUE)
+> dim(datA1)
+[1] 18827   550
+> 
+> datA1[1:2, 1:5]
+                A0D9 A0DB A13G A0AU A0AY
+ENSG00000000003    0    0    0    0    0
+ENSG00000000005    0    0    0    0    0
+> all(names(datA1) == sams)
+[1] TRUE
+> 
+> datA2 = read.table(file = "data/gene_asCounts_EA_hap2_filtered.txt", 
++                    sep = "\t", header = TRUE)
+> dim(datA2)
+[1] 18827   550
+> 
+> datA2[1:2, 1:8]
+                A0D9 A0DB A13G A0AU A0AY A0AZ A0B5 A0B7
+ENSG00000000003    0    0    0    0    0    0    0    0
+ENSG00000000005    0    0    0    0    0    0    0    0
+> all(names(datA2) == sams)
+[1] TRUE
+> 
+> all(rownames(datA1) == rownames(datT))
+[1] TRUE
+> all(rownames(datA2) == rownames(datT))
+[1] TRUE
+> 
+> #------------------------------------------------------------------#
+> # read in allele-specific read counts
+> #------------------------------------------------------------------#
+> 
+> genes2kp = which(info$chr==sprintf("chr%s",chrNum))
+> length(genes2kp)
+[1] 202
+> 
+> Y  = t(data.matrix(datT[genes2kp,]))
+> Y1 = t(data.matrix(datA1[genes2kp,]))
+> Y2 = t(data.matrix(datA2[genes2kp,]))
+> info1  = info[genes2kp,]
+> dim(info1)
+[1] 202   4
+> info1[1:2,]
+                  id   chr    start      end
+8263 ENSG00000141956 chr21 43218385 43299591
+8264 ENSG00000141959 chr21 45719934 45747259
+> 
+> #------------------------------------------------------------------#
+> # read in covariates
+> #------------------------------------------------------------------#
+> 
+> covs = read.table("data/covariates_EA.txt", sep = "\t", header = TRUE)
+> dim(covs)
+[1]  38 551
+> covs[1:2,1:5]
+  id A0D9 A0DB A13G A0AU
+1 A2    0    0    0    0
+2 A7    1    1    1    0
+> 
+> X0 = t(data.matrix(covs[,-1]))
+> colnames(X0) = covs$id
+> all(rownames(X0) == sams)
+[1] TRUE
+> 
+> X = X0[,c(1:3,5,6,8:14,16:38)]
+> X = cbind(X,(X0[,4]+X0[,7]+X0[,15]))
+> colnames(X)[36] = c("AC+AQ+GI")
+> 
+> dim(X)
+[1] 550  36
+> X[1:2,1:5]
+     A2 A7 A8 AN AO
+A0D9  0  1  0  0  0
+A0DB  0  1  0  0  0
+> 
+> # read depth
+> total.reads = colSums(datT)
+> rd.depth    = apply(datT, 2, quantile, prob=0.75)
+> cor(total.reads, rd.depth)
+[1] 0.968822
+> 
+> X = cbind(log(rd.depth+1), X)
+> 
+> # make sure X is full rank
+> s1 = svd(X)
+> summary(s1$d)
+    Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+   0.616    2.714    4.677   43.723    6.487 1421.164 
+> 
+> #------------------------------------------------------------------#
+> # read in tumor purity
+> #------------------------------------------------------------------#
+> 
+> purity.est = read.table(file="data/ABSOLUTE_purity_and_ploidy_BRCA.txt",
++                         sep="\t", header=TRUE, as.is=TRUE)
+> dim(purity.est)
+[1] 1007    6
+> purity.est[1:2,]
+  individual_id Path.Score PAM50.Call Freeze_668 absolute_extract_ploidy
+1  TCGA-A1-A0SB      Other     Normal       TRUE                    2.00
+2  TCGA-A1-A0SD        IDC       LumA       TRUE                    1.92
+  absolute_extract_purity
+1                    0.17
+2                    0.51
+> 
+> purity.est$samp_id = substr(purity.est$individual_id, start = 9,stop = 12)
+> table(colnames(datT) %in% purity.est$samp_id)
+
+TRUE 
+ 550 
+> 
+> purity.est = purity.est[match(colnames(datT), purity.est$samp_id),]
+> dim(purity.est)
+[1] 550   7
+> purity.est[1:2,]
+    individual_id Path.Score PAM50.Call Freeze_668 absolute_extract_ploidy
+122  TCGA-A7-A0D9        IDC       LumA       TRUE                    2.21
+124  TCGA-A7-A0DB        IDC       LumA       TRUE                    4.71
+    absolute_extract_purity samp_id
+122                    0.80    A0D9
+124                    0.44    A0DB
+> 
+> all(colnames(datT)==purity.est$samp_id)
+[1] TRUE
+> 
+> rhos = purity.est$absolute_extract_purity
+> 
+> #------------------------------------------------------------------#
+> # read in SNP genotype information
+> # here we use randomly generated genotype data for demonstration
+> #------------------------------------------------------------------#
+> 
+> gdata = readRDS("data/simulated_gdata.rds")
+> ginfo = readRDS("data/simulated_ginfo.rds")
+> 
+> dim(gdata)
+[1]  550 1000
+> gdata[1:2,1:5]
+     V2 V3 V4 V5 V6
+A0D9  0  0  4  3  4
+A0DB  0  0  4  0  4
+> 
+> dim(ginfo)
+[1] 1000   11
+> ginfo[1:2,]
+     V1       V2 V3 V4         V5 V6 V7 V8 V9 V10 V11
+1 chr22 16051347  G  C rs11089130 -- -- -- --  --  --
+2 chr22 16051497  A  G rs11089134 -- -- -- --  --  --
+> 
+> Z = data.matrix(gdata)
+> 
+> #------------------------------------------------------------------#
+> # run pTReCASE
+> #------------------------------------------------------------------#
+> 
+> dim(Y)
+[1] 550 202
+> dim(Y1)
+[1] 550 202
+> dim(Y2)
+[1] 550 202
+> dim(Z)
+[1]  550 1000
+> dim(X)
+[1] 550  37
+> 
+> summary(rhos)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+ 0.1700  0.4600  0.5900  0.5908  0.7400  1.0000       3 
+> w2kp = which(!is.na(rhos))
+> 
+> Y  = Y[w2kp,]
+> Y1 = Y1[w2kp,]
+> Y2 = Y2[w2kp,]
+> X  = X[w2kp,]
+> rhos = rhos[w2kp]
+> 
+> # first 300 SNPs
+> Z  = Z[w2kp,1:300]
+> ginfo  = ginfo[1:300,]
+> 
+> p1 = pTReCASE_multapp(Y, Y1, Y2, Z, X, rhos, F_out = "pTReCASE_ex_output.txt", 
++                       geno_pos = ginfo$V2, gene_start = info1$start,
++                       gene_end = info1$end, Perform_CT_co=1)
+> 
+> sessionInfo()
+R version 3.5.0 (2018-04-23)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS  10.14.3
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] pTReCASE_0.99.0     RcppEigen_0.3.3.4.0 Rcpp_0.12.18       
+
+loaded via a namespace (and not attached):
+[1] compiler_3.5.0  Matrix_1.2-14   grid_3.5.0      lattice_0.20-35
+> 
+> q(save="no")
+> proc.time()
+   user  system elapsed 
+381.152   1.227 382.565 

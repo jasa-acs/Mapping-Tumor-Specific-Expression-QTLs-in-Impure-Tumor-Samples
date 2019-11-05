@@ -1,0 +1,596 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> library(MASS)
+> library(limma)
+> 
+> source("~/research/R/asSeq/_test/tests.R")
+> source("~/research/R/asSeq/_test/aseR.R")
+> source("~/research/R/asSeq/_test/trecR.R")
+> source("~/research/R/asSeq/_test/trecaseR.R")
+> source("~/research/R/asSeq/_test/plots.R")
+> 
+> # -------------------------------------------------------------------------
+> # read the data and info
+> # -------------------------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> datT  = read.table(file = "gene_counts_EA_filtered.txt", sep = "\t", 
++ header = TRUE, as.is=TRUE)
+> 
+> info = read.table(file = "~/research/data/human/ens_gene_loci.txt", 
++ sep = "\t", header = TRUE, as.is=TRUE)
+> 
+> dim(datT)
+[1] 18827   550
+> dim(info)
+[1] 53561     4
+> 
+> mati = match(rownames(datT), info$id)
+> table(is.na(mati))
+
+FALSE 
+18827 
+> 
+> info = info[mati,]
+> 
+> all(rownames(datT) == info$id)
+[1] TRUE
+> datT[1:2, 1:8]
+                A0D9 A0DB A13G A0AU A0AY A0AZ A0B5 A0B7
+ENSG00000000003 2444 4707 3729 1249 2186 1846 2544 3509
+ENSG00000000005   63   65    3   36   34   41    8   78
+> info[1:2,]
+               id  chr    start      end
+1 ENSG00000000003 chrX 99883667 99894988
+2 ENSG00000000005 chrX 99839799 99854882
+> 
+> sams = names(datT)
+> 
+> # -------------------------------------------------------------------------
+> # The total number of reads per sample
+> # -------------------------------------------------------------------------
+> 
+> tot = colSums(datT)
+> s75 = apply(datT, 2, quantile, prob=0.75)
+> cor(tot, s75)
+[1] 0.968822
+> 
+> # -------------------------------------------------------------------------
+> # read the information covariates
+> # -------------------------------------------------------------------------
+> 
+> covs = read.table("covariates_EA.txt", sep = "\t", header = TRUE)
+> dim(covs)
+[1]  38 551
+> covs[1:2,1:5]
+  id A0D9 A0DB A13G A0AU
+1 A2    0    0    0    0
+2 A7    1    1    1    0
+> 
+> X = t(data.matrix(covs[,-1]))
+> all(rownames(X) == sams)
+[1] TRUE
+> 
+> X = cbind(log(s75+1), X)
+> dim(X)
+[1] 550  39
+> X[1:4,1:5]
+         [,1] [,2] [,3] [,4] [,5]
+A0D9 7.806086    0    1    0    0
+A0DB 7.856707    0    1    0    0
+A13G 8.218248    0    1    0    0
+A0AU 7.698029    0    0    0    0
+> 
+> # -------------------------------------------------------------------------
+> # read AS expression data and info
+> # -------------------------------------------------------------------------
+> 
+> datA1 = read.table(file = "gene_asCounts_EA_hap1_filtered.txt", 
++ sep = "\t", header = TRUE)
+> dim(datA1)
+[1] 18827   550
+> 
+> datA1[1:2, 1:8]
+                A0D9 A0DB A13G A0AU A0AY A0AZ A0B5 A0B7
+ENSG00000000003    0    0    0    0    0    0    0    0
+ENSG00000000005    0    0    0    0    0    0    0    0
+> all(names(datA1) == sams)
+[1] TRUE
+> 
+> datA2 = read.table(file = "gene_asCounts_EA_hap2_filtered.txt", 
++ sep = "\t", header = TRUE)
+> dim(datA2)
+[1] 18827   550
+> 
+> datA2[1:2, 1:8]
+                A0D9 A0DB A13G A0AU A0AY A0AZ A0B5 A0B7
+ENSG00000000003    0    0    0    0    0    0    0    0
+ENSG00000000005    0    0    0    0    0    0    0    0
+> all(names(datA2) == sams)
+[1] TRUE
+> 
+> all(rownames(datA1) == rownames(datT))
+[1] TRUE
+> all(rownames(datA2) == rownames(datT))
+[1] TRUE
+> 
+> # -------------------------------------------------------------------------
+> # read in the eQTL results
+> # -------------------------------------------------------------------------
+> 
+> eqtls = read.table("eqtls_5e-5_per_gene.txt", header=TRUE, sep="\t", as.is=TRUE)
+> dim(eqtls)
+[1] 7231   25
+> eqtls[1:2,]
+  GeneRowID MarkerRowID   TReC_b TReC_Chisq TReC_df TReC_Pvalue     ASE_b
+1         4      387666 -0.02879      0.117       1    7.33e-01 -0.091686
+2         5       59048 -0.20648     16.528       1    4.79e-05 -0.228670
+  ASE_Chisq ASE_df ASE_Pvalue   Joint_b Joint_Chisq Joint_df Joint_Pvalue
+1    33.690      1   6.46e-09 -0.089727      33.278        1     7.99e-09
+2    10.081      1   1.50e-03 -0.214020      26.546        1     2.57e-07
+  n_TReC n_ASE n_ASE_Het trans_Chisq trans_Pvalue final_Pvalue Chr
+1    550   416       259       0.529        0.467     7.99e-09   1
+2    550   419       190       0.063        0.802     2.57e-07   1
+             gene     start       end        snp
+1 ENSG00000000971 196621008 196716634 rs11805258
+2 ENSG00000001460  24683489  24743424 rs11583039
+> 
+> # -------------------------------------------------------------------------
+> # looping
+> # -------------------------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> uchrs = c(1:22)
+> 
+> for(chr1 in uchrs){
++   
++   chr2 = sprintf("chr%d", chr1)
++   
++   st1 = "\n---------------------------------------------------\n"
++   message(sprintf("%s %s, %s %s", st1, chr2, date(), st1))  
++   
++   # -------------------------------------------------------------------------
++   # Prepare gene expression data
++   # -------------------------------------------------------------------------
++   
++   wchr = which(info$chr == chr2)
++   
++   if(length(wchr) == 0){
++     warninng("no genes at", chr2)
++     next
++   }
++   
++   Y  = t(data.matrix(datT[wchr,]))
++   Y1 = t(data.matrix(datA1[wchr,]))
++   Y2 = t(data.matrix(datA2[wchr,]))
++   einfo  = info[wchr,]
++   
++   dim(Y)
++   Y[1:2,1:4]
++   dim(Y1)
++   dim(Y2)
++   
++   dim(einfo)
++   einfo[1:2,]
++   
++   # -------------------------------------------------------------------
++   # read in info
++   # -------------------------------------------------------------------
++   
++   datF  = sprintf("../phased_geno_EA/%s_MAF_0.02.txt", chr2)
++   infF  = sprintf("../phased_geno_EA/%s_MAF_0.02_info.txt", chr2)
++   ginfo = read.table(infF, comment.char = "", sep="\t", 
++                      header = FALSE, as.is=TRUE)
++   dim(ginfo)
++   ginfo[1:2,]
++ 
++   # -------------------------------------------------------------------
++   # randomly choose 10 genes to plot in each case
++   # -------------------------------------------------------------------
++   
++   aseEQ = eqtls[eqtls$Chr==chr1,]
++   aseEQ = aseEQ[order(aseEQ$final_Pvalue),]
++   aseEQ[1:10,]
++   
++   for(kk in 1:10){
++     
++     eID = aseEQ$GeneRowID[kk]
++     gID = aseEQ$MarkerRowID[kk]
++     
++     ff2  = paste(datF, ".tmp1234", sep="")
++     cmd1 = sprintf("cut -f %d %s > %s", gID+1, datF, ff2)
++     system(cmd1)
++     x1   = scan(ff2)
++     cmd1 = sprintf("rm %s", ff2)
++     system(cmd1)
++     
++     y0  = Y[,eID]
++     y1  = Y1[,eID]
++     y2  = Y2[,eID]
++ 
++     tag   = "trecase_figure/x"
++     sName = aseEQ$snp[kk]
++     eName = aseEQ$gen[kk]
++     
++     fname = paste(tag, chr2, eName, sName, sep="_")
++     fname = paste(fname, ".png", sep="")  
++     xlab  = sName
++     ylab  = eName
++     
++     mm1   = sprintf("pJ=%.1e,b(T/A)=%.1f/%.1f,pCis=%.0e", aseEQ$final_Pvalue[kk],
++                     aseEQ$TReC_b[kk], aseEQ$ASE_b[kk], aseEQ$trans_Pvalue[kk])
++ 
++     png(fname, width=8.4, height=3, units="in", res=200)
++     
++     layout(matrix(1:3, nrow=1), widths = c(3,3,2.4))
++     par(mar=c(4,4,3,1), bty="n", cex=0.85, cex.main=0.95)
++ 
++     plotTReC(y0, x1, X, xlab, ylab)
++     
++     if(is.na(aseEQ$ASE_Pvalue[kk])){
++       plot(0:1, 0:1, type="n", xlab="", ylab="", xaxt="n", yaxt="n")
++     }else{
++       plotASE(y1, y2, x1, xlab, ylab, sub=mm1, min.nTotal=10)
++     }
++     
++     dev.off()
++   }
++   
++ }
+
+---------------------------------------------------
+ chr1, Sat Dec 15 00:19:43 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr2, Sat Dec 15 00:24:53 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr3, Sat Dec 15 00:30:29 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr4, Sat Dec 15 00:34:46 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr5, Sat Dec 15 00:45:54 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr6, Sat Dec 15 00:52:57 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr7, Sat Dec 15 02:15:51 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr8, Sat Dec 15 02:20:43 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr9, Sat Dec 15 02:24:52 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr10, Sat Dec 15 02:30:19 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr11, Sat Dec 15 02:35:20 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr12, Sat Dec 15 02:38:33 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr13, Sat Dec 15 02:42:14 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr14, Sat Dec 15 02:47:51 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr15, Sat Dec 15 02:50:52 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr16, Sat Dec 15 02:54:58 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr17, Sat Dec 15 02:57:40 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr18, Sat Dec 15 03:03:22 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr19, Sat Dec 15 03:07:07 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr20, Sat Dec 15 03:14:05 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr21, Sat Dec 15 03:18:36 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+
+---------------------------------------------------
+ chr22, Sat Dec 15 03:21:33 2012 
+---------------------------------------------------
+
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+Read 550 items
+There were 50 or more warnings (use warnings() to see the first 50)
+> 
+> 
+> proc.time()
+     user    system   elapsed 
+11176.790   208.686 11393.653 

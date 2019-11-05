@@ -1,0 +1,128 @@
+
+R version 3.5.0 (2018-04-23) -- "Joy in Playing"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> #----------------------------------------------------#
+> # Concatenate Results Files                          #
+> #----------------------------------------------------#
+> setwd("results_Power_Calcs2/")
+> 
+> # Obtain file list and Order appropriately
+> file_listA = list.files(pattern = "pwr_")
+> file_listB = list.files(pattern = "foldS_1_psi0.1.RData")
+> file_list = intersect(file_listA,file_listB)
+> file_list
+[1] "pwr_foldT_1_foldS_1_psi0.1.RData"   "pwr_foldT_1.1_foldS_1_psi0.1.RData"
+[3] "pwr_foldT_1.2_foldS_1_psi0.1.RData" "pwr_foldT_1.3_foldS_1_psi0.1.RData"
+[5] "pwr_foldT_1.4_foldS_1_psi0.1.RData" "pwr_foldT_1.5_foldS_1_psi0.1.RData"
+[7] "pwr_foldT_1.6_foldS_1_psi0.1.RData" "pwr_foldT_1.7_foldS_1_psi0.1.RData"
+> 
+> # Initialize Storage
+> pwr_mat = matrix(0,nrow = length(file_list),ncol = 7)
+> 
+> for(i in 1:length(file_list)){
++   load(file_list[i])
++   pwr_mat[i,] = pwr
++ }
+> 
+> save(pwr_mat,file = "../compiled_pwr_foldS_1.0_psi0.1_v2.RData")
+> 
+> # Obtain file list and Order appropriately
+> file_listA = list.files(pattern = "pwr_")
+> file_listB = list.files(pattern = "foldS_1_psi0.2.RData")
+> file_list = intersect(file_listA,file_listB)
+> file_list
+[1] "pwr_foldT_1_foldS_1_psi0.2.RData"   "pwr_foldT_1.1_foldS_1_psi0.2.RData"
+[3] "pwr_foldT_1.2_foldS_1_psi0.2.RData" "pwr_foldT_1.3_foldS_1_psi0.2.RData"
+[5] "pwr_foldT_1.4_foldS_1_psi0.2.RData" "pwr_foldT_1.5_foldS_1_psi0.2.RData"
+[7] "pwr_foldT_1.6_foldS_1_psi0.2.RData" "pwr_foldT_1.7_foldS_1_psi0.2.RData"
+> 
+> # Initialize Storage
+> pwr_mat = matrix(0,nrow = length(file_list),ncol = 7)
+> 
+> for(i in 1:length(file_list)){
++   load(file_list[i])
++   pwr_mat[i,] = pwr
++ }
+> 
+> save(pwr_mat,file = "../compiled_pwr_folds_1.0_psi0.2_v2.RData")
+> 
+> #----------------------------------------------------#
+> # Concatenate Results Files                          #
+> #----------------------------------------------------#
+> setwd("../results_TypeI_Error2/")
+> 
+> # Obtain file list and Order appropriately
+> file_listA = list.files(pattern = "pwr_foldT_")
+> file_listB = list.files(pattern = "psi0.1.RData")
+> file_list = intersect(file_listA,file_listB)
+> file_list
+[1] "pwr_foldT_1_foldS_1_psi0.1.RData"   "pwr_foldT_1_foldS_1.2_psi0.1.RData"
+[3] "pwr_foldT_1_foldS_1.4_psi0.1.RData" "pwr_foldT_1_foldS_1.6_psi0.1.RData"
+[5] "pwr_foldT_1_foldS_1.8_psi0.1.RData" "pwr_foldT_1_foldS_2_psi0.1.RData"  
+> 
+> # Initialize Storage
+> pwr_mat = matrix(0,nrow = length(file_list),ncol = 7)
+> 
+> for(i in 1:length(file_list)){
++   load(file_list[i])
++   pwr_mat[i,] = pwr
++ }
+> 
+> save(pwr_mat,file = "../compiled_pwr_foldT_1.0_psi0.1_v2.RData")
+> 
+> file_listA = list.files(pattern = "pwr_foldT_")
+> file_listB = list.files(pattern = "psi0.2.RData")
+> file_list = intersect(file_listA,file_listB)
+> file_list
+[1] "pwr_foldT_1_foldS_1_psi0.2.RData"   "pwr_foldT_1_foldS_1.2_psi0.2.RData"
+[3] "pwr_foldT_1_foldS_1.4_psi0.2.RData" "pwr_foldT_1_foldS_1.6_psi0.2.RData"
+[5] "pwr_foldT_1_foldS_1.8_psi0.2.RData" "pwr_foldT_1_foldS_2_psi0.2.RData"  
+> 
+> # Initialize Storage
+> pwr_mat = matrix(0,nrow = length(file_list),ncol = 7)
+> 
+> for(i in 1:length(file_list)){
++   load(file_list[i])
++   pwr_mat[i,] = pwr
++ }
+> 
+> save(pwr_mat,file = "../compiled_pwr_foldT_1.0_psi0.2_v2.RData")
+> 
+> sessionInfo()
+R version 3.5.0 (2018-04-23)
+Platform: x86_64-apple-darwin15.6.0 (64-bit)
+Running under: macOS  10.14.3
+
+Matrix products: default
+BLAS: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRblas.0.dylib
+LAPACK: /Library/Frameworks/R.framework/Versions/3.5/Resources/lib/libRlapack.dylib
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_3.5.0
+> 
+> q(save="no")
+> proc.time()
+   user  system elapsed 
+  0.179   0.043   0.210 

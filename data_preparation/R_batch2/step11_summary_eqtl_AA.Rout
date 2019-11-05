@@ -1,0 +1,152 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> # ------------------------------------------------------------------------
+> # read in eQTL results
+> # ------------------------------------------------------------------------
+> 
+> pvs = read.table("eQTL_log_TReC_AA.txt", 
++   header=TRUE, sep="\t", as.is=TRUE)
+> dim(pvs)
+[1] 186028      5
+> pvs[1:2,]
+            SNP            gene    t.stat      p.value          FDR
+1 SNP_A-8574695 ENSG00000225972 -25.84238 4.929612e-29 3.276038e-19
+2 SNP_A-8574722 ENSG00000225972 -25.84238 4.929612e-29 3.276038e-19
+> 
+> summary(pvs$p.value)
+     Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+0.000e+00 2.074e-06 4.598e-06 4.706e-06 7.272e-06 1.000e-05 
+> summary(pvs$FDR)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+ 0.0000  0.5927  0.6571  0.6261  0.6927  0.7145 
+> table(pvs$FDR < 0.2)
+
+ FALSE   TRUE 
+185003   1025 
+> table(pvs$p.value < 1e-9)
+
+ FALSE   TRUE 
+185864    164 
+> table(pvs$p.value < 1e-8)
+
+ FALSE   TRUE 
+185272    756 
+> 
+> # ------------------------------------------------------------
+> # read in SNP annotation 
+> # ------------------------------------------------------------
+> 
+> setwd("/Users/suninsky/research/data/Affy/Affy6/anno/")
+> 
+> if(file.exists("affy6_snp_loci.txt")){
++   infoD = read.table("affy6_snp_loci.txt", sep="\t", header=TRUE, 
++                      as.is=TRUE, na.string="---")
++ }else{
++   info = read.csv("GenomeWideSNP_6.na32.annot.csv", as.is=TRUE, 
++                   comment.char="#")
++   dim(info)
++   info[1:2,1:4]
++ 
++   infoD = info[,1:4]
++   write.table(infoD, file = "affy6_snp_loci.txt", append = FALSE, 
++     quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
++ }
+> 
+> names(infoD)
+[1] "Probe.Set.ID"      "dbSNP.RS.ID"       "Chromosome"       
+[4] "Physical.Position"
+> table(infoD$Chromosome)
+
+    1    10    11    12    13    14    15    16    17    18    19     2    20 
+73403 49592 45933 43797 35143 28939 26865 28622 21300 27213 12419 75842 23486 
+   21    22     3     4     5     6     7     8     9    MT     X     Y 
+12910 11951 62277 57556 57945 57818 48283 49992 42663   411 37902   860 
+> table(infoD$Strand)
+character(0)
+> 
+> dim(infoD)
+[1] 934968      4
+> infoD[1:2,]
+   Probe.Set.ID dbSNP.RS.ID Chromosome Physical.Position
+1 SNP_A-1780419   rs6576700          1          84875173
+2 SNP_A-1780418  rs17054099          5         156390980
+> 
+> # ------------------------------------------------------------
+> # read in gene annotation 
+> # ------------------------------------------------------------
+> 
+> setwd("/Users/suninsky/research/data/human/")
+> 
+> infoE = read.table("ens_gene_loci.txt", as.is=TRUE, sep="\t", header=TRUE)
+> dim(infoE)
+[1] 53561     4
+> infoE[1:2,]
+               id  chr    start      end
+1 ENSG00000000003 chrX 99883667 99894988
+2 ENSG00000000005 chrX 99839799 99854882
+> table(infoE$chr)
+
+ chr1 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19  chr2 chr20 
+ 5176  2197  3122  2750  1183  2181  2020  2179  2024   555  1929  3881  1277 
+chr21 chr22  chr3  chr4  chr5  chr6  chr7  chr8  chr9  chrX  chrY 
+  695  1191  2917  2494  2729  2790  2774  2318  2337  2328   514 
+> 
+> # ------------------------------------------------------------------------
+> # read in location information and plot it
+> # ------------------------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/")
+> 
+> ptplot   = pvs[which(pvs$gene %in% infoE$id),]
+> geneID   = match(ptplot$gene, infoE$id)
+> markerID = match(ptplot$SNP,  infoD$Probe.Set.ID)
+> scores   = ptplot$p.value
+> scuts    = c(1e-8, 1e-9, 1e-10, 1e-12)
+> cols     = c("green", "blue", "red", "black")
+> eChr     = gsub("chr", "", infoE$chr)
+> ePos     = 0.5*(infoE$start + infoE$end)
+> mChr     = gsub("chr", "", infoD$Chromosome)
+> mPos     = infoD$Physical.Position;
+> chroms   = 1:22
+> 
+> 
+> source("codes_Wonil/eQTL_Plot.R")
+> 
+> png("figures/eQTL_logTReC_AA.png", width=7.5, height=9, res=200, units="in")
+> eqtl.plot(geneID, markerID, scores, scuts, cols, eChr, ePos, mChr,
++ mPos, chroms, xlab="eQTL Location", ylab="Transcript Location",
++ plot.hotspots=TRUE, hotspots.cut=10, score.type="p-value")
+> dev.off()
+null device 
+          1 
+> 
+> tb = table(pvs$SNP[pvs$p.value<1e-8])
+> table(tb)
+tb
+  1   2   3   4   5   6  14  16 
+606  32   4   3   2   1   1   2 
+> 
+> proc.time()
+   user  system elapsed 
+ 36.567   0.595  37.519 

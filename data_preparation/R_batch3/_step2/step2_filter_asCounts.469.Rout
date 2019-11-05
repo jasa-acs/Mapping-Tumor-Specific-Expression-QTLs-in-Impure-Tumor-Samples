@@ -1,0 +1,190 @@
+
+R version 2.10.1 Patched (2010-04-07 r51635)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> i = 470
+> 
+> library(asSeq, lib="/nas02/home/w/e/weisun/R/Rlibs/")
+> 
+> # -------------------------------------------------------------------------
+> # read in the list of the SNP to be excluded
+> # -------------------------------------------------------------------------
+> 
+> setwd("/lustre/scr/w/e/weisun/TCGA/hetSNP_EA/")
+> files = list.files(path = ".", pattern="hetSNP_")
+> 
+> sams = gsub("hetSNP_", "", files)
+> sams = gsub(".txt", "", sams, fixed=TRUE)
+> 
+> #for(i in 1:length(files)){
+> 
+>   f1   = files[i]
+>   sam1 = sams[i]
+> 
+>   cat("\n", sam1, date(), "\n")
+
+ A1XF Fri Nov 16 01:20:17 2012 
+>   
+>   input   = sprintf("../bam/%s_sorted_by_name_uniq_filtered.bam", sam1)
+>   outputTag  = sprintf("../bam/%s_asCounts_hetSNP_EA", sam1)
+>   snpList = f1
+>   
+>   if(! file.exists(f1)){
++     stop("snpList file does not exist") 
++   }
+>   
+>   extractAsReads(input, snpList, outputTag)
+processing 0'th read
+processing 1000000'th read
+processing 2000000'th read
+processing 3000000'th read
+processing 4000000'th read
+processing 5000000'th read
+processing 6000000'th read
+processing 7000000'th read
+processing 8000000'th read
+processing 9000000'th read
+processing 10000000'th read
+processing 11000000'th read
+processing 12000000'th read
+processing 13000000'th read
+processing 14000000'th read
+processing 15000000'th read
+processing 16000000'th read
+processing 17000000'th read
+processing 18000000'th read
+processing 19000000'th read
+processing 20000000'th read
+processing 21000000'th read
+processing 22000000'th read
+processing 23000000'th read
+processing 24000000'th read
+processing 25000000'th read
+processing 26000000'th read
+processing 27000000'th read
+processing 28000000'th read
+processing 29000000'th read
+processing 30000000'th read
+processing 31000000'th read
+processing 32000000'th read
+processing 33000000'th read
+processing 34000000'th read
+processing 35000000'th read
+processing 36000000'th read
+processing 37000000'th read
+processing 38000000'th read
+processing 39000000'th read
+processing 40000000'th read
+processing 41000000'th read
+processing 42000000'th read
+processing 43000000'th read
+processing 44000000'th read
+processing 45000000'th read
+processing 46000000'th read
+processing 47000000'th read
+processing 48000000'th read
+processing 49000000'th read
+processing 50000000'th read
+processing 51000000'th read
+processing 52000000'th read
+processing 53000000'th read
+processing 54000000'th read
+processing 55000000'th read
+processing 56000000'th read
+processing 57000000'th read
+processing 58000000'th read
+processing 59000000'th read
+processing 60000000'th read
+processing 61000000'th read
+processing 62000000'th read
+processing 63000000'th read
+processing 64000000'th read
+processing 65000000'th read
+processing 66000000'th read
+processing 67000000'th read
+processing 68000000'th read
+processing 69000000'th read
+processing 70000000'th read
+processing 71000000'th read
+processing 72000000'th read
+processing 73000000'th read
+processing 74000000'th read
+processing 75000000'th read
+processing 76000000'th read
+processing 77000000'th read
+processing 78000000'th read
+processing 79000000'th read
+processing 80000000'th read
+processing 81000000'th read
+processing 82000000'th read
+processing 83000000'th read
+processing 84000000'th read
+processing 85000000'th read
+processing 86000000'th read
+processing 87000000'th read
+processing 88000000'th read
+processing 89000000'th read
+processing 90000000'th read
+processing 91000000'th read
+processing 92000000'th read
+processing 93000000'th read
+processing 94000000'th read
+processing 95000000'th read
+processing 96000000'th read
+processing 97000000'th read
+processing 98000000'th read
+processing 99000000'th read
+processing 100000000'th read
+processing 101000000'th read
+processing 102000000'th read
+processing 103000000'th read
+processing 104000000'th read
+processing 105000000'th read
+processing 106000000'th read
+processing 107000000'th read
+processing 108000000'th read
+processing 109000000'th read
+processing 110000000'th read
+processing 111000000'th read
+processing 112000000'th read
+processing 113000000'th read
+processing 114000000'th read
+processing 115000000'th read
+processing 116000000'th read
+processing 117000000'th read
+processing 118000000'th read
+processing 119000000'th read
+processing 120000000'th read
+processing 121000000'th read
+processing 122000000'th read
+processing 123000000'th read
+processing 124000000'th read
+processing 125000000'th read
+processing 126000000'th read
+processing 127000000'th read
+processing 128000000'th read
+total 128962352 lines processed
+[1] "../bam/A1XF_asCounts_hetSNP_EA_hap1.bam"     
+[2] "../bam/A1XF_asCounts_hetSNP_EA_hap2.bam"     
+[3] "../bam/A1XF_asCounts_hetSNP_EA_hapN.bam"     
+[4] "../bam/A1XF_sorted_by_name_uniq_filtered.bam"
+> #}
+> 
+> proc.time()
+    user   system  elapsed 
+3414.901    8.522 3435.337 

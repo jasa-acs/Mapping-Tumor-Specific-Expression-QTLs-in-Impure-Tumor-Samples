@@ -1,0 +1,555 @@
+
+R version 2.13.1 (2011-07-08)
+Copyright (C) 2011 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+Platform: x86_64-apple-darwin9.8.0/x86_64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> ##
+> ## take 0 gene expression PCs and 2 genotype PC
+> ## 
+> 
+> # --------------------------------------------------------
+> # read in sample information
+> # --------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/info/")
+> 
+> sam = read.table("brca_samples2use_after_qc_female.txt", 
++ header=TRUE, sep="\t", as.is=TRUE)
+> dim(sam)
+[1] 663  23
+> sam[1,]
+  DNAtumor_institution DNAtumor_patientID DNAtumor_type DNAtumor_portion
+1                   A7               A0D9           01A              31D
+  DNAtumor_plate                                   DNAtumor_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_H07_697072.CEL
+  DNAnorml_institution DNAnorml_patientID DNAnorml_type DNAnorml_portion
+1                   A7               A0D9           10A              01D
+  DNAnorml_plate                                   DNAnorml_arrayFile
+1           A059 BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+                     RNA_Exome             RNA_RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+             RNA_RNAseq.Normal              RNA_rnaseqID.Tumor
+1 TCGA-A7-A0D9-11A-53R-A089-07 110318_SN749_0046_AB039FABXX_4_
+                   RNA_rnaseqID.Normal RNA_institution RNA_patientID RNA_type
+1 110909_UNC9-SN296_0240_BD0DDBABXX_1_              A7          A0D9      01A
+  RNA_portion RNA_plate gender
+1         31R      A056 female
+> 
+> pam50 = read.table("BRCA.819.DataFreeze.20120912_pam50scores.txt", 
++ header=TRUE, sep="\t", as.is=TRUE)
+> dim(pam50)
+[1] 819  17
+> pam50[1,]
+                                   lane          bcr_patient_barcode tissue
+1 110829_UNC10-SN254_0272_BB07RMABXX_7_ TCGA-A1-A0SB-01A-11R-A144-07  tumor
+      Basal       Her2      LumA       LumB    Normal   Call Confidence
+1 0.3152461 -0.4441297 0.1770468 -0.5814646 0.6521489 Normal          1
+  ROR.S..Subtype.Only. ROR.S.Group..Subtype.Only. Proliferation.Score
+1              19.1617                        low          -0.5061654
+  ROR.P..Subtype...Proliferation. ROR.P.Group..Subtype...Proliferation.
+1                        12.00902                                   med
+         ER    Her2.1
+1 -0.186522 0.2118692
+> 
+> all(sam$RNA_RNAseq.Tumor %in% pam50$bcr_patient_barcode)
+[1] TRUE
+> 
+> # --------------------------------------------------------
+> # read in clinical information
+> # --------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/clinical_brca/")
+> 
+> clin = read.table("clinical_patient_brca.txt", quote="",
++ header=TRUE, sep="\t", as.is=TRUE, na.string="[Not Available]")
+> dim(clin)
+[1] 869 100
+> names(clin)
+  [1] "bcr_patient_barcode"                                                                                             
+  [2] "age_at_initial_pathologic_diagnosis"                                                                             
+  [3] "ajcc_cancer_metastasis_stage_code"                                                                               
+  [4] "ajcc_cancer_staging_handbook_edition"                                                                            
+  [5] "ajcc_neoplasm_disease_lymph_node_stage"                                                                          
+  [6] "ajcc_neoplasm_disease_stage"                                                                                     
+  [7] "ajcc_tumor_stage_code"                                                                                           
+  [8] "anatomic_organ_subdivision"                                                                                      
+  [9] "axillary_lymph_node_stage_method_type"                                                                           
+ [10] "axillary_lymph_node_stage_other_method_descriptive_text"                                                         
+ [11] "bcr_patient_uuid"                                                                                                
+ [12] "breast_cancer_optical_measurement_histologic_type"                                                               
+ [13] "breast_cancer_surgery_margin_status"                                                                             
+ [14] "breast_carcinoma_estrogen_receptor_status"                                                                       
+ [15] "breast_carcinoma_immunohistochemistry_er_pos_finding_scale"                                                      
+ [16] "breast_carcinoma_immunohistochemistry_pos_cell_score"                                                            
+ [17] "breast_carcinoma_immunohistochemistry_progesterone_receptor_pos_finding_scale"                                   
+ [18] "breast_carcinoma_primary_surgical_procedure_name"                                                                
+ [19] "breast_carcinoma_progesterone_receptor_status"                                                                   
+ [20] "breast_carcinoma_surgical_procedure_name"                                                                        
+ [21] "breast_neoplasm_other_surgical_procedure_descriptive_text"                                                       
+ [22] "cytokeratin_immunohistochemistry_staining_method_micrometastasis_indicator"                                      
+ [23] "date_of_form_completion"                                                                                         
+ [24] "date_of_initial_pathologic_diagnosis"                                                                            
+ [25] "days_to_birth"                                                                                                   
+ [26] "days_to_death"                                                                                                   
+ [27] "days_to_initial_pathologic_diagnosis"                                                                            
+ [28] "days_to_last_followup"                                                                                           
+ [29] "days_to_last_known_alive"                                                                                        
+ [30] "distant_metastasis_present_ind2"                                                                                 
+ [31] "er_detection_method_text"                                                                                        
+ [32] "er_level_cell_percentage_category"                                                                               
+ [33] "ethnicity"                                                                                                       
+ [34] "first_nonlymph_node_metastasis_anatomic_site"                                                                    
+ [35] "first_pathologic_diagnosis_biospecimen_acquisition_other_method_text"                                            
+ [36] "first_recurrent_non_nodal_metastatic_anatomic_site_descriptive_text"                                             
+ [37] "fluorescence_in_situ_hybridization_diagnostic_procedure_chromosome_17_signal_result_range"                       
+ [38] "gender"                                                                                                          
+ [39] "her2_and_centromere_17_positive_finding_other_measurement_scale_text"                                            
+ [40] "her2_erbb_method_calculation_method_text"                                                                        
+ [41] "her2_erbb_pos_finding_cell_percent_category"                                                                     
+ [42] "her2_erbb_pos_finding_fluorescence_in_situ_hybridization_calculation_method_text"                                
+ [43] "her2_immunohistochemistry_level_result"                                                                          
+ [44] "her2_neu_and_centromere_17_copy_number_analysis_input_total_number_count"                                        
+ [45] "her2_neu_and_centromere_17_copy_number_metastatic_breast_carcinoma_analysis_input_total_number_count"            
+ [46] "her2_neu_breast_carcinoma_copy_analysis_input_total_number"                                                      
+ [47] "her2_neu_chromosone_17_signal_ratio_value"                                                                       
+ [48] "her2_neu_metastatic_breast_carcinoma_copy_analysis_input_total_number"                                           
+ [49] "icd_10"                                                                                                          
+ [50] "icd_o_3_histology"                                                                                               
+ [51] "icd_o_3_site"                                                                                                    
+ [52] "immunohistochemistry_positive_cell_score"                                                                        
+ [53] "informed_consent_verified"                                                                                       
+ [54] "initial_pathologic_diagnosis_method"                                                                             
+ [55] "lab_proc_her2_neu_immunohistochemistry_receptor_status"                                                          
+ [56] "lab_procedure_her2_neu_in_situ_hybrid_outcome_type"                                                              
+ [57] "lymph_node_examined_count"                                                                                       
+ [58] "margin_status"                                                                                                   
+ [59] "menopause_status"                                                                                                
+ [60] "metastatic_breast_carcinoma_erbb2_immunohistochemistry_level_result"                                             
+ [61] "metastatic_breast_carcinoma_estrogen_receptor_detection_method_text"                                             
+ [62] "metastatic_breast_carcinoma_estrogen_receptor_level_cell_percent_category"                                       
+ [63] "metastatic_breast_carcinoma_estrogen_receptor_status"                                                            
+ [64] "metastatic_breast_carcinoma_fluorescence_in_situ_hybridization_diagnostic_proc_centromere_17_signal_result_range"
+ [65] "metastatic_breast_carcinoma_her2_erbb_method_calculation_method_text"                                            
+ [66] "metastatic_breast_carcinoma_her2_erbb_pos_finding_cell_percent_category"                                         
+ [67] "metastatic_breast_carcinoma_her2_erbb_pos_finding_fluorescence_in_situ_hybridization_calculation_method_text"    
+ [68] "metastatic_breast_carcinoma_her2_neu_chromosone_17_signal_ratio_value"                                           
+ [69] "metastatic_breast_carcinoma_immunohistochemistry_er_pos_cell_score"                                              
+ [70] "metastatic_breast_carcinoma_immunohistochemistry_pr_pos_cell_score"                                              
+ [71] "metastatic_breast_carcinoma_lab_proc_her2_neu_immunohistochemistry_receptor_status"                              
+ [72] "metastatic_breast_carcinoma_lab_proc_her2_neu_in_situ_hybridization_outcome_type"                                
+ [73] "metastatic_breast_carcinoma_pos_finding_her2_erbb2_other_measure_scale_text"                                     
+ [74] "metastatic_breast_carcinoma_pos_finding_other_scale_measurement_text"                                            
+ [75] "metastatic_breast_carcinoma_pos_finding_progesterone_receptor_other_measure_scale_text"                          
+ [76] "metastatic_breast_carcinoma_progesterone_receptor_detection_method_text"                                         
+ [77] "metastatic_breast_carcinoma_progesterone_receptor_level_cell_percent_category"                                   
+ [78] "metastatic_breast_carcinoma_progesterone_receptor_status"                                                        
+ [79] "number_of_lymphnodes_positive_by_he"                                                                             
+ [80] "number_of_lymphnodes_positive_by_ihc"                                                                            
+ [81] "patient_id"                                                                                                      
+ [82] "person_neoplasm_cancer_status"                                                                                   
+ [83] "pgr_detection_method_text"                                                                                       
+ [84] "pos_finding_her2_erbb2_other_measurement_scale_text"                                                             
+ [85] "pos_finding_metastatic_breast_carcinoma_estrogen_receptor_other_measuremenet_scale_text"                         
+ [86] "pos_finding_progesterone_receptor_other_measurement_scale_text"                                                  
+ [87] "positive_finding_estrogen_receptor_other_measurement_scale_text"                                                 
+ [88] "pretreatment_history"                                                                                            
+ [89] "primary_lymph_node_presentation_assessment"                                                                      
+ [90] "primary_other_site_of_disease_name"                                                                              
+ [91] "prior_diagnosis"                                                                                                 
+ [92] "progesterone_receptor_level_cell_percent_category"                                                               
+ [93] "race"                                                                                                            
+ [94] "surgical_procedure_purpose_other_text"                                                                           
+ [95] "tissue_prospective_collection_indicator"                                                                         
+ [96] "tissue_retrospective_collection_indicator"                                                                       
+ [97] "tissue_source_site"                                                                                              
+ [98] "tumor_other_histologic_subtype_descriptive_text"                                                                 
+ [99] "tumor_tissue_site"                                                                                               
+[100] "vital_status"                                                                                                    
+> all(sam$DNAnorml_patientID %in% clin$patient_id)
+[1] TRUE
+> 
+> # --------------------------------------------------------
+> # check gene expression PCs
+> # --------------------------------------------------------
+> 
+> setwd("/Volumes/Moon/TCGA_BRCA/data/")
+> 
+> PCs = read.table("PCs_log_TReC_AA.txt", sep="\t", header=TRUE)
+> dim(PCs)
+[1] 50 51
+> PCs[1:2,1:5]
+   id        A0BW        A0DG       A1FC        A209
+1 PC1  0.17640744 -0.01629809 0.21260793  0.05402244
+2 PC2 -0.02908032 -0.22111225 0.09741975 -0.12078732
+> 
+> PCs$id = paste("expression", PCs$id, sep="")
+> 
+> # --------------------------------------------------------
+> # take a subset of sample information
+> # --------------------------------------------------------
+> 
+> sam1 = sam[match(names(PCs)[-1], sam$DNAnorml_patientID),]
+> dim(sam1)
+[1] 50 23
+> all(names(PCs)[-1] == sam1$DNAnorml_patientID)
+[1] TRUE
+> 
+> table(sam1$RNA_institution, useNA="ifany")
+
+A1 A2 A7 A8 AO AR B6 BH E2 EW 
+ 1 11  1  1  6  1 12  7  8  2 
+> table(sam1$RNA_type, useNA="ifany")
+
+01A 
+ 50 
+> table(sam1$RNA_plate, useNA="ifany")
+
+A00Z A034 A056 A084 A109 A10J A115 A12D A12P A13Q A144 A14D A14M A157 A169 A16F 
+   4   10    4    4    5    1    7    1    1    2    4    1    1    1    3    1 
+> table(sam1$gender, useNA="ifany")
+
+female 
+    50 
+> 
+> pam50 = pam50[match(sam1$RNA_RNAseq.Tumor, pam50$bcr_patient_barcode),]
+> dim(pam50)
+[1] 50 17
+> all(sam1$RNA_RNAseq.Tumor == pam50$bcr_patient_barcode)
+[1] TRUE
+> 
+> table(pam50$tissue, useNA="ifany")
+
+tumor 
+   50 
+> table(pam50$Call, useNA="ifany")
+
+Basal  Her2  LumA  LumB 
+   18     4    17    11 
+> table(pam50$Confidence==1)
+
+FALSE  TRUE 
+    5    45 
+> summary(pam50$Confidence[pam50$Confidence < 1])
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  0.950   0.970   0.990   0.978   0.990   0.990 
+> 
+> clin  = clin[match(sam1$DNAnorml_patientID, clin$patient_id),]
+> dim(clin)
+[1]  50 100
+> all(sam1$DNAnorml_patientID == clin$patient_id)
+[1] TRUE
+> 
+> 
+> table(!is.na(clin$days_to_death), !is.na(clin$days_to_last_known_alive), useNA="ifany")
+       
+        FALSE TRUE
+  FALSE    36    1
+  TRUE     13    0
+> table(clin$tumor_tissue_site, useNA="ifany")
+
+BREAST 
+    50 
+> table(clin$race, useNA="ifany")
+
+BLACK OR AFRICAN AMERICAN                     WHITE                      <NA> 
+                       48                         1                         1 
+> table(clin$gender, useNA="ifany")
+
+FEMALE 
+    50 
+> table(sam1$gender, clin$gender, useNA="ifany")
+        
+         FEMALE
+  female     50
+> 
+> 
+> table(clin$breast_carcinoma_estrogen_receptor_status, useNA="ifany")
+
+Negative Positive 
+      21       29 
+> table(clin$vital_status, useNA="ifany")
+
+DECEASED   LIVING 
+      13       37 
+> summary(clin$age_at_initial_pathologic_diagnosis)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  30.00   41.25   53.00   54.82   64.75   89.00 
+> table(sam1$RNA_institution, clin$tissue_source_site, useNA="ifany")
+    
+     A1 A2 A7 A8 AO AR B6 BH E2 EW
+  A1  1  0  0  0  0  0  0  0  0  0
+  A2  0 11  0  0  0  0  0  0  0  0
+  A7  0  0  1  0  0  0  0  0  0  0
+  A8  0  0  0  1  0  0  0  0  0  0
+  AO  0  0  0  0  6  0  0  0  0  0
+  AR  0  0  0  0  0  1  0  0  0  0
+  B6  0  0  0  0  0  0 12  0  0  0
+  BH  0  0  0  0  0  0  0  7  0  0
+  E2  0  0  0  0  0  0  0  0  8  0
+  EW  0  0  0  0  0  0  0  0  0  2
+> 
+> 
+> table(clin$ajcc_tumor_stage_code, useNA="ifany")
+
+ T1 T1b T1c  T2  T3 T4b  TX 
+  2   1  10  27   6   1   3 
+> table(clin$ajcc_neoplasm_disease_stage, useNA="ifany")
+
+   Stage I   Stage IA  Stage IIA  Stage IIB Stage IIIA Stage IIIC  Stage Tis 
+         5          5         16          8          9          3          1 
+   Stage X 
+         3 
+> table(clin$ajcc_neoplasm_disease_stage, clin$ajcc_tumor_stage_code, useNA="ifany")
+            
+             T1 T1b T1c T2 T3 T4b TX
+  Stage I     0   0   5  0  0   0  0
+  Stage IA    2   1   2  0  0   0  0
+  Stage IIA   0   0   2 14  0   0  0
+  Stage IIB   0   0   0  6  2   0  0
+  Stage IIIA  0   0   0  5  4   0  0
+  Stage IIIC  0   0   0  2  0   1  0
+  Stage Tis   0   0   0  0  0   0  1
+  Stage X     0   0   1  0  0   0  2
+> table(clin$ajcc_cancer_metastasis_stage_code, clin$ajcc_neoplasm_disease_stage, useNA="ifany")
+    
+     Stage I Stage IA Stage IIA Stage IIB Stage IIIA Stage IIIC Stage Tis
+  M0       5        5        15         8          7          3         1
+  MX       0        0         1         0          2          0         0
+    
+     Stage X
+  M0       1
+  MX       2
+> table(clin$tissue_prospective_collection_indicator, useNA="ifany")
+
+ NO YES 
+ 48   2 
+> 
+> # --------------------------------------------------------
+> # check the relation between PCs and covariates
+> # --------------------------------------------------------
+> 
+> pvals = matrix(NA, nrow=20, ncol=7)
+> 
+> for(i in 1:20){
++   PCi = as.numeric(PCs[i,-1])
++   ai  = anova(lm(PCi ~  as.factor(sam1$RNA_institution) 
++                  + as.factor(sam1$RNA_plate)
++                  + as.factor(clin$ajcc_neoplasm_disease_stage)
++                  + as.factor(clin$ajcc_tumor_stage_code)
++                  + as.factor(clin$breast_carcinoma_estrogen_receptor_status)
++                  + clin$age_at_initial_pathologic_diagnosis 
++                  + as.factor(pam50$Call)
++                  ))
++   pvals[i,] = ai$Pr[1:7]
++ }
+> 
+> colnames(pvals) = c("institution", "plate", "disease_stage", "stage_code", "ER", "age", "pam50")
+> signif(pvals,2)
+      institution   plate disease_stage stage_code      ER   age  pam50
+ [1,]      0.0040 0.00097        0.0012     0.0003 2.6e-05 0.045 0.0025
+ [2,]      0.0018 0.00140        0.0720     0.0940 2.7e-02 0.011 0.0030
+ [3,]      0.6700 0.51000        0.3200     0.2000 9.2e-01 0.930 0.0530
+ [4,]      0.3500 0.36000        0.6200     0.7700 7.3e-01 0.072 0.1500
+ [5,]      0.4000 0.08100        0.2500     0.6900 3.6e-01 0.150 0.5200
+ [6,]      0.0550 0.00590        0.0700     0.1300 8.1e-03 0.990 0.0680
+ [7,]      0.0420 0.01100        0.0240     0.1200 1.1e-01 0.850 0.0320
+ [8,]      0.6400 0.48000        0.4300     0.2700 7.4e-01 0.740 0.5900
+ [9,]      0.9400 0.98000        0.5800     0.9600 2.0e-01 0.076 0.5400
+[10,]      0.6600 0.90000        0.6800     0.9600 9.8e-01 0.390 0.3300
+[11,]      0.1500 0.06900        0.3600     0.5600 4.9e-01 0.250 0.9800
+[12,]      0.1100 0.15000        0.0930     0.4700 3.5e-02 0.210 0.1300
+[13,]      0.5000 0.75000        0.2400     0.2800 5.0e-01 0.320 0.4100
+[14,]      0.5600 0.71000        0.7600     0.9200 6.5e-01 0.680 0.8200
+[15,]      0.4700 0.28000        0.4900     0.1400 9.1e-01 0.360 0.6100
+[16,]      0.7000 0.91000        0.9600     0.8600 2.5e-01 0.740 0.7500
+[17,]      0.6300 0.66000        1.0000     0.7100 5.4e-01 0.910 0.3300
+[18,]      0.6500 0.75000        0.8800     0.9500 1.8e-01 0.330 0.3600
+[19,]      0.7800 0.82000        0.8900     0.8600 7.2e-01 0.690 0.4900
+[20,]      0.4200 0.08700        0.0300     0.1000 3.3e-01 0.064 0.2000
+> 
+> table(sam1$RNA_plate, pam50$Call)
+      
+       Basal Her2 LumA LumB
+  A00Z     1    0    0    3
+  A034     6    1    3    0
+  A056     1    1    2    0
+  A084     0    0    2    2
+  A109     1    0    2    2
+  A10J     0    0    1    0
+  A115     3    1    3    0
+  A12D     0    0    1    0
+  A12P     0    0    1    0
+  A13Q     1    0    1    0
+  A144     2    1    0    1
+  A14D     1    0    0    0
+  A14M     1    0    0    0
+  A157     0    0    0    1
+  A169     1    0    0    2
+  A16F     0    0    1    0
+> table(sam1$RNA_institution, pam50$Call)
+    
+     Basal Her2 LumA LumB
+  A1     0    0    1    0
+  A2     3    1    3    4
+  A7     1    0    0    0
+  A8     1    0    0    0
+  AO     1    1    2    2
+  AR     0    0    0    1
+  B6     4    1    5    2
+  BH     3    0    3    1
+  E2     4    1    3    0
+  EW     1    0    0    1
+> 
+> chisq.test(sam1$RNA_plate, pam50$Call)
+
+	Pearson's Chi-squared test
+
+data:  sam1$RNA_plate and pam50$Call 
+X-squared = 43.5004, df = 45, p-value = 0.5356
+
+Warning message:
+In chisq.test(sam1$RNA_plate, pam50$Call) :
+  Chi-squared approximation may be incorrect
+> chisq.test(sam1$RNA_institution, pam50$Call)
+
+	Pearson's Chi-squared test
+
+data:  sam1$RNA_institution and pam50$Call 
+X-squared = 17.4854, df = 27, p-value = 0.9185
+
+Warning message:
+In chisq.test(sam1$RNA_institution, pam50$Call) :
+  Chi-squared approximation may be incorrect
+> table(sam1$RNA_institution, useNA="ifany")
+
+A1 A2 A7 A8 AO AR B6 BH E2 EW 
+ 1 11  1  1  6  1 12  7  8  2 
+> table(sam1$RNA_plate, useNA="ifany")
+
+A00Z A034 A056 A084 A109 A10J A115 A12D A12P A13Q A144 A14D A14M A157 A169 A16F 
+   4   10    4    4    5    1    7    1    1    2    4    1    1    1    3    1 
+> 
+> table(sam1$RNA_institution, sam1$RNA_plate)
+    
+     A00Z A034 A056 A084 A109 A10J A115 A12D A12P A13Q A144 A14D A14M A157 A169
+  A1    0    0    0    1    0    0    0    0    0    0    0    0    0    0    0
+  A2    2    4    0    0    2    0    0    0    0    0    0    0    0    0    2
+  A7    0    0    0    0    0    0    0    0    0    0    0    0    0    0    1
+  A8    0    1    0    0    0    0    0    0    0    0    0    0    0    0    0
+  AO    2    1    2    0    0    1    0    0    0    0    0    0    0    0    0
+  AR    0    0    0    1    0    0    0    0    0    0    0    0    0    0    0
+  B6    0    4    1    2    3    0    2    0    0    0    0    0    0    0    0
+  BH    0    0    1    0    0    0    3    0    1    1    0    0    0    1    0
+  E2    0    0    0    0    0    0    2    1    0    1    2    1    1    0    0
+  EW    0    0    0    0    0    0    0    0    0    0    2    0    0    0    0
+    
+     A16F
+  A1    0
+  A2    1
+  A7    0
+  A8    0
+  AO    0
+  AR    0
+  B6    0
+  BH    0
+  E2    0
+  EW    0
+> 
+> # --------------------------------------------------------
+> # check genotype PCs
+> # --------------------------------------------------------
+> 
+> PCsDNA = read.table("PCs_genotype_AA.txt", sep="\t", header=TRUE)
+> dim(PCsDNA)
+[1] 50 51
+> PCsDNA[1:2,1:5]
+   id        A0BW        A0DG        A1FC        A209
+1 PC1  0.13131165 -0.03855167 -0.22941645 -0.04407727
+2 PC2 -0.01990569  0.11095075 -0.09405443 -0.01172186
+> 
+> PCsDNA$id = paste("genotype", PCsDNA$id, sep="")
+> 
+> sam1 = sam[match(names(PCsDNA)[-1], sam$DNAnorml_patientID),]
+> dim(sam1)
+[1] 50 23
+> all(names(PCs)[-1] == sam1$DNAnorml_patientID)
+[1] TRUE
+> 
+> table(sam1$DNAnorml_plate)
+
+A012 A037 A059 A087 A107 A10L A113 A12A A12N A13N A141 A14F A14J A160 A166 A16C 
+   4   10    4    4    5    1    7    1    1    2    4    1    1    1    3    1 
+> table(sam1$DNAnorml_institution)
+
+A1 A2 A7 A8 AO AR B6 BH E2 EW 
+ 1 11  1  1  6  1 12  7  8  2 
+> table(sam1$DNAnorml_type)
+
+10A 10B 11A 
+ 42   1   7 
+> table(sam1$DNAnorml_portion)
+
+01D 02D 12D 21D 22D 32D 42D 43D 
+ 42   1   1   1   1   1   2   1 
+> 
+> pvals = matrix(NA, nrow=20, ncol=4)
+> 
+> for(i in 1:20){
++   PCi = as.numeric(PCsDNA[i,-1])
++   ai  = anova(lm(PCi ~  as.factor(sam1$DNAnorml_plate) 
++                  + as.factor(sam1$DNAnorml_institution)
++                  + as.factor(sam1$DNAnorml_type)
++                  + as.factor(sam1$DNAnorml_portion)))
++   pvals[i,] = ai$Pr[1:4]
++   
++ }
+> 
+> signif(pvals,2)
+        [,1] [,2]  [,3]   [,4]
+ [1,] 0.6100 0.56 0.580 0.8100
+ [2,] 0.0024 0.75 0.280 0.5200
+ [3,] 0.6100 0.55 0.190 0.1400
+ [4,] 0.5100 0.73 0.500 0.4000
+ [5,] 0.0670 0.14 0.088 0.3400
+ [6,] 0.1900 0.13 0.100 0.8300
+ [7,] 0.8000 0.49 0.690 0.6000
+ [8,] 0.6600 0.75 0.480 0.1500
+ [9,] 0.2100 0.31 1.000 0.1400
+[10,] 0.9800 0.36 0.460 0.4300
+[11,] 0.2200 0.15 0.240 0.0074
+[12,] 0.4700 0.91 0.440 0.3500
+[13,] 0.1400 0.47 0.120 0.6100
+[14,] 0.9500 0.52 0.790 0.8100
+[15,] 0.5100 0.73 0.380 0.7500
+[16,] 0.6000 0.98 0.780 0.0740
+[17,] 0.9700 0.80 0.720 0.3200
+[18,] 0.2200 0.87 0.990 0.3200
+[19,] 0.8700 0.64 0.170 0.4900
+[20,] 0.1600 0.51 0.620 0.4000
+> 
+> # --------------------------------------------------------
+> # write out results
+> # --------------------------------------------------------
+> 
+> write.table(PCsDNA[1:2,], file = "covariates_AA.txt", append = FALSE, 
++ quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> proc.time()
+   user  system elapsed 
+  1.093   0.040   1.127 

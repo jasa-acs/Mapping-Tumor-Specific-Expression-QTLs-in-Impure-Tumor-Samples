@@ -1,0 +1,313 @@
+
+R version 2.11.0 (2010-04-22)
+Copyright (C) 2010 The R Foundation for Statistical Computing
+ISBN 3-900051-07-0
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> 
+> plotIt <- function(dat1, grps){
++ 
++   par(mar=c(5,4,1,1), bty="n")
++   plot(dat1$qc.call.rate.all, dat1$contrast.qc, cex=0.5, pch=20, 
++        xlab="QC call rate", ylab="contrast QC", bty="n", type="n")
++   abline(v=0.80, col="grey")
++   abline(v=0.90, col="grey")
++   abline(h=0.40, col="grey")
++   
++   
++   t1 = table(grps)
++   n1 = length(t1)
++   u1 = names(t1)
++   
++   cols = rainbow(n1)
++   
++   if(n1 < 6){
++     pnts = c(1, 15:(14+n1))
++   }else{
++     pnts = 1:n1
++   }
++   
++   for(i in 1:length(u1)){
++     ui   = u1[i]
++     grp1 = which(as.character(grps) == ui)
++     points(dat1$qc.call.rate.all[grp1], dat1$contrast.qc[grp1], 
++            cex=0.8, col=cols[i], pch=pnts[i])
++   }
++   
++   u2 = paste(u1, "(", t1, ")", sep="")
++   legend("topleft", u2, col=cols, pch=pnts, bty="n")
++   
++ }
+> 
+> # --------------------------------------------------------------
+> # read in QC results
+> # --------------------------------------------------------------
+> 
+> setwd("~/research/TCGA/BRCA/R_batch1")
+> 
+> dat1 = read.table("apt-geno-qc.txt", sep="\t", header=TRUE, as.is=TRUE)
+> dim(dat1)
+[1] 710  12
+> dat1[1:2,]
+                                              cel_files qc.call.rate.all
+1  BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL          0.97419
+2 CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL          0.96823
+  qc.call.rate.nsp qc.call.rate.sty qc.call.rate.nsp.sty.ovlp
+1          0.96530          0.96296                   0.98275
+2          0.96787          0.94364                   0.97782
+  em.cluster.chrX.het.contrast_gender
+1                              female
+2                              female
+  em.cluster.chrX.het.contrast_gender_chrX_het_rate contrast.qc
+1                                           0.24856     3.05139
+2                                           0.22404     2.45182
+  contrast.qc.rand contrast.qc.nsp contrast.qc.sty contrast.qc.nsp.sty.ovlp
+1          3.05139           3.720           3.305                     3.28
+2          2.45182           2.595           2.405                     3.06
+> 
+> sex = dat1$em.cluster.chrX.het.contrast_gender
+> table(sex)
+sex
+ female    male unknown 
+    700       6       4 
+> 
+> # --------------------------------------------------------------
+> # read in sample information
+> # --------------------------------------------------------------
+> 
+> sam1 = read.table("../info/brca_samples2use.txt", sep="\t", header=TRUE, as.is=TRUE)
+> dim(sam1)
+[1] 710  22
+> sam1[1:2,]
+  DNAtumor_institution DNAtumor_patientID DNAtumor_type DNAtumor_portion
+1                   A7               A0D9           01A              31D
+2                   A7               A0DB           01A              11D
+  DNAtumor_plate                                    DNAtumor_arrayFile
+1           A059  BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_H07_697072.CEL
+2           A011 CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_B02_628292.CEL
+  DNAnorml_institution DNAnorml_patientID DNAnorml_type DNAnorml_portion
+1                   A7               A0D9           10A              01D
+2                   A7               A0DB           10A              01D
+  DNAnorml_plate                                    DNAnorml_arrayFile
+1           A059  BITES_p_TCGAb61_SNP_S_GenomeWideSNP_6_E10_697070.CEL
+2           A012 CUSKS_p_TCGAb47_SNP_1N_GenomeWideSNP_6_F09_628240.CEL
+                     RNA_Exome             RNA_RNAseq.Tumor
+1 TCGA-A7-A0D9-01A-31W-A071-09 TCGA-A7-A0D9-01A-31R-A056-07
+2 TCGA-A7-A0DB-01A-11W-A019-09 TCGA-A7-A0DB-01A-11R-A00Z-07
+             RNA_RNAseq.Normal                    RNA_rnaseqID.Tumor
+1 TCGA-A7-A0D9-11A-53R-A089-07       110318_SN749_0046_AB039FABXX_4_
+2 TCGA-A7-A0DB-11A-33R-A089-07 110228_UNC10-SN254_0198_BB041RABXX_3_
+                   RNA_rnaseqID.Normal RNA_institution RNA_patientID RNA_type
+1 110909_UNC9-SN296_0240_BD0DDBABXX_1_              A7          A0D9      01A
+2 110909_UNC9-SN296_0240_BD0DDBABXX_2_              A7          A0DB      01A
+  RNA_portion RNA_plate
+1         31R      A056
+2         11R      A00Z
+> 
+> if(!all(dat1$cel_files == sam1$DNAnorml_arrayFile)){
++   stop("sample mismatch!\n")  
++ }
+> 
+> table(sam1$DNAnorml_plate)
+
+A012 A037 A059 A087 A107 A10L A111 A113 A12A A12N A134 A13N A141 A14F A14J A160 
+  72   87   40   45   38   21    1   69   38   37   15   66   36   19   29   24 
+A166 A16C 
+  46   27 
+> table(sam1$DNAnorml_institution)
+
+ A1  A2  A7  A8  AC  AN  AO  AQ  AR  B6  BH  C8  D8  E2  E9  EW  GI 
+ 13  75  17  68   2  34  41   6  54  47 122  36  62  63  44  25   1 
+> table(sam1$DNAnorml_type)
+
+10A 10B 11A 11B 
+635  10  52  13 
+> table(sam1$DNAnorml_portion)
+
+01D 02D 03D 11D 12D 13D 14D 21D 22D 23D 24D 31D 32D 33D 34D 42D 43D 51D 52D 53D 
+630  11   4   2   4   2   1   6   7  11   1   4   3   4   1   9   3   2   1   1 
+61D 94D 
+  2   1 
+> 
+> summary(dat1$contrast.qc)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+-0.3426  1.8340  2.2480  2.1540  2.6340  3.8330 
+> 
+> anova(lm(dat1$contrast.qc ~ DNAnorml_plate + DNAnorml_institution 
++   + DNAnorml_type + DNAnorml_portion + sex, data=sam1))
+Analysis of Variance Table
+
+Response: dat1$contrast.qc
+                      Df  Sum Sq Mean Sq F value    Pr(>F)    
+DNAnorml_plate        17  62.088  3.6522  8.2328 < 2.2e-16 ***
+DNAnorml_institution  16  11.187  0.6992  1.5760   0.06974 .  
+DNAnorml_type          3   1.184  0.3945  0.8893   0.44629    
+DNAnorml_portion      20   8.346  0.4173  0.9407   0.53474    
+sex                    2  19.319  9.6593 21.7739 7.024e-10 ***
+Residuals            651 288.796  0.4436                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 
+Warning messages:
+1: In model.matrix.default(mt, mf, contrasts) :
+  variable 'DNAnorml_plate' converted to a factor
+2: In model.matrix.default(mt, mf, contrasts) :
+  variable 'DNAnorml_institution' converted to a factor
+3: In model.matrix.default(mt, mf, contrasts) :
+  variable 'DNAnorml_type' converted to a factor
+4: In model.matrix.default(mt, mf, contrasts) :
+  variable 'DNAnorml_portion' converted to a factor
+5: In model.matrix.default(mt, mf, contrasts) :
+  variable 'sex' converted to a factor
+> 
+> anova(lm(dat1$qc.call.rate.all ~ DNAnorml_plate + DNAnorml_institution 
++   + DNAnorml_type + DNAnorml_portion + sex, data=sam1))
+Analysis of Variance Table
+
+Response: dat1$qc.call.rate.all
+                      Df  Sum Sq  Mean Sq F value  Pr(>F)    
+DNAnorml_plate        17 0.19483 0.011460 14.7395 < 2e-16 ***
+DNAnorml_institution  16 0.00564 0.000352  0.4531 0.96733    
+DNAnorml_type          3 0.00492 0.001638  2.1073 0.09806 .  
+DNAnorml_portion      20 0.00751 0.000376  0.4831 0.97292    
+sex                    2 0.13114 0.065572 84.3340 < 2e-16 ***
+Residuals            651 0.50617 0.000778                    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1 
+Warning messages:
+1: In model.matrix.default(mt, mf, contrasts) :
+  variable 'DNAnorml_plate' converted to a factor
+2: In model.matrix.default(mt, mf, contrasts) :
+  variable 'DNAnorml_institution' converted to a factor
+3: In model.matrix.default(mt, mf, contrasts) :
+  variable 'DNAnorml_type' converted to a factor
+4: In model.matrix.default(mt, mf, contrasts) :
+  variable 'DNAnorml_portion' converted to a factor
+5: In model.matrix.default(mt, mf, contrasts) :
+  variable 'sex' converted to a factor
+> 
+> chisq.test(sam1$DNAnorml_institution, sam1$DNAnorml_plate)
+
+	Pearson's Chi-squared test
+
+data:  sam1$DNAnorml_institution and sam1$DNAnorml_plate 
+X-squared = 2085.633, df = 272, p-value < 2.2e-16
+
+Warning message:
+In chisq.test(sam1$DNAnorml_institution, sam1$DNAnorml_plate) :
+  Chi-squared approximation may be incorrect
+> 
+> # --------------------------------------------------------------
+> # http://www.affymetrix.com/support/help/faqs/
+> #          genotyping_console/quality_control/faq_2.jsp
+> # --------------------------------------------------------------
+> 
+> # Contrast QC measures how well experiments resolve SNP signals 
+> # into three genotype clusters. It uses a subset of probes and 
+> # measures the differences in contrast distributions for homozygote 
+> # and heterozygote genotypes. In high-quality data sets, the 
+> # homozygote distributions are well-resolved from the heterozygote 
+> # distribution and the Contrast QC metric is higher than the 0.4 
+> # 
+> # --------------------------------------------------------------
+> # http://www.affymetrix.com/support/help/faqs/
+> #          genotyping_console/quality_control/faq_4.jsp
+> # --------------------------------------------------------------
+> 
+> # The QC Call Rate threshold is 86 percent or greater for the SNP 
+> # Array 5.0, 93 percent or greater for the 500K Array Set, and 95 
+> # percent or greater for the 100K Set. In good-quality data sets, 
+> # 90 percent of samples should pass the QC Call Rate threshold 
+> # and the average QC Call Rate should be in the mid-90 percent 
+> # range. Occasionally, poor samples will pass the QC Call Rate 
+> # metric, which is why Contrast QC is recommended for the SNP 
+> # Array 6.0. To minimize the risk of poor samples passing the 
+> # QC Call Rate metric, samples with outlier values for 
+> # heterozygosity or Birdseed call rate should be rejected.
+> 
+> 
+> png("../figures/QC_check_sex.png", width=6, height=6, units="in", res=400)
+> plotIt(dat1, sex)
+> dev.off()
+null device 
+          1 
+> 
+> plate = sam1$DNAnorml_plate
+> png("../figures/QC_check_plate.png", width=6, height=6, units="in", res=400)
+> plotIt(dat1, plate)
+> dev.off()
+null device 
+          1 
+> 
+> dtype = sam1$DNAnorml_type
+> png("../figures/QC_check_type.png", width=6, height=6, units="in", res=400)
+> plotIt(dat1, dtype)
+> dev.off()
+null device 
+          1 
+> 
+> # --------------------------------------------------------------
+> # output the files after QC filtering 
+> # --------------------------------------------------------------
+> 
+> setwd("~/research/TCGA/BRCA/info")
+> 
+> table(dat1$contrast.qc > 0.4, dat1$qc.call.rate.all > 0.8)
+       
+        FALSE TRUE
+  FALSE     4   20
+  TRUE      1  685
+> w2kp = which(dat1$contrast.qc > 0.4 & dat1$qc.call.rate.all > 0.8)
+> length(w2kp)
+[1] 685
+> db   = sam1[w2kp,]
+> 
+> write.table(db, file = "brca_samples2use_after_qc.txt", append = FALSE, 
++   quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+> 
+> fname = "cel_files_normal_after_qc.txt"
+> cat("cel_files\n", file=fname)
+> cels = paste("/Volumes/Moon/TCGA_BRCA/data_DNA/", db$DNAnorml_arrayFile, sep="")
+> cat(cels, file=fname, sep="\n", append=TRUE)
+> 
+> 
+> fname = "cel_files_tumor_after_qc.txt"
+> cat("cel_files\n", file=fname)
+> cels = paste("/Volumes/Moon/TCGA_BRCA/data_DNA/", db$DNAtumor_arrayFile, sep="")
+> cat(cels, file=fname, sep="\n", append=TRUE)
+> 
+> # --------------------------------------------------------------------
+> # prepare wget command
+> # --------------------------------------------------------------------
+> 
+> rna2download = db$RNA_rnaseqID.Tumor
+> 
+> cmd = character(length(rna2download))
+> adr = "https://webshare.bioinf.unc.edu/seqware/v2_pipeline/"
+> 
+> for(i in 1:length(rna2download)){
++   ri = rna2download[i]
++   ci = "wget --user=weisun --password=JSM@sd12! -O "
++   ci = sprintf("%s %ssorted_genome_alignments.bam", ci, ri)
++   ci = sprintf("%s %s%s/sorted_genome_alignments.bam", ci, adr, ri)
++   cmd[i] = ci
++ }
+> 
+> cat(cmd, file="wget.sh", sep="\n")
+> 
+> 
+> proc.time()
+   user  system elapsed 
+  4.272   0.326   7.559 
